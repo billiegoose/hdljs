@@ -1,0 +1,20 @@
+{
+  "name": "jsc",
+  "version": "0.0.0",
+  "description": "",
+  "main": "parse.js",
+  "watch": {
+    "run": "{src,test}/**/*.mjs"
+  },
+  "scripts": {
+    "run": "node --experimental-modules src/main.mjs",
+    "watch": "npm-watch run",
+    "test": "iverilog design.sv testbench.sv && vvp -N a.out"
+  },
+  "keywords": [],
+  "author": "William Hilton <wmhilton@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "npm-watch": "^0.6.0"
+  }
+}
