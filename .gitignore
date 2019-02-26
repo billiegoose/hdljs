@@ -2,3 +2,4 @@ a.out
 design.sv
 testbench.sv
 node_modules/
+design.js

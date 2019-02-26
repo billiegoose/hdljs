@@ -1,15 +1,9 @@
-function range (width) {
-  const vals = [];
-  for (let i = 2 ** width - 1; i >= 0; i--) {
-    vals.push(i);
-  }
-  return vals;
-}
+import { rangePow2 } from './rangePow2.mjs';
 
 export function combinations (widths, fn) {
   const sets = [];
   for (let width of widths) {
-    sets.push(range(width));
+    sets.push(rangePow2(width));
   }
   let indexes = sets.map(set => set.length - 1);
   let metaIndex = sets.length - 2;

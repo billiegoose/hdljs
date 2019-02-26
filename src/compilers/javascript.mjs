@@ -1,27 +1,35 @@
+import { range } from './utils/range.mjs';
 
 function compileJsCall (chip, mapping) {
+  let args = [...chip.in.values()].map(pin => range(pin.width).map(i => pin.name + i).join(',')).join(',').split(',')
+  let out = [...chip.out.values()].map(pin => range(pin.width).map(i => pin.name + i).join(',')).join(',').split(',')
   let fntext = '';
-  // TODO: figure out how to assign to slices
-  fntext += `;[${[...chip.out.keys()].map(local => mapping[local]).join(', ')}] = `
-  fntext += `${chip.name}(${[...chip.in.keys()].map(local => mapping[local]).join(', ')});`;
+  fntext += `;[${out.map(local => mapping[local]).join(', ')}] = `
+  fntext += `${chip.name}(${args.map(local => mapping[local]).join(', ')});`
   return fntext;
 }
 
 export function compileChip (chip) {
-  const args = [...chip.in.keys()]
+  const args = [...chip.in.values()].map(pin => range(pin.width).map(i => pin.name + i).join(', ')).join(', ')
+  const out = [...chip.out.values()].map(pin => range(pin.width).map(i => pin.name + i).join(', ')).join(', ')
   let fntext = ''
-  fntext += `function ${chip.name} (${args.join(', ')}) {\n`
+  fntext += `function ${chip.name} (${args}) {\n`
   for (let pin of [...chip.internalPins.values(), ...chip.out.values()]) {
-    fntext += `  let ${pin.name};\n`
+    for (let i = pin.start; i <= pin.end; i++) {
+      fntext += `  let ${pin.name}${i};\n`
+    }
   }
   for (let part of chip.parts) {
     let mapping = {}
     for (let connection of part.connections) {
+      for (let i = connection.int.start; i <= connection.int.end; i++) {
+        mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+      }
       mapping[connection.int.name] = connection.ext.name
     }
     fntext += `  ${compileJsCall(part.chip, mapping)}\n`;
   }
-  fntext += `  return [${[...chip.out.keys()].join(', ')}];\n`
+  fntext += `  return [${out}];\n`
   fntext += `}`
   return fntext;
 }
@@ -30,13 +38,10 @@ export function concatJs (chipRegistry) {
   let text = ''
   for (let chip of chipRegistry.values()) {
     if (chip.name === 'Nand') {
-      text += `function Nand (a, b) {
-  // builtin
-  let out;
-  out = Number(!(a && b));
-  return [out];
-}
-\n`
+      text += `// builtin
+function Nand (a, b) {
+  return [Number(!(a && b))];
+}\n\n`
     } else {
       text += `${compileChip(chip)}\n\n`
       // text += `${chip.compileVerilog()}\n\n`

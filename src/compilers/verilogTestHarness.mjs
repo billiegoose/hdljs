@@ -1,4 +1,4 @@
-import { combinations } from './combinations.mjs';
+import { combinations } from './utils/combinations.mjs';
 
 export function compileVerilogTestHarnessChip (chip, jsChip) {
     return `module ${chip.name}_Testbench ();
