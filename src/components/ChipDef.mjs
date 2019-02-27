@@ -57,18 +57,17 @@ export class ChipDef {
         // Validate external chip wiring
         // Infer implicit width based on opposite end of connection
         if (ext.implicit) {
-          ext.end = int.end;
+          ext.end = ext.start + int.width - 1;
         }
         if (!this.pins.has(ext.name) && !this.internalPins.has(ext.name)) {
-          // console.log(`creating wire ${ext.name}`)
+          console.log(`creating wire ${ext.name}`)
           let pin = new PinHeader(`${ext.name}[${ext.width}]`)
           // console.log(pin)
           this.internalPins.set(ext.name, pin)
         }
         let internalPin = this.pins.get(ext.name) || this.internalPins.get(ext.name);
-        if (internalPin.width !== ext.width) {
-          console.log(internalPin.width, ext.width)
-          throw new Error(`Bus width mismatch in RHS assignment ${ext.print()} does not match ${internalPin.print()}`)
+        if (ext.end >= internalPin.width) {
+          throw new Error(`Bus pin assignment ${ext.print()} is out of range of ${this.name} ${internalPin.print()}[${internalPin.width}]`)
         }
       }
     }
@@ -183,13 +182,16 @@ ${(() => {
   }
 }
 
-class Part {
+export class Part {
   constructor(str) {
     this.parse(str)
   }
   parse(str) {
     str = str.trim()
     const match = /^(?<name>\w+)\s*\((?<body>[^\)]*)\)$/.exec(str)
+    if (match === null) {
+      throw new Error(`Unable to parse: ${str}`)
+    }
     const { name, body } = match.groups
     if (!global.chipRegistry.has(name)) {
       throw new Error(`Unregistered chip: ${name}`)

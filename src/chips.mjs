@@ -11,9 +11,10 @@ CHIP Nand {
 
 export const Not = new ChipDef(`
 CHIP Not {
-  IN a;
+  IN in;
   OUT out;
-  Nand(a=a, b=a, out=out);
+PARTS:
+  Nand(a=in, b=in, out=out);
 }`);
 
 
@@ -21,17 +22,65 @@ export const And = new ChipDef(`
 CHIP And {
   IN a, b;
   OUT out;
-  PARTS:
+PARTS:
   Nand(a=a, b=b, out=c);
-  Not(a=c, out=out);
+  Not(in=c, out=out);
 }`)
 
 export const Or = new ChipDef(`
 CHIP Or {
   IN a, b;
   OUT out;
-  PARTS:
-  Not(a=a, out=na);
-  Not(a=b, out=nb);
+PARTS:
+  Not(in=a, out=na);
+  Not(in=b, out=nb);
   Nand(a=na, b=nb, out=out);
+}`)
+
+export const Xor = new ChipDef(`
+CHIP Xor {
+  IN a, b;
+  OUT out;
+PARTS:
+  Nand(a=a, b=b, out=x);
+  Nand(a=a, b=x, out=y);
+  Nand(a=x, b=b, out=z);
+  Nand(a=y, b=z, out=out);
+}`)
+
+
+export const Mux = new ChipDef(`
+CHIP Mux {
+  IN sel, a, b;
+  OUT out;
+PARTS:
+  Not(in=sel, out=nsel);
+  Nand(a=nsel, b=a, out=sela);
+  Nand(a=sel, b=b, out=selb);
+  Nand(a=sela, b=selb, out=out);
+}`)
+
+export const DMux = new ChipDef(`
+CHIP DMux {
+  IN in, sel;
+  OUT a, b;
+PARTS:
+  Not(in=sel, out=nsel);
+  And(a=in, b=nsel, out=a);
+  And(a=in, b=sel, out=b);
+}`)
+
+export const Or8Way = new ChipDef(`
+CHIP Or8Way {
+  IN in[8];
+  OUT out;
+
+  PARTS:
+  Or(a=in[0], b=in[1], out=c0);
+  Or(a=in[2], b=in[3], out=c1);
+  Or(a=in[4], b=in[5], out=c2);
+  Or(a=in[6], b=in[7], out=c3);
+  Or(a=c0, b=c1, out=d0);
+  Or(a=c2, b=c3, out=d1);
+  Or(a=d0, b=d1, out=out);
 }`)
