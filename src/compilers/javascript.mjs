@@ -1,19 +1,13 @@
-import { range } from './utils/range.mjs';
-
 function compileJsCall (chip, mapping) {
-  let args = [...chip.in.values()].map(pin => range(pin.width).map(i => pin.name + i).join(',')).join(',').split(',')
-  let out = [...chip.out.values()].map(pin => range(pin.width).map(i => pin.name + i).join(',')).join(',').split(',')
   let fntext = '';
-  fntext += `;[${out.map(local => mapping[local]).join(', ')}] = `
-  fntext += `${chip.name}(${args.map(local => mapping[local]).join(', ')});`
+  fntext += `;[${chip.outputNames().map(local => mapping[local]).join(', ')}] = `
+  fntext += `${chip.name}(${chip.inputNames().map(local => mapping[local]).join(', ')});`
   return fntext;
 }
 
 export function compileChip (chip) {
-  const args = [...chip.in.values()].map(pin => range(pin.width).map(i => pin.name + i).join(', ')).join(', ')
-  const out = [...chip.out.values()].map(pin => range(pin.width).map(i => pin.name + i).join(', ')).join(', ')
   let fntext = ''
-  fntext += `function ${chip.name} (${args}) {\n`
+  fntext += `function ${chip.name} (${chip.inputNames().join(', ')}) {\n`
   for (let pin of [...chip.internalPins.values(), ...chip.out.values()]) {
     for (let i = pin.start; i <= pin.end; i++) {
       fntext += `  let ${pin.name}${i};\n`
@@ -29,7 +23,7 @@ export function compileChip (chip) {
     }
     fntext += `  ${compileJsCall(part.chip, mapping)}\n`;
   }
-  fntext += `  return [${out}];\n`
+  fntext += `  return [${chip.outputNames().join(', ')}];\n`
   fntext += `}`
   return fntext;
 }

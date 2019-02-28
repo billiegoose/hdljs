@@ -3,38 +3,38 @@ import { combinations } from './utils/combinations.mjs';
 export function compileVerilogTestHarnessChip (chip, jsChip) {
     return `module ${chip.name}_Testbench ();
   // Local vars
-${[...chip.in.values()].map(arg =>
-  `  reg [${arg.width}] ${arg.name} = ${arg.width}'b0;`
+${[...chip.inputNames()].map(arg =>
+  `  reg ${arg} = 0;`
 ).join('\n')}
-${[...chip.out.values()].map(arg =>
-  `  wire ${arg.name};`
+${[...chip.outputNames()].map(arg =>
+  `  wire ${arg};`
 ).join('\n')}
     
   // Instantiate unit to test
   ${chip.name} ${chip.name} (
-${[...chip.pins.keys()].map(name =>
+${[...chip.inputNames(), ...chip.outputNames()].map(name =>
   `    .${name}(${name})`
 ).join(',\n')}
   );
 
   // Test code
   initial begin
-    $monitor("time: %d | ${[...chip.pins.keys()].map(name =>
+    $monitor("time: %d | ${[...chip.inputNames(), ...chip.outputNames()].map(name =>
       `${name}= %b`
-    ).join(' | ')}",$time,${[...chip.pins.keys()].join(',')});
+    ).join(' | ')}",$time,${[...chip.inputNames(), ...chip.outputNames()].join(',')});
 ${(() => {
-  let widths = [...chip.in.values()].map(x => x.width);
-  let names = [...chip.in.values()].map(x => x.name);
+  let widths = [...chip.inputNames()].map(x => 1);
+  let names = chip.inputNames();
   let text = ''
   combinations(widths, (values) => {
     text += `    `
     for (let i = 0; i < names.length; i++) {
-      text += `${names[i]} <= ${widths[i]}'d${values[i]}; `
+      text += `${names[i]} <= ${values[i]}; `
     }
     text += `#1`
     // TODO: compute value from JS version and add assertion here.
     let result = jsChip(...values);
-    let outNames = [...chip.out.keys()];
+    let outNames = chip.outputNames();
     for (let i = 0; i < outNames.length; i++) {
       // text += ` assert (${outNames[i]} == ${result[i]});`
       text += `\n    if (${outNames[i]} != ${result[i]}) begin $display("TEST FAIL on '${outNames[i]}'. Expected value ${result[i]}. Actual value %d", ${outNames[i]}); $stop; end`

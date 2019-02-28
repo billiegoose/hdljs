@@ -1,3 +1,6 @@
+import { flatten } from '../compilers/utils/flatten.mjs'
+import { range } from '../compilers/utils/range.mjs'
+
 export class Chip {
   constructor (chipDef) {
     this.name = chipDef.name;
@@ -17,5 +20,15 @@ export class Chip {
       sum += pin.width;
     }
     return sum
+  }
+  inputNames () {
+    return flatten([...this.in.values()]
+      .map(pin => range(pin.width).map(i => pin.name + i))
+    )
+  }
+  outputNames () {
+    return flatten([...this.out.values()]
+      .map(pin => range(pin.width).map(i => pin.name + i))
+    )
   }
 }

@@ -1,7 +1,11 @@
+import { range } from './utils/range.mjs';
+import { flatten } from './utils/flatten.mjs';
+
 function compileVerilogCall (chip, n, mapping) {
-    return `${chip.name} ${chip.name}_${n} (
-${[...chip.pins.keys()]
-    .map(local => mapping[local] && `    .${local}(${printSlice(mapping[local])})`)
+  let args = [...chip.inputNames(), ...chip.outputNames()]
+  return `${chip.name} ${chip.name}_${n} (
+${args
+    .map(local => mapping[local] && `    .${local}(${mapping[local]})`)
     .filter(x => x !== undefined)
     .join(',\n')}
     );`;
@@ -10,16 +14,12 @@ ${[...chip.pins.keys()]
 function printDecl(pin) {
   return `${pin.width > 1 ? `[${pin.width - 1}:0] ` : ''}${pin.name}`
 }
-
-function printSlice(bus) {
-  return `${bus.name}${(bus.start > 0 || bus.end > 0 || bus.pin.width > 1) ? `[${bus.end}${bus.end !== bus.start ? `:${bus.start}` : ''}]` : ''}`
-}
   
 export function compileVerilogChip (chip) {
   let fntext = ''
   fntext += `module ${chip.name} (\n`
-  const inputs = [...chip.in.values()].map(pin => `  input  ${printDecl(pin)}`)
-  const outputs = [...chip.out.values()].map(pin => `  output ${printDecl(pin)}`)
+  const inputs = chip.inputNames().map(arg => `  input  ${arg}`)
+  const outputs = chip.outputNames().map(arg => `  output ${arg}`)
   fntext += [...inputs, ...outputs].join(',\n');
   fntext += `
 );\n`
@@ -30,6 +30,9 @@ export function compileVerilogChip (chip) {
   for (let part of chip.parts) {
     let mapping = {}
     for (let connection of part.connections) {
+      for (let i = connection.int.start; i <= connection.int.end; i++) {
+        mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+      }
       mapping[connection.int.name] = connection.ext
     }
     fntext += `  ${compileVerilogCall(part.chip, n++, mapping)}\n`;
@@ -43,12 +46,12 @@ export function compileVerilog (chipRegistry) {
   for (let chip of chipRegistry.values()) {
     if (chip.name === 'Nand') {
       text += `module Nand (
-  input a,
-  input b,
-  output out
+  input a0,
+  input b0,
+  output out0
   );
   
-  assign out = ~(a & b);
+  assign out0 = ~(a0 & b0);
 endmodule
 \n`
     } else {

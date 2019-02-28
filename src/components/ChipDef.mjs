@@ -1,6 +1,8 @@
 import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'
+import { flatten } from '../compilers/utils/flatten.mjs'
+import { range } from '../compilers/utils/range.mjs'
 
 export class ChipDef {
   constructor(str) {
@@ -138,49 +140,15 @@ export class ChipDef {
 ${this.vram.map((addr, i) => `  ${String(i).padStart(3, ' ')} ${addr.part.name} ${addr.header.name}`).join('\n')}
 `
   }
-  compileVerilogTestHarness () {
-    return `module ${this.name}_Testbench ();
-  // Local vars
-${[...this.in.values()].map(arg =>
-  `  reg ${arg.name} = ${arg.width}'b0;`
-).join('\n')}
-${[...this.out.values()].map(arg =>
-  `  wire ${arg.name};`
-).join('\n')}
-    
-  // Instantiate unit to test
-  Nand Nand (
-${[...this.pins.keys()].map(name =>
-  `    .${name}(${name})`
-).join('\n')}
-  );
-    
-  // Test code
-  initial begin
-    $monitor("time: %d | ${[...this.pins.keys()].map(name =>
-      `${name}= %b`
-    ).join(' | ')}",$time,${[...this.pins.keys()].join(',')});
-${(() => {
-  let widths = [...this.in.values()].map(x => x.width);
-  let names = [...this.in.values()].map(x => x.name);
-  let text = ''
-  combinations(widths, (values) => {
-    text += `    #1\n`
-    for (let i = 0; i < names.length; i++) {
-      text += `    ${names[i]} <= ${values[i]}\n`
-    }
-  });
-  return text;
-})()}
-    #1
-    $finish;
-  end
-    
-    //initial begin
-    //  $dumpfile("dump.vcd"); $dumpvars;
-    //end
-    
-  endmodule`
+  inputNames () {
+    return flatten([...this.in.values()]
+      .map(pin => range(pin.width).map(i => pin.name + i))
+    )
+  }
+  outputNames () {
+    return flatten([...this.out.values()]
+      .map(pin => range(pin.width).map(i => pin.name + i))
+    )
   }
 }
 
