@@ -47,6 +47,7 @@ export class ChipDef {
           throw new Error(`Chip ${chip.name} does not have a pin named ${int.name}`)
         }
         const pin = chip.pins.get(int.name);
+        int.pin = pin;
         // Infer implicit width based on chip
         if (int.implicit) {
           int.end = pin.width - 1;
@@ -66,6 +67,7 @@ export class ChipDef {
           this.internalPins.set(ext.name, pin)
         }
         let internalPin = this.pins.get(ext.name) || this.internalPins.get(ext.name);
+        ext.pin = internalPin;
         if (ext.end >= internalPin.width) {
           throw new Error(`Bus pin assignment ${ext.print()} is out of range of ${this.name} ${internalPin.print()}[${internalPin.width}]`)
         }

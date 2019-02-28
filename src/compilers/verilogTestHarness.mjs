@@ -4,7 +4,7 @@ export function compileVerilogTestHarnessChip (chip, jsChip) {
     return `module ${chip.name}_Testbench ();
   // Local vars
 ${[...chip.in.values()].map(arg =>
-  `  reg ${arg.name} = ${arg.width}'b0;`
+  `  reg [${arg.width}] ${arg.name} = ${arg.width}'b0;`
 ).join('\n')}
 ${[...chip.out.values()].map(arg =>
   `  wire ${arg.name};`
@@ -29,7 +29,7 @@ ${(() => {
   combinations(widths, (values) => {
     text += `    `
     for (let i = 0; i < names.length; i++) {
-      text += `${names[i]} <= ${values[i]}; `
+      text += `${names[i]} <= ${widths[i]}'d${values[i]}; `
     }
     text += `#1`
     // TODO: compute value from JS version and add assertion here.
