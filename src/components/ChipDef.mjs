@@ -1,8 +1,7 @@
 import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'
-import { flatten } from '../compilers/utils/flatten.mjs'
-import { range } from '../compilers/utils/range.mjs'
+import { pinNames } from '../compilers/utils/pinNames.mjs';
 
 export class ChipDef {
   constructor(str) {
@@ -141,14 +140,13 @@ ${this.vram.map((addr, i) => `  ${String(i).padStart(3, ' ')} ${addr.part.name} 
 `
   }
   inputNames () {
-    return flatten([...this.in.values()]
-      .map(pin => range(pin.width).map(i => pin.name + i))
-    )
+    return pinNames(this.in);
   }
   outputNames () {
-    return flatten([...this.out.values()]
-      .map(pin => range(pin.width).map(i => pin.name + i))
-    )
+    return pinNames(this.out);
+  }
+  internalNames () {
+    return pinNames(this.internalPins);
   }
 }
 

@@ -3,12 +3,10 @@ import { flatten } from './utils/flatten.mjs';
 
 function compileVerilogCall (chip, n, mapping) {
   let args = [...chip.inputNames(), ...chip.outputNames()]
-  return `${chip.name} ${chip.name}_${n} (
-${args
-    .map(local => mapping[local] && `    .${local}(${mapping[local]})`)
+  return `${chip.name} ${chip.name}_${n} (${args
+    .map(local => mapping[local] && `.${local}(${mapping[local]})`)
     .filter(x => x !== undefined)
-    .join(',\n')}
-    );`;
+    .join(', ')});`;
 }
 
 function printDecl(pin) {
@@ -23,8 +21,8 @@ export function compileVerilogChip (chip) {
   fntext += [...inputs, ...outputs].join(',\n');
   fntext += `
 );\n`
-  for (let pin of chip.internalPins.values()) {
-    fntext += `  wire ${printDecl(pin)};\n`
+  for (let arg of chip.internalNames()) {
+    fntext += `  wire ${arg};\n`
   }
   let n = 0;
   for (let part of chip.parts) {

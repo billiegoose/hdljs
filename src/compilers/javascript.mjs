@@ -8,11 +8,7 @@ function compileJsCall (chip, mapping) {
 export function compileChip (chip) {
   let fntext = ''
   fntext += `function ${chip.name} (${chip.inputNames().join(', ')}) {\n`
-  for (let pin of [...chip.internalPins.values(), ...chip.out.values()]) {
-    for (let i = pin.start; i <= pin.end; i++) {
-      fntext += `  let ${pin.name}${i};\n`
-    }
-  }
+  fntext += `  let ${[...chip.internalNames(), ...chip.outputNames()].join(', ')};\n`
   for (let part of chip.parts) {
     let mapping = {}
     for (let connection of part.connections) {
