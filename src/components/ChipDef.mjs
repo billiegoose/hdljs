@@ -2,7 +2,7 @@ import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'
 import { pinNames } from '../compilers/utils/pinNames.mjs';
-
+import { range } from '../compilers/utils/range.mjs'
 export class ChipDef {
   constructor(str) {
     this.parse(str)
@@ -139,14 +139,38 @@ export class ChipDef {
 ${this.vram.map((addr, i) => `  ${String(i).padStart(3, ' ')} ${addr.part.name} ${addr.header.name}`).join('\n')}
 `
   }
-  inputNames () {
-    return pinNames(this.in);
+  inputNames (opts) {
+    return pinNames(this.in, opts);
   }
-  outputNames () {
-    return pinNames(this.out);
+  outputNames (opts) {
+    return pinNames(this.out, opts);
   }
-  internalNames () {
-    return pinNames(this.internalPins);
+  internalNames (opts) {
+    return pinNames(this.internalPins, opts);
+  }
+  test (str) {
+    const trim = (x) => x.trim();
+    const notEmpty = (x) => x !== '';
+    const trimEdges = (line) => {
+      let matches = /^\s*\|(.*)\|\s*$/.exec(line)
+      if (matches === null) throw new Error(line)
+      return matches[1]
+    }
+    const [header, ...rows] = str.trim().split('\n').map(trim).filter(notEmpty).map(trimEdges);
+    const names = header.split('|').map(trim)
+    this.examples = []
+    for (let row of rows.map(row => row.split('|').map(trim))) {
+      let entry = {}
+      row.forEach((col, i) => {
+        let name = names[i];
+        for (let i of range(col.length)) {
+          entry[name + i] = col[i]
+        }
+      })
+      this.examples.push(entry)
+    }
+    // allow chaining
+    return this;
   }
 }
 

@@ -11,3 +11,5 @@ let lastChip = [...global.chipRegistry.values()][global.chipRegistry.size - 1]
 let lastChipJs = compileJs(global.chipRegistry)()[lastChip.name]
 fs.writeFileSync('design.js', concatJs(global.chipRegistry))
 fs.writeFileSync('testbench.sv', compileVerilogTestHarnessChip(lastChip, lastChipJs))
+
+console.log(lastChip.examples)

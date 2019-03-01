@@ -20,10 +20,10 @@ export class Chip {
     }
     return sum
   }
-  inputNames () {
-    return pinNames(this.in);
+  inputNames (opts) {
+    return pinNames(this.in, opts);
   }
-  outputNames () {
-    return pinNames(this.out);
+  outputNames (opts) {
+    return pinNames(this.out, opts);
   }
 }

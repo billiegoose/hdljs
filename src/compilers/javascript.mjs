@@ -34,7 +34,6 @@ function Nand (a, b) {
 }\n\n`
     } else {
       text += `${compileChip(chip)}\n\n`
-      // text += `${chip.compileVerilog()}\n\n`
     }
   }
   return text;
