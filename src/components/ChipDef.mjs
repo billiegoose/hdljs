@@ -164,7 +164,7 @@ ${this.vram.map((addr, i) => `  ${String(i).padStart(3, ' ')} ${addr.part.name} 
       row.forEach((col, i) => {
         let name = names[i];
         for (let i of range(col.length)) {
-          entry[name + i] = col[i]
+          entry[name + (col.length - i - 1)] = parseInt(col[i])
         }
       })
       this.examples.push(entry)

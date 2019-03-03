@@ -235,9 +235,9 @@ CHIP DMux4Way {
   OUT a, b, c, d;
 
   PARTS:
-  DMux(in=in, sel=sel[0], a=x, b=y);
-  DMux(in=x, sel=sel[1], a=a, b=b);
-  DMux(in=y, sel=sel[1], a=c, b=d);
+  DMux(in=in, sel=sel[1], a=x, b=y);
+  DMux(in=x, sel=sel[0], a=a, b=b);
+  DMux(in=y, sel=sel[0], a=c, b=d);
 }`).test(`
 | in  | sel  |  a  |  b  |  c  |  d  |
 |  0  |  00  |  0  |  0  |  0  |  0  |
@@ -290,9 +290,9 @@ CHIP DMux8Way {
   OUT a, b, c, d, e, f, g, h;
 
   PARTS:
-  DMux(in=in, sel=sel[0], a=x, b=y);
-  DMux4Way(in=x, sel=sel[1..2], a=a, b=b, c=c, d=d);
-  DMux4Way(in=y, sel=sel[1..2], a=e, b=f, c=g, d=h);
+  DMux(in=in, sel=sel[2], a=x, b=y);
+  DMux4Way(in=x, sel=sel[0..1], a=a, b=b, c=c, d=d);
+  DMux4Way(in=y, sel=sel[0..1], a=e, b=f, c=g, d=h);
 }`).test(`
 | in  |  sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  0  |  000  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
@@ -319,9 +319,9 @@ CHIP Mux4Way16 {
   OUT out[16];
 
   PARTS:
-  Mux16(a=a, b=b, sel=sel[1], out=x);
-  Mux16(a=c, b=d, sel=sel[1], out=y);
-  Mux16(a=x, b=y, sel=sel[0], out=out);
+  Mux16(a=a, b=b, sel=sel[0], out=x);
+  Mux16(a=c, b=d, sel=sel[0], out=y);
+  Mux16(a=x, b=y, sel=sel[1], out=out);
 }`).test(`
 |        a         |        b         |        c         |        d         | sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  00  | 0000000000000000 |
@@ -340,9 +340,9 @@ CHIP Mux8Way16 {
   OUT out[16];
 
   PARTS:
-  Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[1..2], out=x);
-  Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[1..2], out=y);
-  Mux16(a=x, b=y, sel=sel[0], out=out);
+  Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=x);
+  Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=y);
+  Mux16(a=x, b=y, sel=sel[2], out=out);
 }`).test(`
 |        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  000  | 0000000000000000 |
@@ -362,3 +362,89 @@ CHIP Mux8Way16 {
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |
 `)
+
+export const HalfAdder = new ChipDef(`
+CHIP HalfAdder {
+  IN a, b;
+  OUT sum, carry;
+
+  PARTS:
+  Xor(a=a, b=b, out=sum);
+  And(a=a, b=b, out=carry);
+}`).test(`
+|   a   |   b   |  sum  | carry |
+|   0   |   0   |   0   |   0   |
+|   0   |   1   |   1   |   0   |
+|   1   |   0   |   1   |   0   |
+|   1   |   1   |   0   |   1   |
+`)
+
+export const FullAdder = new ChipDef(`
+CHIP FullAdder {
+  IN a, b, c;
+  OUT sum, carry;
+
+  PARTS:
+  HalfAdder(a=a, b=b, sum=x, carry=y);
+  HalfAdder(a=x, b=c, sum=sum, carry=z);
+  Or(a=y, b=z, out=carry);
+}`).test(`
+|   a   |   b   |   c   |  sum  | carry |
+|   0   |   0   |   0   |   0   |   0   |
+|   0   |   0   |   1   |   1   |   0   |
+|   0   |   1   |   0   |   1   |   0   |
+|   0   |   1   |   1   |   0   |   1   |
+|   1   |   0   |   0   |   1   |   0   |
+|   1   |   0   |   1   |   0   |   1   |
+|   1   |   1   |   0   |   0   |   1   |
+|   1   |   1   |   1   |   1   |   1   |
+`)
+
+export const Add16 = new ChipDef(`
+CHIP Add16 {
+  IN a[16], b[16];
+  OUT out[16], overflow;
+
+  PARTS:
+  HalfAdder(a=a[0], b=b[0], sum=out[0], carry=c1);
+  FullAdder(a=a[1], b=b[1], c=c1, sum=out[1], carry=c2);
+  FullAdder(a=a[2], b=b[2], c=c2, sum=out[2], carry=c3);
+  FullAdder(a=a[3], b=b[3], c=c3, sum=out[3], carry=c4);
+  FullAdder(a=a[4], b=b[4], c=c4, sum=out[4], carry=c5);
+  FullAdder(a=a[5], b=b[5], c=c5, sum=out[5], carry=c6);
+  FullAdder(a=a[6], b=b[6], c=c6, sum=out[6], carry=c7);
+  FullAdder(a=a[7], b=b[7], c=c7, sum=out[7], carry=c8);
+  FullAdder(a=a[8], b=b[8], c=c8, sum=out[8], carry=c9);
+  FullAdder(a=a[9], b=b[9], c=c9, sum=out[9], carry=c10);
+  FullAdder(a=a[10], b=b[10], c=c10, sum=out[10], carry=c11);
+  FullAdder(a=a[11], b=b[11], c=c11, sum=out[11], carry=c12);
+  FullAdder(a=a[12], b=b[12], c=c12, sum=out[12], carry=c13);
+  FullAdder(a=a[13], b=b[13], c=c13, sum=out[13], carry=c14);
+  FullAdder(a=a[14], b=b[14], c=c14, sum=out[14], carry=c15);
+  FullAdder(a=a[15], b=b[15], c=c15, sum=out[15], carry=overflow);
+}`).test(`
+|        a         |        b         |       out        | overflow |
+| 0000000000000000 | 0000000000000000 | 0000000000000000 |     0    |
+| 0000000000000000 | 1111111111111111 | 1111111111111111 |     0    |
+| 1111111111111111 | 1111111111111111 | 1111111111111110 |     1    |
+| 1010101010101010 | 0101010101010101 | 1111111111111111 |     0    |
+| 0011110011000011 | 0000111111110000 | 0100110010110011 |     0    |
+| 0001001000110100 | 1001100001110110 | 1010101010101010 |     0    |
+`)
+
+// // TODO: fix parser to handle this
+// export const Inc16 = new ChipDef(`
+// CHIP Inc16 {
+//   IN in[16];
+//   OUT out[16];
+
+//   PARTS:
+//   Add16(a=in, b[0]=1, out=out);
+// }
+// `).test(`
+// |        in        |       out        |
+// | 0000000000000000 | 0000000000000001 |
+// | 1111111111111111 | 0000000000000000 |
+// | 0000000000000101 | 0000000000000110 |
+// | 1111111111111011 | 1111111111111100 |
+// `)
