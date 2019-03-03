@@ -1,5 +1,4 @@
 a.out
-design.sv
-testbench.sv
+out/
 node_modules/
-design.js
+.yalc

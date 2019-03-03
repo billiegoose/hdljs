@@ -1,7 +1,6 @@
 {
-  "name": "jsc",
+  "name": "hdljs",
   "version": "0.0.0",
-  "description": "",
   "main": "parse.js",
   "watch": {
     "run": "{src,test}/**/*.mjs"
@@ -9,12 +8,24 @@
   "scripts": {
     "run": "node --experimental-modules src/main.mjs",
     "watch": "npm-watch run",
-    "test": "iverilog design.sv testbench.sv && vvp -N a.out"
+    "test": "cd out && iverilog design.sv testbench.sv && vvp -N a.out",
+    "upload": "scripts/upload.sh"
   },
   "keywords": [],
   "author": "William Hilton <wmhilton@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "npm-watch": "^0.6.0"
-  }
+    "npm-watch": "^0.6.0",
+    "walt-compiler": "file:.yalc/walt-compiler"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wmhilton/hdljs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wmhilton/hdljs/issues"
+  },
+  "homepage": "https://github.com/wmhilton/hdljs#readme",
+  "description": ""
 }

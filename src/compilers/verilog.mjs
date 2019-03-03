@@ -1,16 +1,9 @@
-import { range } from './utils/range.mjs';
-import { flatten } from './utils/flatten.mjs';
-
 function compileVerilogCall (chip, n, mapping) {
   let args = [...chip.inputNames(), ...chip.outputNames()]
   return `${chip.name} ${chip.name}_${n} (${args
     .map(local => mapping[local] && `.${local}(${mapping[local]})`)
     .filter(x => x !== undefined)
     .join(', ')});`;
-}
-
-function printDecl(pin) {
-  return `${pin.width > 1 ? `[${pin.width - 1}:0] ` : ''}${pin.name}`
 }
   
 export function compileVerilogChip (chip) {
