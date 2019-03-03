@@ -1,3 +1,5 @@
+import { pinName } from '../compilers/utils/pinName.mjs'
+
 function compileVerilogCall (chip, n, mapping) {
   // We want to force undefined inputs to 0, but leave
   // undefined outputs disconnected, hence the mess.
@@ -26,21 +28,15 @@ export function compileVerilogChip (chip) {
   for (let part of chip.parts) {
     let mapping = {}
     for (let connection of part.connections) {
-      for (let i = connection.int.start; i <= connection.int.end; i++) {
-        switch(connection.ext.name) {
-          case 'true':
-          case '1': {
-            mapping[connection.int.name + i] = `1'b1`;
-            break;
-          }
-          case 'false':
-          case '0': {
-            mapping[connection.int.name + i] = `1'b0`;
-            break;
-          }
-          default: {
-            mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
-          }
+      for (let i = 0; i < connection.int.width; i++) {
+        const input = pinName(connection.int.name, i + connection.int.start)
+        const output = pinName(connection.ext.name, i + connection.ext.start)
+        mapping[input] = output;
+        // slight alteration required to avoid warnings
+        if (output === '1') {
+          mapping[input] = `1'b1`
+        } else if (output === '0') {
+          mapping[input] = `1'b0`
         }
       }
     }
@@ -55,12 +51,12 @@ export function compileVerilog (chipRegistry) {
   for (let chip of chipRegistry.values()) {
     if (chip.name === 'Nand') {
       text += `module Nand (
-  input a0,
-  input b0,
-  output out0
+  input a_0,
+  input b_0,
+  output out_0
   );
   
-  assign out0 = ~(a0 & b0);
+  assign out_0 = ~(a_0 & b_0);
 endmodule
 \n`
     } else {

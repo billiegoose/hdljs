@@ -2,6 +2,7 @@ import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'
 import { pinNames } from '../compilers/utils/pinNames.mjs';
+import { pinName } from '../compilers/utils/pinName.mjs';
 import { range } from '../compilers/utils/range.mjs'
 export class ChipDef {
   constructor(str) {
@@ -119,7 +120,7 @@ export class ChipDef {
       row.forEach((col, i) => {
         let name = names[i];
         for (let i of range(col.length)) {
-          entry[name + (col.length - i - 1)] = parseInt(col[i])
+          entry[pinName(name, col.length - i - 1)] = parseInt(col[i])
         }
       })
       this.examples.push(entry)

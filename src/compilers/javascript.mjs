@@ -1,3 +1,5 @@
+import { pinName } from './utils/pinName.mjs';
+
 function compileJsCall (chip, mapping) {
   let fntext = '';
   fntext += `;[${chip.outputNames().map(local => mapping[local]).join(', ')}] = `
@@ -12,24 +14,11 @@ export function compileChip (chip) {
   for (let part of chip.parts) {
     let mapping = {}
     for (let connection of part.connections) {
-      for (let i = connection.int.start; i <= connection.int.end; i++) {
-        switch(connection.ext.name) {
-          case 'true':
-          case '1': {
-            mapping[connection.int.name + i] = '1';
-            break;
-          }
-          case 'false':
-          case '0': {
-            mapping[connection.int.name + i] = '0';
-            break;
-          }
-          default: {
-            mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
-          }
-        }
+      for (let i = 0; i < connection.int.width; i++) {
+        const input = pinName(connection.int.name, i + connection.int.start)
+        const output = pinName(connection.ext.name, i + connection.ext.start)
+        mapping[input] = output;
       }
-      mapping[connection.int.name] = connection.ext.name
     }
     fntext += `  ${compileJsCall(part.chip, mapping)}\n`;
   }

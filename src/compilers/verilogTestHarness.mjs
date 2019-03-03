@@ -29,11 +29,8 @@ ${(() => {
   let names = chip.inputNames();
   let text = ''
   for (let example of chip.examples) {
-    text += `    `
-    for (const name of names) {
-      text += `${name} <= ${example[name]};\n`
-    }
-    text += `#1`
+    text += names.map(name => `    ${name} <= ${example[name]};\n`).join(``)
+    text += `    #1`
     let outNames = chip.outputNames();
     for (const name of outNames) {
       // text += ` assert (${outNames[i]} == ${result[i]});`
