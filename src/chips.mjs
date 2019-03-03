@@ -22,7 +22,6 @@ CHIP Not {
 |   1   |   0   |
 `);
 
-
 export const And = new ChipDef(`
 CHIP And {
   IN a, b;
@@ -98,7 +97,7 @@ CHIP Mux {
 
 export const DMux = new ChipDef(`
 CHIP DMux {
-  IN in, sel;
+  IN sel, in;
   OUT a, b;
 
   PARTS:
@@ -166,7 +165,6 @@ CHIP Not16 {
 | 0001001000110100 | 1110110111001011 |
 `)
 
-/*
 export const And16 = new ChipDef(`
 CHIP And16 {
   IN a[16], b[16];
@@ -231,9 +229,30 @@ CHIP Or16 {
 | 0001001000110100 | 1001100001110110 | 1001101001110110 |
 `)
 
+export const DMux4Way = new ChipDef(`
+CHIP DMux4Way {
+  IN sel[2], in;
+  OUT a, b, c, d;
+
+  PARTS:
+  DMux(in=in, sel=sel[0], a=x, b=y);
+  DMux(in=x, sel=sel[1], a=a, b=b);
+  DMux(in=y, sel=sel[1], a=c, b=d);
+}`).test(`
+| in  | sel  |  a  |  b  |  c  |  d  |
+|  0  |  00  |  0  |  0  |  0  |  0  |
+|  0  |  01  |  0  |  0  |  0  |  0  |
+|  0  |  10  |  0  |  0  |  0  |  0  |
+|  0  |  11  |  0  |  0  |  0  |  0  |
+|  1  |  00  |  1  |  0  |  0  |  0  |
+|  1  |  01  |  0  |  1  |  0  |  0  |
+|  1  |  10  |  0  |  0  |  1  |  0  |
+|  1  |  11  |  0  |  0  |  0  |  1  |
+`)
+
 export const Mux16 = new ChipDef(`
 CHIP Mux16 {
-  IN a[16], b[16], sel;
+  IN sel, a[16], b[16];
   OUT out[16];
 
   PARTS:
@@ -265,30 +284,9 @@ CHIP Mux16 {
 | 1010101010101010 | 0101010101010101 |  1  | 0101010101010101 |
 `)
 
-export const DMux4Way = new ChipDef(`
-CHIP DMux4Way {
-  IN in, sel[2];
-  OUT a, b, c, d;
-
-  PARTS:
-  DMux(in=in, sel=sel[0], a=x, b=y);
-  DMux(in=x, sel=sel[1], a=a, b=b);
-  DMux(in=y, sel=sel[1], a=c, b=d);
-}`).test(`
-| in  | sel  |  a  |  b  |  c  |  d  |
-|  0  |  00  |  0  |  0  |  0  |  0  |
-|  0  |  01  |  0  |  0  |  0  |  0  |
-|  0  |  10  |  0  |  0  |  0  |  0  |
-|  0  |  11  |  0  |  0  |  0  |  0  |
-|  1  |  00  |  1  |  0  |  0  |  0  |
-|  1  |  01  |  0  |  1  |  0  |  0  |
-|  1  |  10  |  0  |  0  |  1  |  0  |
-|  1  |  11  |  0  |  0  |  0  |  1  |
-`)
-
 export const DMux8Way = new ChipDef(`
 CHIP DMux8Way {
-  IN in, sel[3];
+  IN sel[3], in;
   OUT a, b, c, d, e, f, g, h;
 
   PARTS:
@@ -317,7 +315,7 @@ CHIP DMux8Way {
 
 export const Mux4Way16 = new ChipDef(`
 CHIP Mux4Way16 {
-  IN a[16], b[16], c[16], d[16], sel[2];
+  IN sel[2], a[16], b[16], c[16], d[16];
   OUT out[16];
 
   PARTS:
@@ -336,10 +334,9 @@ CHIP Mux4Way16 {
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  11  | 0101010101010101 |
 `)
 
-
 export const Mux8Way16 = new ChipDef(`
 CHIP Mux8Way16 {
-  IN a[16], b[16], c[16], d[16], e[16], f[16], g[16], h[16], sel[3];
+  IN sel[3], a[16], b[16], c[16], d[16], e[16], f[16], g[16], h[16];
   OUT out[16];
 
   PARTS:
@@ -365,5 +362,3 @@ CHIP Mux8Way16 {
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |
 `)
-
-*/
