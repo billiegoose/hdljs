@@ -1,7 +1,7 @@
 function compileJsCall (chip, mapping) {
   let fntext = '';
   fntext += `;[${chip.outputNames().map(local => mapping[local]).join(', ')}] = `
-  fntext += `${chip.name}(${chip.inputNames().map(local => mapping[local]).join(', ')});`
+  fntext += `${chip.name}(${chip.inputNames().map(local => mapping[local] || 0).join(', ')});`
   return fntext;
 }
 
@@ -13,7 +13,21 @@ export function compileChip (chip) {
     let mapping = {}
     for (let connection of part.connections) {
       for (let i = connection.int.start; i <= connection.int.end; i++) {
-        mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+        switch(connection.ext.name) {
+          case 'true':
+          case '1': {
+            mapping[connection.int.name + i] = '1';
+            break;
+          }
+          case 'false':
+          case '0': {
+            mapping[connection.int.name + i] = '0';
+            break;
+          }
+          default: {
+            mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+          }
+        }
       }
       mapping[connection.int.name] = connection.ext.name
     }

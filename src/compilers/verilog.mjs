@@ -1,11 +1,16 @@
 function compileVerilogCall (chip, n, mapping) {
-  let args = [...chip.inputNames(), ...chip.outputNames()]
-  return `${chip.name} ${chip.name}_${n} (${args
-    .map(local => mapping[local] && `.${local}(${mapping[local]})`)
-    .filter(x => x !== undefined)
-    .join(', ')});`;
+  // We want to force undefined inputs to 0, but leave
+  // undefined outputs disconnected, hence the mess.
+  return `${chip.name} ${chip.name}_${n} (${[
+    ...chip.inputNames()
+      .map(local => `.${local}(${mapping[local] || `1'b0`})`)
+      .filter(x => x !== undefined),
+    ...chip.outputNames()
+      .map(local => mapping[local] && `.${local}(${mapping[local]})`)
+      .filter(x => x !== undefined)
+  ].join(', ')});`;
 }
-  
+
 export function compileVerilogChip (chip) {
   let fntext = ''
   fntext += `module ${chip.name} (\n`
@@ -22,9 +27,22 @@ export function compileVerilogChip (chip) {
     let mapping = {}
     for (let connection of part.connections) {
       for (let i = connection.int.start; i <= connection.int.end; i++) {
-        mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+        switch(connection.ext.name) {
+          case 'true':
+          case '1': {
+            mapping[connection.int.name + i] = `1'b1`;
+            break;
+          }
+          case 'false':
+          case '0': {
+            mapping[connection.int.name + i] = `1'b0`;
+            break;
+          }
+          default: {
+            mapping[connection.int.name + i] = connection.ext.name + (i + connection.ext.start)
+          }
+        }
       }
-      mapping[connection.int.name] = connection.ext
     }
     fntext += `  ${compileVerilogCall(part.chip, n++, mapping)}\n`;
   }

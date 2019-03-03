@@ -13,9 +13,7 @@ export class ChipDef {
     const match = /^CHIP\s+(?<name>\w+)\s+\{(?<body>[^\}]+)\}$/.exec(str);
     const { name, body } = match.groups;
     this.name = name;
-    // this.body = body;
     this.parts = []
-    this.vram = []
     const statements = body.split(';').map(x => x.trim());
     for (let line of statements) {
       if (line.startsWith('IN')) {
@@ -64,7 +62,6 @@ export class ChipDef {
         if (!this.pins.has(ext.name) && !this.internalPins.has(ext.name)) {
           console.log(`creating wire ${ext.name}`)
           let pin = new PinHeader(`${ext.name}[${ext.width}]`)
-          // console.log(pin)
           this.internalPins.set(ext.name, pin)
         }
         let internalPin = this.pins.get(ext.name) || this.internalPins.get(ext.name);
@@ -74,48 +71,11 @@ export class ChipDef {
         }
       }
     }
-    // Allocate all the pins
-    for (let header of this.pins.values()) {
-      this.allocate(this, header)
-    }
-    for (let header of this.internalPins.values()) {
-      this.allocate(this, header)
-    }
-    for (let part of this.parts) {
-      const chip = part.chip;
-      for (let header of chip.pins.values()) {
-        this.allocate(part.chip, header)
-      }
-    }
-    // Create the connectivity matrix
-    this.matrix = []
-    for (let i = 0; i < this.vram.length; i ++) {
-      this.matrix[i] = Array(this.vram.length).fill(0);
-    }
-    for (let part of this.parts) {
-      for (let connection of part.connections) {
-        const { int, ext } = connection;
-        const voffset1 = part.chip.pins.get(int.name).vramOffset
-        const voffset2 = (this.pins.get(ext.name) || this.internalPins.get(ext.name)).vramOffset
-        for (let i = 0; i < int.width; i++) {
-          // console.log(`connect ${part.chip.name}.${int.name}[${i + int.start}] == ${ext.name}[${i + ext.start}]
-          // ${voffset1 + i} to ${voffset2 + i}`)
-          this.matrix[voffset1 + i][voffset2 + i] = 1;
-          this.matrix[voffset2 + i][voffset1 + i] = 1;
-        }
-      }
-    }
-  }
-  allocate (part, header) {
-    header.vramOffset = this.vram.length
-    let len = header.width;
-    for (let i = 0; i < len; i++) {
-      this.vram.push({
-        part,
-        header,
-        addr: i
-      })
-    }
+    // If any of the pins are builtin pins, remove them
+    this.internalPins.delete('true');
+    this.internalPins.delete('false');
+    this.internalPins.delete('1');
+    this.internalPins.delete('0');
   }
   get width () {
     let sum = 0;
@@ -133,11 +93,6 @@ export class ChipDef {
       sum += wire.width
     }
     return sum
-  }
-  print () {
-    return `${this.name}
-${this.vram.map((addr, i) => `  ${String(i).padStart(3, ' ')} ${addr.part.name} ${addr.header.name}`).join('\n')}
-`
   }
   inputNames (opts) {
     return pinNames(this.in, opts);
