@@ -105,6 +105,7 @@ export function testJs (chipRegistry) {
             throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${chip.outputNames()[i]}. Expected value ${outputValues[i]}. Actual value ${result[i]}.`)
           }
         }
+        console.log(`PASS ${chip.name} #${e+1}`)
       }
     }
   }

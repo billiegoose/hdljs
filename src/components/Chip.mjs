@@ -3,6 +3,7 @@ import { pinNames } from '../compilers/utils/pinNames.mjs'
 export class Chip {
   constructor (chipDef) {
     this.name = chipDef.name;
+    this.clocked = chipDef.clocked;
     this.in = new Map()
     this.out = new Map()
     for (let [key, pin] of chipDef.in) {

@@ -3,7 +3,7 @@ import { pinName } from '../compilers/utils/pinName.mjs'
 function compileVerilogCall (chip, n, mapping) {
   // We want to force undefined inputs to 0, but leave
   // undefined outputs disconnected, hence the mess.
-  return `${chip.name} ${chip.name}_${n} (${[
+  return `${chip.name} ${chip.name}_${n} (${chip.clocked ? `.clock(clock), ` : ''}${[
     ...chip.inputNames()
       .map(local => `.${local}(${mapping[local] || `1'b0`})`)
       .filter(x => x !== undefined),
@@ -17,6 +17,9 @@ export function compileVerilogChip (chip) {
   let fntext = ''
   fntext += `module ${chip.name} (\n`
   const inputs = chip.inputNames().map(arg => `  input  ${arg}`)
+  if (chip.clocked) {
+    inputs.unshift(`  input  clock`)
+  }
   const outputs = chip.outputNames().map(arg => `  output ${arg}`)
   fntext += [...inputs, ...outputs].join(',\n');
   fntext += `
@@ -49,8 +52,9 @@ export function compileVerilogChip (chip) {
 export function compileVerilog (chipRegistry) {
   let text = ''
   for (let chip of chipRegistry.values()) {
-    if (chip.name === 'Nand') {
-      text += `module Nand (
+    switch(chip.name) {
+      case 'Nand': {
+        text += `module Nand (
   input a_0,
   input b_0,
   output out_0
@@ -59,8 +63,39 @@ export function compileVerilog (chipRegistry) {
   assign out_0 = ~(a_0 & b_0);
 endmodule
 \n`
-    } else {
-      text += `${compileVerilogChip(chip)}\n\n`
+        break;
+      }
+      case 'Copy': {
+        text += `module Copy (
+  input in_0,
+  output out_0
+  );
+  
+  assign out_0 = in_0;
+endmodule
+\n`
+        break;
+      }
+      case 'DFF': {
+        text += `module DFF (
+  input clock,
+  input in_0,
+  output out_0
+  );
+
+  reg mem_0;
+  always @ (posedge clock) begin
+    mem_0 <= in_0;
+  end
+
+  assign out_0 = mem_0;
+endmodule
+\n`
+        break;
+      }
+      default: {
+        text += `${compileVerilogChip(chip)}\n\n`
+      }
     }
   }
   return text

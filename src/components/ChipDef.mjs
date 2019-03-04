@@ -40,6 +40,7 @@ export class ChipDef {
     // Static validation
     for (let part of this.parts) {
       const chip = part.chip;
+      if (chip.clocked) this.clocked = true;
       for (let connection of part.connections) {
         const { int, ext } = connection;
         // Validate internal part pins
@@ -119,8 +120,22 @@ export class ChipDef {
       let entry = {}
       row.forEach((col, i) => {
         let name = names[i];
-        for (let i of range(col.length)) {
-          entry[pinName(name, col.length - i - 1)] = parseInt(col[i])
+        if (this.pins.has(name)) {
+          let width = this.pins.get(name).width
+          if (col.length === width) {
+            // binary representation
+            for (let i of range(col.length)) {
+              entry[pinName(name, col.length - i - 1)] = parseInt(col[i])
+            }
+          } else {
+            // decimal representation
+            let n = parseInt(col);
+            if (n < 0) n = 2**(width) + n;
+            let bits = n.toString(2).padStart(width, '0');
+            for (let i of range(width)) {
+              entry[pinName(name, width - i - 1)] = parseInt(bits[i])
+            }
+          }
         }
       })
       this.examples.push(entry)
