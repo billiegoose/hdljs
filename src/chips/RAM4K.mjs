@@ -17,7 +17,7 @@ CHIP RAM4K {
   RAM512(in=in, load=lh, address=address[3..11], out=h);
   Mux8Way16(sel=address[0..2], a=a, b=b, c=c, d=d, e=e, f=f, g=g, h=h, out=out);
 }
-`)/*.test(`
+`).test(`
 | time |   in   |load |address |  out   |
 | 0+   |      0 |  0  |     0  |      0 |
 | 1    |      0 |  0  |     0  |      0 |
@@ -338,4 +338,4 @@ CHIP RAM4K {
 | 81   |  21845 |  0  |  2901  |  21845 |
 | 81   |  21845 |  0  |  3413  |  21845 |
 | 81   |  21845 |  0  |  3925  |  21845 |
-`);*/
+`);

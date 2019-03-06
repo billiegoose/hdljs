@@ -17,7 +17,7 @@ CHIP RAM512 {
   RAM64(in=in, load=lh, address=address[3..8], out=h);
   Mux8Way16(sel=address[0..2], a=a, b=b, c=c, d=d, e=e, f=f, g=g, h=h, out=out);
 }
-`)/*.test(`
+`).test(`
 | time |   in   |load |address|  out   |
 | 0+   |      0 |  0  |    0  |      0 |
 | 1    |      0 |  0  |    0  |      0 |
@@ -338,4 +338,59 @@ CHIP RAM512 {
 | 81   |  21845 |  0  |  362  |  21845 |
 | 81   |  21845 |  0  |  426  |  21845 |
 | 81   |  21845 |  0  |  490  |  21845 |
-`);*/
+`).addBuiltin('js', `
+function RAM512 () {
+  let memory = new Array(512);
+  return function RAM512 (load_0, address_0, address_1, address_2, address_3, address_4, address_5, address_6, address_7, address_8, in_0, in_1, in_2, in_3, in_4, in_5, in_6, in_7, in_8, in_9, in_10, in_11, in_12, in_13, in_14, in_15) {
+    let index =
+      address_0 +
+      address_1 * 2 +
+      address_2 * 4 +
+      address_3 * 8 +
+      address_4 * 16 +
+      address_5 * 32 +
+      address_6 * 64 +
+      address_7 * 128 +
+      address_8 * 256;
+    let result = memory[index];
+    if (load_0) {
+      let input =
+        in_0 +
+        in_1 * 2 +
+        in_2 * 4 +
+        in_3 * 8 +
+        in_4 * 16 +
+        in_5 * 32 +
+        in_6 * 64 +
+        in_7 * 128 +
+        in_8 * 256 +
+        in_9 * 512 +
+        in_10 * 1024 +
+        in_11 * 2048 +
+        in_12 * 4096 +
+        in_13 * 8192 +
+        in_14 * 16384 +
+        in_15 * 32768;
+      memory[index] = input;
+    }
+    return [
+      Number(!!(result & 1)), // 1
+      Number(!!(result & 2)),
+      Number(!!(result & 4)),
+      Number(!!(result & 8)), // 4
+      Number(!!(result & 16)),
+      Number(!!(result & 32)),
+      Number(!!(result & 64)),
+      Number(!!(result & 128)), // 8
+      Number(!!(result & 256)),
+      Number(!!(result & 512)),
+      Number(!!(result & 1024)),
+      Number(!!(result & 2048)), // 12
+      Number(!!(result & 4096)),
+      Number(!!(result & 8192)),
+      Number(!!(result & 16384)),
+      Number(!!(result & 32768)) // 16
+    ];
+  }
+}
+`);

@@ -57,6 +57,8 @@ export function testJs (chipRegistry) {
   const chips = compileJs(chipRegistry)()
   for (let chip of chipRegistry.values()) {
     if (chip.examples) {
+      console.time(chip.name);
+      process.stdout.write(`Testing ${chip.name}`)
       let chipInstance = chips[chip.name]();
       for (let e = 0; e < chip.examples.length; e++) {
         const example = chip.examples[e];
@@ -71,8 +73,10 @@ export function testJs (chipRegistry) {
             throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${chip.outputNames()[i]}. Expected value ${outputValues[i]}. Actual value ${result[i]}.`)
           }
         }
-        console.log(`PASS ${chip.name} #${e+1}`)
+        process.stdout.write('.')
+        // console.log(`PASS ${chip.name} #${e+1}`)
       }
+      console.timeEnd(chip.name);
     }
   }
 }
