@@ -1,5 +1,6 @@
 import { ChipDef } from '../components/ChipDef.mjs';
-export * from './builtins.mjs';
+export * from './Copy.mjs';
+export * from './Nand.mjs';
 export * from './Not.mjs';
 export * from './And.mjs';
 export * from './Or.mjs';
@@ -21,6 +22,7 @@ export * from './FullAdder.mjs';
 export * from './Add16.mjs';
 export * from './Inc16.mjs';
 export * from './ALU.mjs';
+export * from './DFF.mjs';
 export * from './Bit.mjs';
 export * from './Register.mjs';
 export * from './RAM8.mjs';

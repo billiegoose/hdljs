@@ -37,44 +37,10 @@ export function compileChip (chip) {
 export function concatJs (chipRegistry) {
   let text = ''
   for (let chip of chipRegistry.values()) {
-    switch(chip.name) {
-      case 'Nand': {
-        text += `// builtin
-function Nand () {
-  return function Nand (a, b) {
-    return [Number(!(a && b))];
-  }
-}\n\n`;
-        break;
-      }
-      case 'Copy': {
-        text += `// builtin
-function Copy () {
-  return function Copy (input) {
-    return [Number(input)];
-  }
-}\n\n`;
-        break;
-      }
-      case 'DFF': {
-        text += `// builtin
-function DFF () {
-  let _current = 0;
-  return function DFF (input) {
-    if (input === undefined) {
-      return [_current];
+    if (chip.builtin && chip.builtin.js) {
+      text += chip.builtin.js + '\n\n';
     } else {
-      let tmp = _current;
-      _current = input;
-      return [tmp];
-    }
-  }
-}\n\n`;
-        break;
-      }
-      default: {
-        text += `${compileChip(chip)}\n\n`
-      }
+      text += `${compileChip(chip)}\n\n`;
     }
   }
   return text;

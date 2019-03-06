@@ -145,6 +145,12 @@ export class ChipDef {
     // allow chaining
     return this;
   }
+  addBuiltin (lang, body) {
+    if (!this.builtin) this.builtin = {};
+    this.builtin[lang] = body
+    // allow chaining
+    return this;
+  }
 }
 
 export class Part {
