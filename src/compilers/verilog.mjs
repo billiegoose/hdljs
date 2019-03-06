@@ -52,50 +52,10 @@ export function compileVerilogChip (chip) {
 export function compileVerilog (chipRegistry) {
   let text = ''
   for (let chip of chipRegistry.values()) {
-    switch(chip.name) {
-      case 'Nand': {
-        text += `module Nand (
-  input a_0,
-  input b_0,
-  output out_0
-  );
-  
-  assign out_0 = ~(a_0 & b_0);
-endmodule
-\n`
-        break;
-      }
-      case 'Copy': {
-        text += `module Copy (
-  input in_0,
-  output out_0
-  );
-  
-  assign out_0 = in_0;
-endmodule
-\n`
-        break;
-      }
-      case 'DFF': {
-        text += `module DFF (
-  input clock,
-  input in_0,
-  output out_0
-  );
-
-  reg mem_0;
-  always @ (posedge clock) begin
-    mem_0 <= in_0;
-  end
-
-  assign out_0 = mem_0;
-endmodule
-\n`
-        break;
-      }
-      default: {
-        text += `${compileVerilogChip(chip)}\n\n`
-      }
+    if (chip.builtin && chip.builtin.verilog) {
+      text += chip.builtin.verilog + '\n\n';
+    } else {
+      text += `${compileVerilogChip(chip)}\n\n`
     }
   }
   return text
