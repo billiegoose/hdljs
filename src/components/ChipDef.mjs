@@ -1,3 +1,5 @@
+global.chipRegistry = new Map();
+
 import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'

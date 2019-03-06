@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import './chips.mjs'
+import './chips/index.mjs'
 import { compileJs, concatJs, testJs } from './compilers/javascript.mjs'
 import { compileVerilog} from './compilers/verilog.mjs'
 import { compileVerilogTestHarnessChip } from './compilers/verilogTestHarness.mjs'
