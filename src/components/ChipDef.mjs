@@ -64,7 +64,6 @@ export class ChipDef {
           ext.end = ext.start + int.width - 1;
         }
         if (!this.pins.has(ext.name) && !this.internalPins.has(ext.name)) {
-          console.log(`creating wire ${ext.name}`)
           let pin = new PinHeader(`${ext.name}[${ext.width}]`)
           this.internalPins.set(ext.name, pin)
         }
