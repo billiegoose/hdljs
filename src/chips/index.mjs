@@ -27,11 +27,11 @@ export * from './ALU.mjs';
 export * from './DFF.mjs';
 export * from './Bit.mjs';
 export * from './Register.mjs';
-export * from './RAM8.mjs';
-export * from './RAM64.mjs';
-export * from './RAM512.mjs';
-export * from './RAM4K.mjs';
-export * from './RAM16K.mjs';
+// export * from './RAM8.mjs';
+// export * from './RAM64.mjs';
+// export * from './RAM512.mjs';
+// export * from './RAM4K.mjs';
+// export * from './RAM16K.mjs';
 export * from './PC.mjs';
 
 // // TODO: Figure out how to do the memory mapped peripherals

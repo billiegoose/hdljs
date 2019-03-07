@@ -1,4 +1,4 @@
-export function compileVerilogTestHarnessChip (chip, chipJs) {
+export function compileVerilogTestHarnessChip (chip) {
     if (!chip.examples) return '';
     return `module ${chip.name}_Testbench ();
   // Local vars

@@ -1,4 +1,4 @@
-import { pinNames } from '../compilers/utils/pinNames.mjs'
+import { pinNames } from '../utils/pinNames.mjs'
 
 export class Chip {
   constructor (chipDef) {

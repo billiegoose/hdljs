@@ -3,9 +3,9 @@ global.chipRegistry = new Map();
 import { Chip } from './Chip.mjs';
 import { PinHeader } from './PinHeader.mjs'
 import { Connection } from './Connection.mjs'
-import { pinNames } from '../compilers/utils/pinNames.mjs';
-import { pinName } from '../compilers/utils/pinName.mjs';
-import { range } from '../compilers/utils/range.mjs'
+import { pinNames } from '../utils/pinNames.mjs';
+import { pinName } from '../utils/pinName.mjs';
+import { range } from '../utils/range.mjs'
 export class ChipDef {
   constructor(str) {
     this.parse(str)

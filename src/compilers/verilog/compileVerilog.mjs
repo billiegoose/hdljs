@@ -1,4 +1,4 @@
-import { pinName } from '../compilers/utils/pinName.mjs'
+import { pinName } from '../../utils/pinName.mjs'
 
 function compileVerilogCall (chip, n, mapping) {
   // We want to force undefined inputs to 0, but leave
