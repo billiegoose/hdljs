@@ -23,6 +23,19 @@ html {
   justify-content: center;
   align-items: center;
 }
+#registers {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-column-gap: 30px;
+}
+#registers label {
+  padding: 5px 10px;
+  border: 1px solid black;
+}
 #canvas {
   image-rendering: pixelated;
 }
@@ -70,14 +83,30 @@ html {
 }
 </style>
 
-<div id="app"><canvas id="canvas" height="256" width="512"></canvas></div>
+<div id="app">
+  <canvas id="canvas" height="256" width="512"></canvas>
+  <div id="registers">
+    <label>KeyCode: <output id="keyboard"></output></label>
+    <label>Instruction: <output id="instruction"></output></label>
+    <label>M: <output id="m-in"></output></label>
+    <label>A: <output id="a-reg"></output></label>
+    <label>D: <output id="d-reg"></output></label>
+    <label>M out: <output id="m-out"></output></label>
+    <label>M addr: <output id="m-addr"></output></label>
+    <label>PC: <output id="pc"></output></label>
+  </div>
+</div>
 <script>global = window</script>
 <script type="module">
 import "../chips/index.mjs"
 import './Screen.mjs';
+import "./Keyboard.mjs";
 import { compileJs } from "../compilers/js/compileJs.mjs"
 const chips = compileJs(global.chipRegistry)();
 let screen = chips.Screen();
+let keyboard = chips.Keyboard();
+
+window.chips = chips;
 
 const reverse = (str) => {
   const a = str.split('');

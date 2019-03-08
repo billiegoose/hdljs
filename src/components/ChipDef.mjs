@@ -16,6 +16,8 @@ export class ChipDef {
     const match = /^CHIP\s+(?<name>\w+)\s+\{(?<body>[^\}]+)\}$/.exec(str);
     const { name, body } = match.groups;
     this.name = name;
+    this.in = new Map();
+    this.out = new Map();
     this.parts = []
     const statements = body.split(';').map(x => x.trim());
     for (let line of statements) {
