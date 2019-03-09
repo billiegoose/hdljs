@@ -22,6 +22,9 @@ export function compileChip (chip) {
     fntext += `  let ${part.chip.name}_${i} = ${part.chip.name}();\n`
   }
   fntext += `  return function ${chip.name} (${chip.inputNames().join(', ')}) {\n`
+  if (chip.clocked) {
+    fntext += `    if (${chip.inputNames()[0]} === undefined) return [${chip.outputNames().join(', ')}];\n`
+  }
   for (let i = 0; i < chip.parts.length; i++) {
     let part = chip.parts[i];
     if (part.chip.clocked) {

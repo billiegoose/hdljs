@@ -31,11 +31,19 @@ html {
   padding: 10px;
   background: white;
 }
+#top-stuff summary {
+  all: initial;
+  cursor: pointer
+}
 #registers, #program-toolbar {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-column-gap: 30px;
   margin-bottom: 10px;
+}
+#program-toolbar button {
+  all: initial;
+  cursor: pointer
 }
 #virtual-registers {
   display: grid;
@@ -98,7 +106,7 @@ label {
 <div id="app">
   <canvas id="canvas" height="256" width="512"></canvas>
   <details id="top-stuff" open>
-    <summary style="outline: none; cursor: pointer">Toolbar</summary>
+    <summary>Toolbar</summary>
     <div id="registers">
       <label>KeyCode: <output id="keyboard"></output></label>
       <label>Instruction: <output id="instruction"></output></label>
@@ -129,6 +137,10 @@ label {
     </div>
     <div id="program-toolbar">
       <label>ROM: <input type="file" id="load"></label>
+      <label>Step: <button id="step">⏯️</button></label>
+      <label>Reset: <button id="reset">🛑</button></label>
+      <label>Run: <button id="run">▶️</button></label>
+      <label>Pause: <button id="pause">⏸️</button></label>
     </div>
   </details>
 </div>
@@ -149,12 +161,15 @@ attachScreen(global.chipRegistry.get('Screen'));
 import { attachRAM } from "./attachRAM.mjs";
 attachRAM(global.chipRegistry.get('RAM16K'));
 
+import { attachCPU } from "./attachCPU.mjs";
+attachCPU(global.chipRegistry.get('CPU'));
+
 const chips = compileJs(global.chipRegistry)();
-let memory = chips.Memory();
-let rom = chips.ROM32K();
-let cpu = chips.CPU();
-window.chips = chips;
-window.CPU = cpu;
+window.chips = chips
+window.computer = chips.Computer();
+
+import { attachComputer } from "./attachComputer.mjs";
+attachComputer(window.computer);
 
 const reverse = (str) => {
   const a = str.split('');
@@ -179,7 +194,7 @@ for (let y = 0; y < 256; y++) {
     }
     addr.reverse();
     input.reverse();
-    memory(load, ...addr, ...input);
+    // memory(load, ...addr, ...input);
   }
 }
 

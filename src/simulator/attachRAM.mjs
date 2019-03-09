@@ -1,5 +1,6 @@
 export function attachRAM (chip) {
-  global.RAM = new Array(16 * 1024);
+  global.RAM = new Array(2 ** 14);
+  global.RAM.fill(0);
 
   const r0 = document.getElementById('r0');
   const r1 = document.getElementById('r1');
