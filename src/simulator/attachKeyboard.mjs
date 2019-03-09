@@ -1,9 +1,5 @@
-import { ChipDef } from "../components/ChipDef.mjs"
-
-export const Keyboard = new ChipDef(`
-CHIP Keyboard {
-  OUT out[16];
-}`).addBuiltin('js', `
+export function attachKeyboard (chip) {
+  chip.addBuiltin('js', `
 function Keyboard () {
   const log = document.getElementById('keyboard');
 
@@ -88,3 +84,4 @@ function Keyboard () {
     ];
   }
 }`);
+}

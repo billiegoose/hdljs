@@ -107,12 +107,17 @@ label {
 <script>global = window</script>
 <script type="module">
 import "../chips/index.mjs"
-import './Screen.mjs';
-import "./Keyboard.mjs";
-import "./Memory.mjs";
-import "./ROMLoader.mjs";
 import { compileJs } from "../compilers/js/compileJs.mjs"
-global.ROM = [1,2,3,4];
+
+import { attachROM } from "./attachROM.mjs";
+attachROM(global.chipRegistry.get('ROM32K'));
+
+import { attachKeyboard } from "./attachKeyboard.mjs";
+attachKeyboard(global.chipRegistry.get('Keyboard'));
+
+import { attachScreen } from "./attachScreen.mjs";
+attachScreen(global.chipRegistry.get('Screen'));
+
 const chips = compileJs(global.chipRegistry)();
 let memory = chips.Memory();
 let rom = chips.ROM32K();

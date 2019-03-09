@@ -70,25 +70,3 @@ CHIP Memory {
 |     -1 |  0  | 101111111001111 |      0 |
 |     -1 |  0  | 110000000000000 |     89 |
 `);
-
-// .addBuiltin('js', `
-// function Screen () {
-//   const RAM16K_0 = RAM16K();
-//   const Screen_0 = Screen();
-//   const Keyboard_0 = Keyboard();
-//   return function Screen (load_0, address_0, address_1, address_2, address_3, address_4, address_5, address_6, address_7, address_8, address_9, address_10, address_11, address_12, address_13, address_14, in_0, in_1, in_2, in_3, in_4, in_5, in_6, in_7, in_8, in_9, in_10, in_11, in_12, in_13, in_14, in_15) {
-//     let result
-//     let load_ram = Number(load_0 && !address_15);
-//     let load_screen = Number(load_0 && address_15 && !address_14);
-//     let ram_results = RAM16K_0(load_ram, address_0, address_1, address_2, address_3, address_4, address_5, address_6, address_7, address_8, address_9, address_10, address_11, address_12, address_13, in_0, in_1, in_2, in_3, in_4, in_5, in_6, in_7, in_8, in_9, in_10, in_11, in_12, in_13, in_14, in_15);
-//     let screen_results = Screen_0(load_screen, address_0, address_1, address_2, address_3, address_4, address_5, address_6, address_7, address_8, address_9, address_10, address_11, address_12, in_0, in_1, in_2, in_3, in_4, in_5, in_6, in_7, in_8, in_9, in_10, in_11, in_12, in_13, in_14, in_15);
-//     let keyboard_results = Keyboard_0();
-//     if (!address_15) {
-//       return ram_results;
-//     } else if (!address_14) {
-//       return screen_results;
-//     } else {
-//       return keyboard_results;
-//     }
-//   }
-// }`);
