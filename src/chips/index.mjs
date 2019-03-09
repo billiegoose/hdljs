@@ -34,5 +34,4 @@ export * from './RAM4K.mjs';
 export * from './RAM16K.mjs';
 export * from './PC.mjs';
 
-// // TODO: Figure out how to do the memory mapped peripherals
-// export * from './Memory.mjs';
+export * from './ROM32K.mjs';

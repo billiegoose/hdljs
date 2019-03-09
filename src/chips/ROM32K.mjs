@@ -1,14 +1,6 @@
 import { ChipDef } from '../components/ChipDef.mjs';
 
-const reverse = (str) => {
-  const a = str.split('');
-  a.reverse();
-  return a.join('')
-}
-
-export function loadROM32K(imagefile) {
-
-  new ChipDef(`
+export const ROM32K = new ChipDef(`
 CHIP ROM32K {
   IN load, address[14], in[16];
   OUT out[16];
@@ -16,11 +8,7 @@ CHIP ROM32K {
 `).addBuiltin('js', `
 // 
 function ROM32K () {
-  let memory = [${
-    imagefile.trim().split('\n').map(
-      line => parseInt(reverse(line.trim()), 2)
-    ).join(',')
-  }];
+  let memory = global.ROM;
   return function ROM32K (address_0, address_1, address_2, address_3, address_4, address_5, address_6, address_7, address_8, address_9, address_10, address_11, address_12, address_13, address_14) {
     let index =
       address_0 +
@@ -59,4 +47,3 @@ function ROM32K () {
     ];
   }
 }`);
-}
