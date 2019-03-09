@@ -25,9 +25,11 @@ html {
 }
 #top-stuff {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  padding: 10px;
+  background: white;
 }
 #registers, #program-toolbar {
   display: grid;
@@ -35,9 +37,16 @@ html {
   grid-column-gap: 30px;
   margin-bottom: 10px;
 }
+#virtual-registers {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-column-gap: 30px;
+  margin-bottom: 10px;
+}
 label {
   padding: 5px 10px;
   border: 1px solid black;
+  white-space: nowrap;
 }
 #canvas {
   image-rendering: pixelated;
@@ -88,7 +97,8 @@ label {
 
 <div id="app">
   <canvas id="canvas" height="256" width="512"></canvas>
-  <div id="top-stuff">
+  <details id="top-stuff" open>
+    <summary style="outline: none; cursor: pointer">Toolbar</summary>
     <div id="registers">
       <label>KeyCode: <output id="keyboard"></output></label>
       <label>Instruction: <output id="instruction"></output></label>
@@ -99,10 +109,28 @@ label {
       <label>M addr: <output id="m-addr"></output></label>
       <label>PC: <output id="pc"></output></label>
     </div>
+    <div id="virtual-registers">
+      <label>R0/SP: <output id="r0"></output></label>
+      <label>R1/LCL: <output id="r1"></output></label>
+      <label>R2/ARG: <output id="r2"></output></label>
+      <label>R3/THIS: <output id="r3"></output></label>
+      <label>R4/THAT: <output id="r4"></output></label>
+      <label>R5 <output id="r5"></output></label>
+      <label>R6: <output id="r6"></output></label>
+      <label>R7: <output id="r7"></output></label>
+      <label>R8: <output id="r8"></output></label>
+      <label>R9: <output id="r9"></output></label>
+      <label>R10: <output id="r10"></output></label>
+      <label>R11: <output id="r11"></output></label>
+      <label>R12: <output id="r12"></output></label>
+      <label>R13: <output id="r13"></output></label>
+      <label>R14: <output id="r14"></output></label>
+      <label>R15: <output id="r15"></output></label>
+    </div>
     <div id="program-toolbar">
       <label>ROM: <input type="file" id="load"></label>
     </div>
-  </div>
+  </details>
 </div>
 <script>global = window</script>
 <script type="module">
@@ -118,10 +146,15 @@ attachKeyboard(global.chipRegistry.get('Keyboard'));
 import { attachScreen } from "./attachScreen.mjs";
 attachScreen(global.chipRegistry.get('Screen'));
 
+import { attachRAM } from "./attachRAM.mjs";
+attachRAM(global.chipRegistry.get('RAM16K'));
+
 const chips = compileJs(global.chipRegistry)();
 let memory = chips.Memory();
 let rom = chips.ROM32K();
+let cpu = chips.CPU();
 window.chips = chips;
+window.CPU = cpu;
 
 const reverse = (str) => {
   const a = str.split('');
