@@ -7,7 +7,7 @@ CHIP Nor {
 
   PARTS:
   Or(a=a, b=b, out=x);
-  Not(in=x, out=out)
+  Not(in=x, out=out);
 }`).test(`
 |   a   |   b   |  out  |
 |   0   |   0   |   1   |

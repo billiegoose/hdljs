@@ -1,4 +1,5 @@
 export * from './Copy.mjs';
+export * from './Copy16.mjs';
 export * from './Nand.mjs';
 export * from './Not.mjs';
 export * from './And.mjs';
