@@ -3,6 +3,7 @@ export * from './Nand.mjs';
 export * from './Not.mjs';
 export * from './And.mjs';
 export * from './Or.mjs';
+export * from './Nor.mjs';
 export * from './Xor.mjs';
 export * from './Mux.mjs';
 export * from './DMux.mjs';
@@ -37,3 +38,5 @@ export * from './Screen.mjs';
 export * from './Keyboard.mjs';
 export * from './Memory.mjs';
 export * from './ROM32K.mjs';
+
+export * from './CPU.mjs';

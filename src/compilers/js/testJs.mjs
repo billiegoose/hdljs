@@ -13,7 +13,7 @@ export function testJs (chips) {
           throw new Error(`[${chip.name} chip] Unexpected length mismatch: expected ${outputValues.length} outputs but JS version of chip only output ${result.length}`)
         }
         for (let i = 0; i < result.length; i++) {
-          if (result[i] !== outputValues[i]) {
+          if (result[i] !== outputValues[i] && (outputValues[i] === 1 || outputValues[i] === 0)) {
             throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${chip.outputNames()[i]}. Expected value ${outputValues[i]}. Actual value ${result[i]}.`)
           }
         }

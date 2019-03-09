@@ -19,7 +19,7 @@ export class ChipDef {
     this.in = new Map();
     this.out = new Map();
     this.parts = []
-    const statements = body.split(';').map(x => x.trim());
+    const statements = body.replace(/\/\/.*\n/g, '').split(';').map(x => x.trim());
     for (let line of statements) {
       if (line.startsWith('IN')) {
         line = line.slice('IN'.length)
@@ -133,10 +133,11 @@ export class ChipDef {
           } else {
             // decimal representation
             let n = parseInt(col);
+            let dnc = Number.isNaN(n)
             if (n < 0) n = 2**(width) + n;
             let bits = n.toString(2).padStart(width, '0');
             for (let i of range(width)) {
-              entry[pinName(name, width - i - 1)] = parseInt(bits[i])
+              entry[pinName(name, width - i - 1)] = dnc ? NaN : parseInt(bits[i])
             }
           }
         }
