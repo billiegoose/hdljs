@@ -101,10 +101,10 @@ html {
 import "../chips/index.mjs"
 import './Screen.mjs';
 import "./Keyboard.mjs";
+import "./Memory.mjs";
 import { compileJs } from "../compilers/js/compileJs.mjs"
 const chips = compileJs(global.chipRegistry)();
-let screen = chips.Screen();
-let keyboard = chips.Keyboard();
+let memory = chips.Memory();
 
 window.chips = chips;
 
@@ -118,7 +118,7 @@ for (let y = 0; y < 256; y++) {
   for (let x = 0; x < 32; x++) {
     let color = Number(Math.abs(x - y) % 2);
     // let color = 1
-    let addr = Number(y * 32 + x).toString(2).padStart(13, '0').split('').map(Number);
+    let addr = Number(0x4000 + y * 32 + x).toString(2).padStart(15, '0').split('').map(Number);
     let load = 1;
     let input = [
       1, 0, 1, 0,
@@ -129,49 +129,11 @@ for (let y = 0; y < 256; y++) {
     if (y % 2) {
       input.push(input.shift())
     }
-    // input =  Number(y).toString(2).padStart(16, '0').split('').map(Number);
     addr.reverse();
     input.reverse();
-    screen(load, ...addr, ...input);
+    memory(load, ...addr, ...input);
   }
 }
-
-// import { ChipDef } from "../components/ChipDef.mjs"
-
-// const WIDTH = 512;
-// const HEIGHT = 256;
-
-// const canvas = document.getElementById("canvas");
-// const ctx = canvas.getContext("2d");
-// var myImageData = ctx.createImageData(WIDTH, HEIGHT);
-
-// ctx.fillStyle = "white";
-// ctx.fillRect(0, 0, 512, 256);
-
-
-// let data = myImageData.data;
-
-// const paint = (x, y, color) => {
-//   data[y * WIDTH * 4 + x * 4 + 0] = color;
-//   data[y * WIDTH * 4 + x * 4 + 1] = color;
-//   data[y * WIDTH * 4 + x * 4 + 2] = color;
-//   data[y * WIDTH * 4 + x * 4 + 3] = 255;
-// }
-
-// for (let y = 0; y < 256; y++) {
-//   for (let x = 0; x < 512; x++) {
-//     let color = Number(Math.abs(x - y) % 2) * 255
-//     paint(x, y, color);
-//   }
-//   // for (let i = 0; i < 256; i++) {
-//   //   data = data.concat([0,0,0,1, 1,1,1,1])
-//   // }
-//   // for (let i = 0; i < 256; i++) {
-//   //   data = data.concat([1,1,1,1, 0,0,0,1])
-//   // }
-// }
-// ctx.putImageData(myImageData, 0, 0);
-// console.log('well?')
 
 </script>
 </body>
