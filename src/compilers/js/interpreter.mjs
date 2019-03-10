@@ -7,8 +7,8 @@ function wrapArg (name) {
 }
 
 export class Pin {
-  constructor () {
-    return observable({ value: 0 })
+  constructor (value = 0) {
+    return observable({ value })
   }
 }
 
@@ -18,7 +18,6 @@ export class Chip {
     this.parts = observable.object({})
     // Create the necessary input pins for a top-level chip.
     if (Object.keys(inputs).length === 0) {
-      console.log('toplevel')
       for (const name of chipDef.inputNames()) {
         this.pins[name] = new Pin();
       }
@@ -41,7 +40,20 @@ export class Chip {
       // Map our current chip's pins to the parts inputs
       let inputs = {}
       for (const name of part.chip.inputNames()) {
-        inputs[name] = this.pins[part.chip.mapping[name]]
+        const ext = part.chip.mapping[name];
+        if (ext === '1') {
+          // Hard-coded input of 1
+          inputs[name] = new Pin(1);
+        } else if (ext === '0') {
+          // Hard-coded input of 0
+          inputs[name] = new Pin(0);
+        } else if (ext) {
+          // Use one of this chip's pins as the input
+          inputs[name] = this.pins[ext]
+        } else {
+          // Inputs that aren't listed in the assignment are set to 0.
+          inputs[name] = new Pin(0);
+        }
       }
       // create the part
       const Class = getClass(chipname)
@@ -51,11 +63,11 @@ export class Chip {
       for (let [ext, int] of Object.entries(part.chip.mapping)) {
         if (part.chip.inputNames().includes(ext)) {
           // supply the part with the input pins
-          console.log(`${chipDef.name} ${int} -> ${part.chip.name} ${ext}`)
+          // console.log(`${chipDef.name} ${int} -> ${part.chip.name} ${ext}`)
           instance.pins[ext] = this.pins[int];
         } else {
           // take the part's output pins
-          console.log(`${chipDef.name} ${int} <- ${part.chip.name} ${ext}`)
+          // console.log(`${chipDef.name} ${int} <- ${part.chip.name} ${ext}`)
           this.pins[int] = instance.pins[ext];
         }
       }
@@ -96,61 +108,4 @@ export function getClass(name) {
     case 'Nand': return Nand;
     default: return Chip;
   }
-}
-
-export function compileChip (chip) {
-  let fntext = ''
-  fntext += `class ${chip.name} {\n`
-  fntext += `  constructor () {\n`
-  fntext += chip.inputNames().length > 0 ? `    // inputs\n` : ''
-  for (let name of chip.inputNames()) {
-    fntext += `    this.${name} = 0;\n`
-  }
-  fntext += chip.outputNames().length > 0 ? `    // outputs\n` : ''
-  for (let name of chip.outputNames()) {
-    fntext += `    this.${name} = 0;\n`
-  }
-  fntext += chip.internalNames().length > 0 ? `    // internal\n` : ''
-  for (let name of chip.internalNames()) {
-    fntext += `    this.${name} = 0;\n`
-  }
-  for (let i = 0; i < chip.parts.length; i++) {
-    let part = chip.parts[i];
-    fntext += `    this.${part.chip.name}_${i} = new ${part.chip.name}();\n`
-  }
-  fntext += `  }\n`
-  fntext += `  tick () {\n`
-  for (let i = 0; i < chip.parts.length; i++) {
-    let part = chip.parts[i];
-    fntext += compileTick(part.chip, mapping, i);
-  }
-  fntext += `  }\n`
-  fntext += `  tock () {\n`
-  for (let i = 0; i < chip.parts.length; i++) {
-    let part = chip.parts[i];
-    fntext += `    this.${part.chip.name}_${i}.tock();\n`
-  }
-  fntext += `    this.tick();\n`
-  fntext += `  }\n`
-  fntext += `}`
-  return fntext;
-}
-
-export function concatJs (chipRegistry) {
-  let text = '";\n\n'
-  for (let chip of chipRegistry.values()) {
-    if (chip.builtin && chip.builtin.js) {
-      text += chip.builtin.js + '\n\n';
-    } else {
-      text += `${compileChip(chip)}\n\n`;
-    }
-  }
-  return text;
-}
-
-
-export function compileJs (chipRegistry) {
-  return Function(`"use strict";
-
-${concatJs(chipRegistry)}return {${[...chipRegistry.keys()].join(', ')}}`);
 }

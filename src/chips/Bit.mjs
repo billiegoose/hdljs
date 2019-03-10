@@ -6,9 +6,8 @@ CHIP Bit {
   OUT out;
 
   PARTS:
-  Mux(a=feedback, b=in, sel=load, out=val);
-  DFF(in=val, out=feedback);
-  Copy(in=feedback, out=out);
+  Mux(a=out, b=in, sel=load, out=val);
+  DFF(in=val, out=out);
 }`).test(`
 | time | in  |load | out |
 | 0+   |  0  |  0  |  0  |
