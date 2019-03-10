@@ -149,8 +149,9 @@ label {
 import "../chips/index.mjs"
 import { compileJs } from "../compilers/js/compileJs.mjs"
 
-import { attachROM } from "./attachROM.mjs";
-attachROM(global.chipRegistry.get('ROM32K'));
+import { monitorROM } from "./monitorROM.mjs";
+import { monitorCPU } from "./monitorCPU.mjs";
+import { monitorRAM } from "./monitorRAM.mjs";
 
 import { attachKeyboard } from "./attachKeyboard.mjs";
 attachKeyboard(global.chipRegistry.get('Keyboard'));
@@ -158,18 +159,16 @@ attachKeyboard(global.chipRegistry.get('Keyboard'));
 import { attachScreen } from "./attachScreen.mjs";
 attachScreen(global.chipRegistry.get('Screen'));
 
-import { attachRAM } from "./attachRAM.mjs";
-attachRAM(global.chipRegistry.get('RAM16K'));
-
-import { attachCPU } from "./attachCPU.mjs";
-attachCPU(global.chipRegistry.get('CPU'));
-
 const chips = compileJs(global.chipRegistry)();
 window.chips = chips
-window.computer = chips.Computer();
+window.computer = new chips.Computer();
 
 import { attachComputer } from "./attachComputer.mjs";
 attachComputer(window.computer);
+
+monitorROM(computer);
+monitorCPU(computer);
+monitorRAM(computer);
 
 const reverse = (str) => {
   const a = str.split('');

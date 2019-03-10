@@ -5,9 +5,13 @@ CHIP Nand {
   IN a,b;
   OUT out;
 }`).addBuiltin('js', `// builtin
-function Nand () {
-  return function Nand (a, b) {
-    return [Number(!(a && b))];
+class Nand {
+  constructor () {
+    this.a_0 = 0;
+    this.b_0 = 0;
+  }
+  tick () {
+    this.out_0 = Number(!(this.a_0 && this.b_0));
   }
 }`).addBuiltin('verilog', `// builtin
 module Nand (

@@ -1,30 +1,49 @@
 import { pinName } from '../../utils/pinName.mjs';
 
+function wrapArg (name) {
+  if (name === '0' || name === '1') return name;
+  if (name === undefined) return '0';
+  return `this.${name}`
+}
+
 function compileJsCall (chip, mapping, i) {
   let fntext = '';
-  fntext += `;[${chip.outputNames().map(local => mapping[local]).join(', ')}] = `
-  fntext += `${chip.name}_${i}(${chip.inputNames().map(local => mapping[local] || 0).join(', ')});`
+  for (let name of [...chip.inputNames()]) {
+    fntext += `    this.${chip.name}_${i}.${name} = ${wrapArg(mapping[name])};\n`
+  }
+  fntext += `    this.${chip.name}_${i}.tick();\n`
+  for (let name of [...chip.outputNames()]) {
+    if (mapping[name]) {
+      fntext += `    this.${mapping[name]} = this.${chip.name}_${i}.${name};\n`
+    }
+  }
+  fntext += '\n'
   return fntext;
 }
 
 function compileJsRegisterRead (chip, mapping, i) {
   let fntext = '';
-  fntext += `;[${chip.outputNames().map(local => mapping[local]).join(', ')}] = ${chip.name}_${i}();`
+  for (const name of chip.outputNames()) {
+    if (mapping[name] !== undefined) {
+      fntext += `    this.${mapping[name]} = this.${chip.name}_${i}.${name};`
+    }
+  }
   return fntext;
 }
 
 export function compileChip (chip) {
   let fntext = ''
-  fntext += `function ${chip.name} () {\n`
-  fntext += `  let ${[...chip.internalNames(), ...chip.outputNames()].join(', ')};\n`
+  fntext += `class ${chip.name} {\n`
+  fntext += `  constructor () {\n`
+  for (let name of [...chip.internalNames(), ...chip.outputNames()]) {
+    fntext += `    this.${name} = 0;\n`
+  }
   for (let i = 0; i < chip.parts.length; i++) {
     let part = chip.parts[i];
-    fntext += `  let ${part.chip.name}_${i} = ${part.chip.name}();\n`
+    fntext += `    this.${part.chip.name}_${i} = new ${part.chip.name}();\n`
   }
-  fntext += `  return function ${chip.name} (${chip.inputNames().join(', ')}) {\n`
-  if (chip.clocked) {
-    fntext += `    if (${chip.inputNames()[0]} === undefined) return [${chip.outputNames().join(', ')}];\n`
-  }
+  fntext += `  }\n`
+  fntext += `  tick () {\n`
   for (let i = 0; i < chip.parts.length; i++) {
     let part = chip.parts[i];
     if (part.chip.clocked) {
@@ -36,7 +55,7 @@ export function compileChip (chip) {
           mapping[input] = output;
         }
       }
-      fntext += `    ${compileJsRegisterRead(part.chip, mapping, i)}\n`;
+      fntext += `${compileJsRegisterRead(part.chip, mapping, i)}\n\n`;
     }
   }
   for (let i = 0; i < chip.parts.length; i++) {
@@ -49,9 +68,8 @@ export function compileChip (chip) {
         mapping[input] = output;
       }
     }
-    fntext += `    ${compileJsCall(part.chip, mapping, i)}\n`;
+    fntext += compileJsCall(part.chip, mapping, i);
   }
-  fntext += `    return [${chip.outputNames().join(', ')}];\n`
   fntext += `  }\n`
   fntext += `}`
   return fntext;

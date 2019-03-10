@@ -5,11 +5,15 @@ CHIP Copy {
   IN in;
   OUT out;
 }`).addBuiltin('js', `// builtin
-function Copy () {
-  return function Copy (input) {
-    return [Number(input)];
+class Copy {
+  constructor () {
+    this.out_0 = 0;
   }
-}`).addBuiltin('verilog', `// builtin
+  tick () {
+    this.out_0 = this.in_0;
+  }
+}
+`).addBuiltin('verilog', `// builtin
 module Copy (
   input in_0,
   output out_0

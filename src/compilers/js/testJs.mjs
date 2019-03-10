@@ -3,18 +3,19 @@ export function testJs (chips) {
     if (chip.examples) {
       console.time(chip.name);
       process.stdout.write(`Testing ${chip.name}`)
-      let chipInstance = chips[chip.name]();
+      let chipInstance = new chips[chip.name]();
       for (let e = 0; e < chip.examples.length; e++) {
         const example = chip.examples[e];
         const inputValues = chip.inputNames().map(x => example[x])
-        const outputValues = chip.outputNames().map(x => example[x])
-        const result = chipInstance.apply(null, inputValues);
-        if (result.length !== outputValues.length) {
-          throw new Error(`[${chip.name} chip] Unexpected length mismatch: expected ${outputValues.length} outputs but JS version of chip only output ${result.length}`)
+        for (const name of chip.inputNames()) {
+          chipInstance[name] = example[name];
         }
-        for (let i = 0; i < result.length; i++) {
-          if (result[i] !== outputValues[i] && (outputValues[i] === 1 || outputValues[i] === 0)) {
-            throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${chip.outputNames()[i]}. Expected value ${outputValues[i]}. Actual value ${result[i]}.`)
+        chipInstance.tick(...inputValues);
+        for (const name of chip.outputNames()) {
+          let val = example[name];
+          if (val === undefined || Number.isNaN(val)) continue;
+          if (example[name] !== chipInstance[name]) {
+            throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${name}. Expected value ${val}. Actual value ${chipInstance[name]}.`)
           }
         }
         process.stdout.write('.')
