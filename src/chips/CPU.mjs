@@ -18,19 +18,6 @@ CHIP CPU {
   Mux16(sel=instruction[12], a=A, b=inM, out=AM);
   ALU(zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], x=D, y=AM, out=comp, zr=zr, ng=ng);
 
-  // M register
-  And(a=instruction[15], b=instruction[3], out=writeM);
-  Or16(a=0, b=A, out[0..14]=addressM);
-  Or16(a=0, b=comp, out=outM);
-
-  // A register
-  Not(in=instruction[15], out=ni);
-  Or(a=ni, b=instruction[5], out=loadA);
-  Mux16(sel=instruction[15], a=instruction, b=comp, out=Ain);
-
-  // D register
-  And(a=instruction[15], b=instruction[4], out=loadD);
-  
   // Jump computation
   Nor(a=ng, b=zr, out=ps);
   And(a=instruction[2], b=ng, out=j1);
@@ -41,10 +28,23 @@ CHIP CPU {
   And(a=instruction[15], b=jy, out=jump);
   Not(in=jump, out=njump);
 
-  // Clocked
-  Register(load=loadA, in=Ain, out=A);
+  // D register
+  And(a=instruction[15], b=instruction[4], out=loadD);
   Register(load=loadD, in=comp, out=D);
+
+  // A register
+  Not(in=instruction[15], out=ni);
+  Or(a=ni, b=instruction[5], out=loadA);
+  Mux16(sel=instruction[15], a=instruction, b=comp, out=Ain);
+  Register(load=loadA, in=Ain, out=A);
+
+  // Program Counter
   PC(load=jump, inc=njump, reset=reset, in=A, out[0..14]=pc);
+
+  // M register
+  And(a=instruction[15], b=instruction[3], out=writeM);
+  Or16(a=0, b=A, out[0..14]=addressM);
+  Or16(a=0, b=comp, out=outM);
 }`).test(`
 |time| inM  |  instruction   |reset| outM  |writeM |addressM| pc  |DRegister|
 |0+  |     0|0011000000111001|  0  |*******|   0   |    0|    0|      0 |

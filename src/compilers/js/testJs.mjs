@@ -15,6 +15,7 @@ export function testJs (chips) {
             chipInstance.tick(...inputValues);
           } else {
             chipInstance.tock(...inputValues);
+            chipInstance.tick(...inputValues);
           }
         } else {
           chipInstance.tick(...inputValues);
@@ -24,6 +25,7 @@ export function testJs (chips) {
           let val = example[name];
           if (val === undefined || Number.isNaN(val)) continue;
           if (example[name] !== chipInstance[name]) {
+            console.log(chipInstance.Register_17);
             throw new Error(`[${chip.name} chip] Test #${e + 1} ${example.time ? `at time='${example.time}'` : ``} failed for output ${name}. Expected value ${val}. Actual value ${chipInstance[name]}.`)
           }
         }
