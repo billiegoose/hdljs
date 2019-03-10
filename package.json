@@ -15,6 +15,7 @@
   "author": "William Hilton <wmhilton@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "mobx": "^5.9.0",
     "npm-watch": "^0.6.0",
     "walt-compiler": "file:.yalc/walt-compiler"
   },

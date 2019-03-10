@@ -110,9 +110,9 @@ label {
     <div id="registers">
       <label>KeyCode: <output id="keyboard"></output></label>
       <label>Instruction: <output id="instruction"></output></label>
-      <label>M: <output id="m-in"></output></label>
       <label>A: <output id="a-reg"></output></label>
       <label>D: <output id="d-reg"></output></label>
+      <label>M: <output id="m-in"></output></label>
       <label>M out: <output id="m-out"></output></label>
       <label>M addr: <output id="m-addr"></output></label>
       <label>PC: <output id="pc"></output></label>
@@ -145,7 +145,9 @@ label {
   </details>
 </div>
 <script>global = window</script>
+<script src="https://unpkg.com/mobx/lib/mobx.umd.js"></script>
 <script type="module">
+  console.log(mobx)
 import "../chips/index.mjs"
 import { compileJs } from "../compilers/js/compileJs.mjs"
 

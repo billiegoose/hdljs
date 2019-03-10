@@ -1,5 +1,3 @@
-import { pinName } from '../../utils/pinName.mjs';
-
 function wrapArg (name) {
   if (name === '0' || name === '1') return name;
   if (name === undefined) return '0';
