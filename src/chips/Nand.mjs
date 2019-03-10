@@ -13,6 +13,9 @@ class Nand {
   tick () {
     this.out_0 = Number(!(this.a_0 && this.b_0));
   }
+  tock () {
+    // noop
+  }
 }`).addBuiltin('verilog', `// builtin
 module Nand (
   input a_0,

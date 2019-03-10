@@ -65,6 +65,9 @@ class Keyboard {
     })
   }
   tick () {
+    // noop
+  }
+  tock () {
     this.out_0 = Number(!!(this.lastKeyCode & 1)); // 1
     this.out_1 = Number(!!(this.lastKeyCode & 2));
     this.out_2 = Number(!!(this.lastKeyCode & 4));

@@ -42,6 +42,9 @@ class Copy16 {
     this.out_14 = this.in_14;
     this.out_15 = this.in_15;
   }
+  tock () {
+    // noop
+  }
 }`).addBuiltin('verilog', `// builtin
 module Copy16 (
   input in_0,

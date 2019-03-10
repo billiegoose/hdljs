@@ -371,7 +371,19 @@ class RAM512 {
     this.out_13 = Number(!!(result & 8192));
     this.out_14 = Number(!!(result & 16384));
     this.out_15 = Number(!!(result & 32768)); // 16
+  }
+  tock () {
     if (this.load_0) {
+      let index =
+        this.address_0 +
+        this.address_1 * 2 +
+        this.address_2 * 4 +
+        this.address_3 * 8 +
+        this.address_4 * 16 +
+        this.address_5 * 32 +
+        this.address_6 * 64 +
+        this.address_7 * 128 +
+        this.address_8 * 256;
       let input =
         this.in_0 +
         this.in_1 * 2 +
@@ -391,6 +403,7 @@ class RAM512 {
         this.in_15 * 32768;
       this.memory[index] = input;
     }
+    this.tick();
   }
 }
 `);

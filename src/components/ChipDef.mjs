@@ -140,6 +140,8 @@ export class ChipDef {
               entry[pinName(name, width - i - 1)] = dnc ? NaN : parseInt(bits[i])
             }
           }
+        } else if (name === 'time') {
+          entry['time'] = col;
         }
       })
       this.examples.push(entry)

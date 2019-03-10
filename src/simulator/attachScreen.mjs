@@ -53,6 +53,22 @@ class Screen {
     this.out_13 = Number(!!(result & 8192));
     this.out_14 = Number(!!(result & 16384));
     this.out_15 = Number(!!(result & 32768)); // 16
+  }
+  tock () {
+    let index =
+      this.address_0 +
+      this.address_1 * 2 +
+      this.address_2 * 4 +
+      this.address_3 * 8 +
+      this.address_4 * 16 +
+      this.address_5 * 32 +
+      this.address_6 * 64 +
+      this.address_7 * 128 +
+      this.address_8 * 256 +
+      this.address_9 * 512 +
+      this.address_10 * 1024 +
+      this.address_11 * 2048 +
+      this.address_12 * 4096;
     if (this.load_0) {
       let input =
         this.in_0 +

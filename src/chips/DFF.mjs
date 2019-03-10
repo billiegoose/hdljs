@@ -8,12 +8,13 @@ CHIP DFF {
 class DFF {
   constructor () {
     this.in_0 = 0;
-    this._current = 0;
     this.out_0 = 0;
   }
   tick () {
-    this.out_0 = this._current;
-    this._current = this.in_0;
+    // noop
+  }
+  tock () {
+    this.out_0 = this.in_0;
   }
 }`).addBuiltin('verilog', `// builtin
 module DFF (

@@ -14,39 +14,31 @@ CHIP CPU {
       pc[15];          // address of next instruction
 
   PARTS:
-  // Instruction Decoding
-  Copy(in=instruction[15], out=i);
-  Copy16(in[0..14]=instruction[0..14], out[0..14]=address[0..14]);
-  Copy(in=instruction[12], out=a);
-  Copy16(in[0..5]=instruction[6..11], out[0..5]=c[0..5]);
-  Copy16(in[0..2]=instruction[3..5], out[0..2]=d[0..2]);
-  Copy16(in[0..2]=instruction[0..2], out[0..2]=j[0..2]);
-
   // ALU computation
-  Mux16(sel=a, a=A, b=inM, out=AM);
-  ALU(zx=c[5], nx=c[4], zy=c[3], ny=c[2], f=c[1], no=c[0], x=D, y=AM, out=comp, zr=zr, ng=ng);
+  Mux16(sel=instruction[12], a=A, b=inM, out=AM);
+  ALU(zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], x=D, y=AM, out=comp, zr=zr, ng=ng);
 
   // M register
-  And(a=i, b=d[0], out=writeM);
-  Copy16(in=A, out[0..14]=addressM);
-  Copy16(in=comp, out=outM[0..15]);
+  And(a=instruction[15], b=instruction[3], out=writeM);
+  Or16(a=0, b=A, out[0..14]=addressM);
+  Or16(a=0, b=comp, out=outM);
 
   // A register
-  Not(in=i, out=ni);
-  Or(a=ni, b=d[2], out=loadA);
-  Mux16(sel=i, a=instruction, b=comp, out=Ain);
+  Not(in=instruction[15], out=ni);
+  Or(a=ni, b=instruction[5], out=loadA);
+  Mux16(sel=instruction[15], a=instruction, b=comp, out=Ain);
 
   // D register
-  And(a=i, b=d[1], out=loadD);
+  And(a=instruction[15], b=instruction[4], out=loadD);
   
   // Jump computation
   Nor(a=ng, b=zr, out=ps);
-  And(a=j[2], b=ng, out=j1);
-  And(a=j[1], b=zr, out=j2);
-  And(a=j[0], b=ps, out=j3);
+  And(a=instruction[2], b=ng, out=j1);
+  And(a=instruction[1], b=zr, out=j2);
+  And(a=instruction[0], b=ps, out=j3);
   Or(a=j1, b=j2, out=jx);
   Or(a=jx, b=j3, out=jy);
-  And(a=i, b=jy, out=jump);
+  And(a=instruction[15], b=jy, out=jump);
   Not(in=jump, out=njump);
 
   // Clocked

@@ -10,12 +10,21 @@ export function testJs (chips) {
         for (const name of chip.inputNames()) {
           chipInstance[name] = example[name];
         }
-        chipInstance.tick(...inputValues);
+        if (example['time']) {
+          if (example['time'].endsWith('+')) {
+            chipInstance.tick(...inputValues);
+          } else {
+            chipInstance.tock(...inputValues);
+          }
+        } else {
+          chipInstance.tick(...inputValues);
+          chipInstance.tock(...inputValues);
+        }
         for (const name of chip.outputNames()) {
           let val = example[name];
           if (val === undefined || Number.isNaN(val)) continue;
           if (example[name] !== chipInstance[name]) {
-            throw new Error(`[${chip.name} chip] Test #${e + 1} failed for output ${name}. Expected value ${val}. Actual value ${chipInstance[name]}.`)
+            throw new Error(`[${chip.name} chip] Test #${e + 1} ${example.time ? `at time='${example.time}'` : ``} failed for output ${name}. Expected value ${val}. Actual value ${chipInstance[name]}.`)
           }
         }
         process.stdout.write('.')

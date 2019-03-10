@@ -12,6 +12,9 @@ class Copy {
   tick () {
     this.out_0 = this.in_0;
   }
+  tock () {
+    // noop
+  }
 }
 `).addBuiltin('verilog', `// builtin
 module Copy (
