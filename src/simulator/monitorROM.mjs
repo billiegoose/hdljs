@@ -13,11 +13,12 @@ export function monitorROM (computer) {
       const memory = computer.ROM32K_2.memory
       memory.fill(0);
       let vals = fr.result.trim().split('\n').map(
-        line => parseInt(reverse(line.trim()), 2)
+        line => parseInt(line.trim(), 2)
       )
       for (let i = 0; i < vals.length; i++) {
         memory[i] = vals[i];
       }
+      computer.tick();
     })
     fr.readAsText(file)
   })

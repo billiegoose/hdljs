@@ -24,6 +24,7 @@ class ROM32K {
     this.address_11 = 0;
     this.address_12 = 0;
     this.address_13 = 0;
+    this.address_14 = 0;
     this.out_0 = 0;
     this.out_1 = 0;
     this.out_2 = 0;
@@ -57,9 +58,7 @@ class ROM32K {
       this.address_11 * 2048 +
       this.address_12 * 4096 +
       this.address_13 * 8192 +
-      this.address_15 * 16384;
-    console.log('index', index);
-    console.log(this.memory[index]);
+      this.address_14 * 16384;
     let result = this.memory[index];
     this.out_0 = Number(!!(result & 1)); // 1
     this.out_1 = Number(!!(result & 2));
@@ -77,5 +76,8 @@ class ROM32K {
     this.out_13 = Number(!!(result & 8192));
     this.out_14 = Number(!!(result & 16384));
     this.out_15 = Number(!!(result & 32768)); // 16
+  }
+  tock () {
+    // noop
   }
 }`);

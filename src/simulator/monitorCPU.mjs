@@ -29,11 +29,11 @@ export function monitorCPU (computer) {
   const updateScreen = () => {
     requestAnimationFrame(updateScreen);
     instruction.textContent = get16bitnum(computer, 'instruction');
-    a.textContent = get16bitnum(computer.CPU_0, 'A');
-    d.textContent = get16bitnum(computer.CPU_0, 'D');
-    inM.textContent = get16bitnum(computer.CPU_0, 'inM');
-    outM.textContent = get16bitnum(computer.CPU_0, 'outM');
-    addressM.textContent = get16bitnum(computer.CPU_0, 'addressM');
+    a.textContent = get16bitnum(computer.CPU_1, 'A');
+    d.textContent = get16bitnum(computer.CPU_1, 'D');
+    inM.textContent = get16bitnum(computer.CPU_1, 'inM');
+    outM.textContent = get16bitnum(computer.CPU_1, 'outM');
+    addressM.textContent = get16bitnum(computer.CPU_1, 'addressM');
     pc.textContent = get16bitnum(computer, 'pc');
   }
   requestAnimationFrame(updateScreen);

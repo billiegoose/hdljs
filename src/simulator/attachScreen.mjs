@@ -8,7 +8,7 @@ class Screen {
     this.canvas = document.getElementById("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.imagedata = this.ctx.createImageData(this.WIDTH, this.HEIGHT);
-    this.ctx.fillStyle = "white";
+    this.ctx.fillStyle = "green";
     this.ctx.fillRect(0, 0, 512, 256);
   }
   updateScreen () {
@@ -88,22 +88,22 @@ class Screen {
         this.in_14 * 16384 +
         this.in_15 * 32768;
       this.memory[index] = input;
-      paint(index * 16 + 0, this.in_0);
-      paint(index * 16 + 1, this.in_1);
-      paint(index * 16 + 2, this.in_2);
-      paint(index * 16 + 3, this.in_3);
-      paint(index * 16 + 4, this.in_4);
-      paint(index * 16 + 5, this.in_5);
-      paint(index * 16 + 6, this.in_6);
-      paint(index * 16 + 7, this.in_7);
-      paint(index * 16 + 8, this.in_8);
-      paint(index * 16 + 9, this.in_9);
-      paint(index * 16 + 10, this.in_10);
-      paint(index * 16 + 11, this.in_11);
-      paint(index * 16 + 12, this.in_12);
-      paint(index * 16 + 13, this.in_13);
-      paint(index * 16 + 14, this.in_14);
-      paint(index * 16 + 15, this.in_15);
+      this.paint(index * 16 + 0, this.in_0);
+      this.paint(index * 16 + 1, this.in_1);
+      this.paint(index * 16 + 2, this.in_2);
+      this.paint(index * 16 + 3, this.in_3);
+      this.paint(index * 16 + 4, this.in_4);
+      this.paint(index * 16 + 5, this.in_5);
+      this.paint(index * 16 + 6, this.in_6);
+      this.paint(index * 16 + 7, this.in_7);
+      this.paint(index * 16 + 8, this.in_8);
+      this.paint(index * 16 + 9, this.in_9);
+      this.paint(index * 16 + 10, this.in_10);
+      this.paint(index * 16 + 11, this.in_11);
+      this.paint(index * 16 + 12, this.in_12);
+      this.paint(index * 16 + 13, this.in_13);
+      this.paint(index * 16 + 14, this.in_14);
+      this.paint(index * 16 + 15, this.in_15);
     }
   }
 }`);
