@@ -44,6 +44,7 @@ export class ChipDef {
     // Static validation
     for (let part of this.parts) {
       const chip = part.chip;
+      chip.mapping = {}
       if (chip.clocked) this.clocked = true;
       for (let connection of part.connections) {
         const { int, ext } = connection;
@@ -73,6 +74,12 @@ export class ChipDef {
         ext.pin = internalPin;
         if (ext.end >= internalPin.width) {
           throw new Error(`Bus pin assignment ${ext.print()} is out of range of ${this.name} ${internalPin.print()}[${internalPin.width}]`)
+        }
+        // Build a pin-for-pin mapping
+        for (let i = 0; i < int.width; i++) {
+          const input = pinName(int.name, i + int.start)
+          const output = pinName(ext.name, i + ext.start)
+          chip.mapping[input] = output;
         }
       }
     }

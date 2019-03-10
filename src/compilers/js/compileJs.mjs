@@ -20,16 +20,6 @@ function compileTick (chip, mapping, i) {
   return fntext;
 }
 
-function compileTock (chip, mapping, i) {
-  let fntext = `    this.${chip.name}_${i}.tock();\n`
-  for (let name of [...chip.outputNames()]) {
-    if (mapping[name]) {
-      fntext += `    this.${mapping[name]} = this.${chip.name}_${i}.${name};\n`
-    }
-  }
-  return fntext;
-}
-
 export function compileChip (chip) {
   let fntext = ''
   fntext += `class ${chip.name} {\n`
@@ -54,15 +44,7 @@ export function compileChip (chip) {
   fntext += `  tick () {\n`
   for (let i = 0; i < chip.parts.length; i++) {
     let part = chip.parts[i];
-    let mapping = {}
-    for (let connection of part.connections) {
-      for (let i = 0; i < connection.int.width; i++) {
-        const input = pinName(connection.int.name, i + connection.int.start)
-        const output = pinName(connection.ext.name, i + connection.ext.start)
-        mapping[input] = output;
-      }
-    }
-    fntext += compileTick(part.chip, mapping, i);
+    fntext += compileTick(part.chip, part.chip.mapping, i);
   }
   fntext += `  }\n`
   fntext += `  tock () {\n`
