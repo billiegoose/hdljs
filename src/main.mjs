@@ -13,11 +13,11 @@ fs.writeFileSync('out/testbench.sv', compileVerilogTestHarnessChip(lastChip, las
 fs.writeFileSync('out/goboard.sv', compileGoBoardWrapper(lastChip))
 // console.log(lastChip.examples)
 // console.log(compileGoBoardWrapper(lastChip));
-// testJs(jsImplementations);
+testJs(jsImplementations);
 
-import { autorun } from "./compilers/js/mobx.module.mjs"
-import { interpreterTest } from "./compilers/js/interpreterTest.mjs";
-interpreterTest(global.chipRegistry);
+// import { autorun } from "./compilers/js/mobx.module.mjs"
+// import { interpreterTest } from "./compilers/js/interpreterTest.mjs";
+// interpreterTest(global.chipRegistry);
 // import { Chip, clock } from './compilers/js/interpreter.mjs';
 // let c = new Chip(global.chipRegistry.get('Bit'));
 

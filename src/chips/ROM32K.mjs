@@ -2,7 +2,7 @@ import { ChipDef } from '../components/ChipDef.mjs';
 
 export const ROM32K = new ChipDef(`
 CHIP ROM32K {
-  IN address[14];
+  IN address[15];
   OUT out[16];
 }
 `).addBuiltin('js', `// builtin
@@ -80,4 +80,77 @@ class ROM32K {
   tock () {
     // noop
   }
-}`);
+}`).addBuiltin('verilog', `// builtin
+module ROM32K (
+  input address_0,
+  input address_1,
+  input address_2,
+  input address_3,
+  input address_4,
+  input address_5,
+  input address_6,
+  input address_7,
+  input address_8,
+  input address_9,
+  input address_10,
+  input address_11,
+  input address_12,
+  input address_13,
+  input address_14,
+  output out_0,
+  output out_1,
+  output out_2,
+  output out_3,
+  output out_4,
+  output out_5,
+  output out_6,
+  output out_7,
+  output out_8,
+  output out_9,
+  output out_10,
+  output out_11,
+  output out_12,
+  output out_13,
+  output out_14,
+  output out_15
+);
+  // http://www.asic-world.com/verilog/memory_fsm1.html
+  reg [15:0] my_memory [0:100]; // full 32K will be [0:32768]
+  initial begin
+    $readmemb("rom.mem", my_memory, 0, 100);
+  end
+  wire [14:0] bits = {
+    address_14,
+    address_13,
+    address_12,
+    address_11,
+    address_10,
+    address_9,
+    address_8,
+    address_7,
+    address_6,
+    address_5,
+    address_4,
+    address_3,
+    address_2,
+    address_1,
+    address_0
+  };
+  wire [15:0] word = my_memory[bits];
+  assign out_0 = word[0];
+  assign out_1 = word[1];
+  assign out_2 = word[2];
+  assign out_3 = word[3];
+  assign out_4 = word[4];
+  assign out_5 = word[5];
+  assign out_6 = word[6];
+  assign out_7 = word[7];
+  assign out_8 = word[8];
+  assign out_9 = word[9];
+  assign out_10 = word[10];
+  assign out_11 = word[11];
+  assign out_12 = word[12];
+  assign out_13 = word[13];
+  assign out_14 = word[14];
+  assign out_15 = word[15];
+endmodule`);
