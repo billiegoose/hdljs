@@ -6,25 +6,25 @@ function testOne(chipDef) {
   process.stdout.write(`Testing ${chipDef.name}`)
   for (let e = 0; e < chipDef.examples.length; e++) {
     const example = chipDef.examples[e];
-    const inputValues = chipDef.inputNames().map(x => example[x])
     for (const name of chipDef.inputNames()) {
       chip.pins[name].value = example[name];
     }
-    if (example['time']) {
-      if (example['time'].endsWith('+')) {
-        chip.clock = 1;
+    if (chip.clock) {
+      if (example['time']) {
+        if (example['time'].endsWith('+')) {
+          chip.clock.value = 1;
+        } else {
+          chip.clock.value = 0;
+        }
       } else {
-        chip.clock = 0;
+        chip.clock.value = 1;
+        chip.clock.value = 0;
       }
-    } else {
-      chip.clock = 1;
-      chip.clock = 0;
     }
     for (const name of chipDef.outputNames()) {
       let val = example[name];
       if (val === undefined || Number.isNaN(val)) continue;
       if (example[name] !== chip.pins[name].value) {
-        console.log(chip);
         throw new Error(`[${chipDef.name} chip] Test #${e + 1} ${example.time ? `at time='${example.time}'` : ``} failed for output ${name}. Expected value ${val}. Actual value ${chip.pins[name].value}.`)
       }
     }

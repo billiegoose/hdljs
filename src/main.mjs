@@ -13,13 +13,44 @@ fs.writeFileSync('out/testbench.sv', compileVerilogTestHarnessChip(lastChip, las
 fs.writeFileSync('out/goboard.sv', compileGoBoardWrapper(lastChip))
 // console.log(lastChip.examples)
 // console.log(compileGoBoardWrapper(lastChip));
-testJs(jsImplementations);
+// testJs(jsImplementations);
 
 import { autorun } from "./compilers/js/mobx.module.mjs"
 import { interpreterTest } from "./compilers/js/interpreterTest.mjs";
-// import { Chip } from './compilers/js/interpreter.mjs';
-// let c = new Chip(global.chipRegistry.get('Mux'));
 interpreterTest(global.chipRegistry);
+// import { Chip, clock } from './compilers/js/interpreter.mjs';
+// let c = new Chip(global.chipRegistry.get('Bit'));
+
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// c.pins.in_0.value = 0;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// clock.value = 0;
+// c.pins.in_0.value = 1;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// clock.value = 0;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`-0: ${c.pins.in_0.value} ${c.pins.load_0.value} ${c.parts.DFF._state} ${c.pins.out_0.value}`)
+
+// console.log(`-0: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// c.pins.in_0.value = 0;
+// console.log(`0+: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`0: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// clock.value = 0;
+// c.pins.in_0.value = 1;
+// console.log(`1+: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`1: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// clock.value = 0;
+// console.log(`2+: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+// clock.value = 1;
+// console.log(`2: ${c.pins.in_0.value} ${c._state} ${c.pins.out_0.value}`)
+
 // autorun(() => {
 //   console.log(`hello ${c.pins.out_0.value}`)
 // })

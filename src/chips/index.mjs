@@ -21,15 +21,15 @@ export * from './Mux8Way16.mjs';
 
 export * from './HalfAdder.mjs';
 export * from './FullAdder.mjs';
-export * from './Add16.mjs';
-export * from './Inc16.mjs';
-export * from './ALU.mjs';
+// export * from './Add16.mjs';
+// export * from './Inc16.mjs';
+// export * from './ALU.mjs';
 
-// export * from './DFF.mjs';
-// export * from './Bit.mjs';
-// export * from './Register.mjs';
-// export * from './RAM8.mjs';
-// export * from './RAM64.mjs';
+export * from './DFF.mjs';
+export * from './Bit.mjs';
+export * from './Register.mjs';
+export * from './RAM8.mjs';
+export * from './RAM64.mjs';
 // export * from './RAM512.mjs';
 // export * from './RAM4K.mjs';
 // export * from './RAM16K.mjs';
