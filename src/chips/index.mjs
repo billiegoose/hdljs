@@ -40,5 +40,5 @@ export * from './PC.mjs';
 // export * from './Memory.mjs';
 // export * from './ROM32K.mjs';
 
-// export * from './CPU.mjs';
+export * from './CPU.mjs';
 // export * from './Computer.mjs';

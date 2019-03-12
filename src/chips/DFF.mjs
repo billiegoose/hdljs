@@ -23,7 +23,7 @@ module DFF (
   output out_0
   );
 
-  reg mem_0;
+  reg mem_0 = 0;
   always @ (posedge clock) begin
     mem_0 <= in_0;
   end
