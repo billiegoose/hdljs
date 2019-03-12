@@ -34,17 +34,23 @@ module Go_Board (
 );
 
   wire w_Switch_1;
-
   Debouncer Debouncer_1 (
     .clock(i_Clk),
     .in_0(i_Switch_1),
     .out_0(w_Switch_1)
   );
 
+  wire w_Switch_3;
+  Debouncer Debouncer_3 (
+    .clock(i_Clk),
+    .in_0(i_Switch_3),
+    .out_0(w_Switch_3)
+  );
+
   wire [7:0] wire_0;
 
   ${chip.name} ${chip.name}_MAIN (
-${chip.clocked ? `    .clock(w_Switch_1),`: ''}
+${chip.clocked ? `    .clock(w_Switch_1 || (i_Clk && w_Switch_3)),`: ''}
 ${chip.inputNames().map((arg, i) => `    .${arg}(${boardInput[i] || 0})`).join(',\n')},
 ${chip.outputNames().slice(0,boardOutput.length).map((arg, i) => `    .${arg}(${boardOutput[i] || 0})`).join(',\n')}
   );
