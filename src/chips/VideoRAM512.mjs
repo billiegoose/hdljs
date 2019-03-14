@@ -19,7 +19,7 @@ CHIP VideoRAM512 {
   Mux8Way16(sel=videoAddress[0..2], a=va, b=vb, c=vc, d=vd, e=ve, f=vf, g=vg, h=vh, out=videoOut);
 }
 `).addBuiltin('verilog', `
-module RAM512 (
+module VideoRAM512 (
   input clock,
   input load_0,
   input address_0,
