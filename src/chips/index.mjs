@@ -28,6 +28,7 @@ export * from './ALU.mjs';
 export * from './DFF.mjs';
 export * from './Bit.mjs';
 export * from './Register.mjs';
+export * from './ShiftRegister.mjs';
 export * from './RAM8.mjs';
 export * from './RAM64.mjs';
 export * from './RAM512.mjs';
