@@ -1,0 +1,29 @@
+CHIP IICBit {
+  IN pulseClock, begin, in;
+  OUT sda, scl, ready;
+
+  PARTS:
+  // State machine
+  Blip(in=begin, out=state0);
+  Bit(in=state0, load=pulseClock, out=state1);
+  Bit(in=state1, load=pulseClock, out=state2);
+  Bit(in=state2, load=pulseClock, out=state3);
+  Bit(in=state3, load=pulseClock, out=state4);
+  // |        | scl | sda |
+  // | idle   |  0  |  0  |
+  // | state1 |  0  |  b  |
+  // | state2 |  1  |  b  |
+  // | state3 |  1  |  b  |
+  // | state4 |  0  |  b  |
+  // | idle   |  0  |  0  |
+
+  Or(a=state1, b=state2, out=active1);
+  Or(a=state3, b=state4, out=active2);
+  Or(a=active1, b=active2, out=active);
+  Not(in=active, out=ready);
+
+  Or(a=state2, b=state3, out=scl);
+
+  Bit(in=in, load=state0, out=sda1);
+  And(a=active, b=sda1, out=sda);
+}

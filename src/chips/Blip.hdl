@@ -1,0 +1,9 @@
+CHIP Blip {
+  IN in;
+  OUT out;
+
+  PARTS:
+  DFF(in=in, out=val);
+  Not(in=val, out=prev);
+  And(a=prev, b=in, out=out);
+}

@@ -13,13 +13,22 @@ export function testJs (chips) {
         if (example['time']) {
           if (example['time'].endsWith('+')) {
             chipInstance.tick(...inputValues);
+            chipInstance.tick(...inputValues);
+            chipInstance.tick(...inputValues);
           } else {
             chipInstance.tock(...inputValues);
+            chipInstance.tick(...inputValues);
+            chipInstance.tick(...inputValues);
             chipInstance.tick(...inputValues);
           }
         } else {
           chipInstance.tick(...inputValues);
+          chipInstance.tick(...inputValues);
+          chipInstance.tick(...inputValues);
           chipInstance.tock(...inputValues);
+          chipInstance.tick(...inputValues);
+          chipInstance.tick(...inputValues);
+          chipInstance.tick(...inputValues);
         }
         for (const name of chip.outputNames()) {
           let val = example[name];
