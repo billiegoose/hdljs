@@ -30,7 +30,15 @@ module Go_Board (
   output o_Segment2_D,
   output o_Segment2_E,
   output o_Segment2_F,
-  output o_Segment2_G
+  output o_Segment2_G,
+  inout io_PMOD_1,
+  inout io_PMOD_2,
+  inout io_PMOD_3,
+  inout io_PMOD_4,
+  inout io_PMOD_7,
+  inout io_PMOD_8,
+  inout io_PMOD_9,
+  inout io_PMOD_10
 );
 
   wire w_Switch_1;
