@@ -1,0 +1,7 @@
+CHIP Copy {
+  IN in;
+  OUT out;
+  PARTS:
+  Nand(a=in, b=in, out=c);
+  Nand(a=c, b=c, out=out);
+}

@@ -1,0 +1,68 @@
+CHIP IICByte {
+  IN pulseClock, begin, in[8];
+  OUT sda, scl, ready;
+
+  PARTS:
+  // State machine
+  Blip(in=begin, out=start);
+  And(a=active, b=bitReady, out=loadBit);
+  Or(a=start, b=loadBit, out=startLoad);
+  Bit(in=start,  load=startLoad, out=state00);
+  Or(a=start, b=state00, out=state0);
+  Bit(in=state00, load=loadBit, out=state1);
+  Bit(in=state1, load=loadBit, out=state2);
+  Bit(in=state2, load=loadBit, out=state3);
+  Bit(in=state3, load=loadBit, out=state4);
+  Bit(in=state4, load=loadBit, out=state5);
+  Bit(in=state5, load=loadBit, out=state6);
+  Bit(in=state6, load=loadBit, out=state7);
+
+  Or8Way(
+    in[0]=state0,
+    in[1]=state1,
+    in[2]=state2,
+    in[3]=state3,
+    in[4]=state4,
+    in[5]=state5,
+    in[6]=state6,
+    in[7]=state7,
+    out=active
+  );
+  Not(in=active, out=ready);
+
+  Or8Way(
+    in[0]=state0,
+    in[1]=state1,
+    in[2]=state2,
+    in[3]=state3,
+    in[4]=state4,
+    in[5]=state5,
+    in[6]=state6,
+    in[7]=startLoad,
+    out=loadActive
+  );
+
+  And(a=in[0], b=state0, out=bit0);
+  And(a=in[1], b=state1, out=bit1);
+  And(a=in[2], b=state2, out=bit2);
+  And(a=in[3], b=state3, out=bit3);
+  And(a=in[4], b=state4, out=bit4);
+  And(a=in[5], b=state5, out=bit5);
+  And(a=in[6], b=state6, out=bit6);
+  And(a=in[7], b=state7, out=bit7);
+  Or8Way(
+    in[0]=bit0,
+    in[1]=bit1,
+    in[2]=bit2,
+    in[3]=bit3,
+    in[4]=bit4,
+    in[5]=bit5,
+    in[6]=bit6,
+    in[7]=bit7,
+    out=activebit
+  );
+  And(a=loadActive, b=bitReady, out=writeBit);
+  Or(a=start, b=writeBit, out=writeLoad);
+  IICBit(pulseClock=pulseClock, begin=writeLoad, in=activebit, sda=sda, scl=scl, ready=bitReady);
+  // DFF(in=bitReady0, out=bitReady);
+}

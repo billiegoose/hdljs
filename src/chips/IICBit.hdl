@@ -4,26 +4,32 @@ CHIP IICBit {
 
   PARTS:
   // State machine
-  Blip(in=begin, out=state0);
-  Bit(in=state0, load=pulseClock, out=state1);
+  Blip(in=begin, out=start);
+  Or(a=start, b=pulseClock, out=startLoad);
+  Bit(in=start,  load=startLoad, out=state00);
+  Or(a=start, b=state00, out=state0);
+  Bit(in=state00, load=pulseClock, out=state1);
   Bit(in=state1, load=pulseClock, out=state2);
   Bit(in=state2, load=pulseClock, out=state3);
-  Bit(in=state3, load=pulseClock, out=state4);
   // |        | scl | sda |
   // | idle   |  0  |  0  |
-  // | state1 |  0  |  b  |
+  // | state0 |  0  |  b  |
+  // | state1 |  1  |  b  |
   // | state2 |  1  |  b  |
-  // | state3 |  1  |  b  |
-  // | state4 |  0  |  b  |
+  // | state3 |  0  |  b  |
   // | idle   |  0  |  0  |
 
-  Or(a=state1, b=state2, out=active1);
-  Or(a=state3, b=state4, out=active2);
+  Or(a=state0, b=state1, out=active1);
+  Or(a=state2, b=state3, out=active2);
   Or(a=active1, b=active2, out=active);
-  Not(in=active, out=ready);
 
-  Or(a=state2, b=state3, out=scl);
+  Or(a=state00, b=state1, out=activex);
+  Or(a=activex, b=state2, out=notready);
+  Not(in=notready, out=ready);
 
-  Bit(in=in, load=state0, out=sda1);
+  Or(a=state1, b=state2, out=scl);
+
+  FastBit(in=in, load=start, out=sda1);
+
   And(a=active, b=sda1, out=sda);
 }
