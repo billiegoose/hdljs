@@ -217,6 +217,50 @@ tock, output;
 tick, output;
 tock, output;
 
+set in %B01010101,
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+set begin 1,
+
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+set begin 0,
+tock, output;
+tick, output;
+tock, output;
+
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+tick, output;
+tock, output;
+
 tick, output;
 tock, output;
 tick, output;
