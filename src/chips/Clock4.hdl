@@ -1,0 +1,20 @@
+CHIP Clock4 {
+  IN pulseClock, reset;
+  OUT state0, state1, state2, state3;
+
+  PARTS:
+  // State machine
+  Or(a=pulseClock, b=reset, out=load);
+  Mux(sel=reset, a=false, b=true, out=bit0);
+  Mux(sel=reset, a=s0, b=false, out=bit1);
+  Mux(sel=reset, a=s1, b=false, out=bit2);
+  Mux(sel=reset, a=s2, b=false, out=bit3);
+  Bit(in=bit0, load=load, out=s0);
+  Bit(in=bit1, load=load, out=s1);
+  Bit(in=bit2, load=load, out=s2);
+  Bit(in=bit3, load=load, out=s3);
+  Copy(in=s0, out=state0);
+  Copy(in=s1, out=state1);
+  Copy(in=s2, out=state2);
+  Copy(in=s3, out=state3);
+}
