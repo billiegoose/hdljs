@@ -11,161 +11,89 @@ output-list time%S1.4.1 pulseClock%B6.1.5 begin%B3.1.3 in%B2.1.1 sda%B2.1.2 scl%
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 1,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 1,
 set in 1,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 1,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
 
 set pulseClock 1,
 set begin 0,
 set in 0,
-tick,
-output;
-
-tock,
-output;
+tick,tock,output;
