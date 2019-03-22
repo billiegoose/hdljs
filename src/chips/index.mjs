@@ -38,9 +38,12 @@ export * from './PC.mjs';
 
 export * from './Equal.mjs';
 export * from './Blip.mjs';
-export * from './ClockDivider.mjs';
-export * from './SquareWave.mjs';
-export * from './IICStart.mjs';
+export * from './Clock4.mjs';
+export * from './Clock8.mjs';
+export * from './IICByte.mjs';
+// export * from './ClockDivider.mjs';
+// export * from './SquareWave.mjs';
+// export * from './IICStart.mjs';
 
 // export * from './ShiftRegister.mjs';
 // export * from './VideoRAM8.mjs'

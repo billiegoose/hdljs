@@ -31,7 +31,7 @@ ${(() => {
   for (let example of chip.examples) {
     i++;
     text += names.map(name => `    ${name} <= ${example[name]};\n`).join(``)
-    text += `    #1\n`
+    text += `    #2\n`
     text += `    $display("time: #%d | ${
       [...chip.inputNames({group: true})].map(group =>
         group.map(name => `%b`).join('')

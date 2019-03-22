@@ -1,4 +1,87 @@
-| time | reset | pulseClock | begin |    in    | sda | scl | ready |
+import { ChipDef } from '../components/ChipDef.mjs';
+
+export const IICByte = new ChipDef(`
+CHIP IICByte {
+  IN pulseClock, reset, begin, in[8];
+  OUT sda, scl, ready;
+
+  PARTS:
+  // Fast clock (4 cycles / bit)
+  Or(a=begin, b=continue, out=fastbegin);
+  Clock4(
+    pulseClock=pulseClock,
+    reset=reset,
+    begin=fastbegin,
+    state0=substate0,
+    state1=substate1,
+    state2=substate2,
+    state3=substate3,
+    carry=fastCarry
+  );
+  And(a=state06, b=substate3, out=continue);
+
+  // |           | scl | sda |
+  // | substate0 |  0  |  b  |
+  // | substate1 |  1  |  b  |
+  // | substate2 |  1  |  b  |
+  // | substate3 |  0  |  b  |
+  Or(a=substate1, b=substate2, out=scl);
+
+  Or(a=substate0, b=substate1, out=bitactive1);
+  Or(a=substate2, b=substate3, out=bitactive2);
+  Or(a=bitactive1, b=bitactive2, out=bitactive);
+  And(a=bitactive, b=b, out=sda);
+
+  // Slow clock (8 cycles / byte)
+  Or(a=begin, b=substate3, out=slowPulse);
+  Clock8(
+    pulseClock=slowPulse,
+    reset=reset,
+    begin=begin,
+    state0=state0,
+    state1=state1,
+    state2=state2,
+    state3=state3,
+    state4=state4,
+    state5=state5,
+    state6=state6,
+    state7=state7
+  );
+
+  And(a=in[0], b=state0, out=bit0);
+  And(a=in[1], b=state1, out=bit1);
+  And(a=in[2], b=state2, out=bit2);
+  And(a=in[3], b=state3, out=bit3);
+  And(a=in[4], b=state4, out=bit4);
+  And(a=in[5], b=state5, out=bit5);
+  And(a=in[6], b=state6, out=bit6);
+  And(a=in[7], b=state7, out=bit7);
+  Or8Way(
+    in[0]=bit0,
+    in[1]=bit1,
+    in[2]=bit2,
+    in[3]=bit3,
+    in[4]=bit4,
+    in[5]=bit5,
+    in[6]=bit6,
+    in[7]=bit7,
+    out=b
+  );
+
+  Or8Way(
+    in[0]=state0,
+    in[1]=state1,
+    in[2]=state2,
+    in[3]=state3,
+    in[4]=state4,
+    in[5]=state5,
+    in[6]=state6,
+    in[7]=false,
+    out=state06
+  );
+  Or(a=state06, b=state7, out=active);
+  Not(in=active, out=ready);
+}`).test(`| time | reset | pulseClock | begin |    in    | sda | scl | ready |
 | 1    |   0   |      1     |   0   | 00000000 |  0  |  0  |   1   |
 | 2    |   0   |      1     |   0   | 00000000 |  0  |  0  |   1   |
 | 3    |   0   |      1     |   1   | 00000000 |  0  |  0  |   0   |
@@ -123,3 +206,4 @@
 | 122  |   0   |      1     |   0   | 01010101 |  0  |  0  |   1   |
 | 123  |   0   |      1     |   0   | 01010101 |  0  |  0  |   1   |
 | 124  |   0   |      1     |   0   | 01010101 |  0  |  0  |   1   |
+`);
