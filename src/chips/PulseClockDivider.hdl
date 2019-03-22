@@ -1,0 +1,10 @@
+CHIP PulseClockDivider {
+  IN pulseClock, reset, max[16];
+  OUT out;
+  PARTS:
+  And(a=pulseClock, b=nloop, out=inc);
+  PC(load=loop, inc=inc, reset=reset, in=0, out=count);
+  Equal(a=count, b=max, out=loop);
+  Not(in=loop, out=nloop);
+  And(a=pulseClock, b=loop, out=out);
+}

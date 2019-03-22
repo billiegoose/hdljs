@@ -1,0 +1,57 @@
+CHIP IICDumpLoop {
+  IN reset;
+  OUT sda, scl;
+  PARTS:
+  Or(a=reset, b=loop, out=zero);
+  PC(inc=true, reset=zero, out[0..14]=pc);
+  ROM32K(address=pc, out=data);
+  // 250 cycles = 100kHz
+  // divide by 4 roughly 62 cycles or 111110
+  ClockDivider(
+    reset=reset,
+    max[0]=false,
+    max[1]=true,
+    max[2]=true,
+    max[3]=true,
+    max[4]=true,
+    max[5]=true,
+    max[6]=true,
+    out=pulseClock
+  )
+  Clock8(
+    pulseClock=pulseClock,
+    reset=reset,
+    begin=s7,
+    state0=state0,
+    state7=state7
+  )
+  Copy(in=state7, out=s7)
+  // (512 bit of screen + 8 * (3 * 3 + 2) bytes transmission overhead)
+  // 512 + 704 bits
+  // = 1216
+  PulseClockDivider(
+    pulseClock=pulseClock,
+    reset=reset,
+    max[0]=false,
+    max[1]=false,
+    max[2]=false,
+    max[3]=false,
+    max[4]=false,
+    max[5]=false,
+    max[6]=true,
+    max[7]=true,
+    max[8]=false,
+    max[9]=false,
+    max[10]=true,
+    max[11]=false,
+    out=loop
+  )
+  IICByte(
+    pulseClock=pulseClock,
+    reset=reset,
+    begin=state0,
+    in=data[/* YOU DUMMY, YOU SHOULD USE ORDERS OF 2 TO MAKE A 2-4-16 CLOCK WITH FEWER GATES*/];
+  OUT sda, scl, ready;
+  Memory(load=writeM, in=nextM, address=addressM, out=M);
+  CPU(reset=reset, instruction=instruction, inM=M, pc=pc, outM=nextM, writeM=writeM, addressM=addressM);
+}

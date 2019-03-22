@@ -1,0 +1,14 @@
+CHIP Memory {
+  IN load, address[15], in[16];
+  OUT out[16];
+  PARTS:
+  DMux(sel=address[14], in=true, a=ram, b=peripheral);
+  DMux(sel=address[13], in=peripheral, a=screen, b=keyboard);
+  And(a=ram, b=load, out=loadRam);
+  And(a=screen, b=load, out=loadScreen);
+  RAM16K(in=in, load=loadRam, address=address[0..13], out=ramOut);
+  Screen(in=in, load=loadScreen, address=address[1..13], out=screenOut);
+  Keyboard(out=keyOut);
+  Mux16(sel=keyboard, a=screenOut, b=keyOut, out=peripheralOut);
+  Mux16(sel=ram, a=peripheralOut, b=ramOut, out=out);
+}
