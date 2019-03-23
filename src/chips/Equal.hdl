@@ -1,0 +1,9 @@
+CHIP Equal {
+  IN a[16], b[16];
+  OUT out;
+
+  PARTS:
+  Xor16(a=a, b=b, out=x);
+  Or16Way(in=x, out=notequal);
+  Not(in=notequal, out=out);
+}
