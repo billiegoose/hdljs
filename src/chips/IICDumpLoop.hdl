@@ -2,56 +2,56 @@ CHIP IICDumpLoop {
   IN reset;
   OUT sda, scl;
   PARTS:
-  Or(a=reset, b=loop, out=zero);
-  PC(inc=true, reset=zero, out[0..14]=pc);
-  ROM32K(address=pc, out=data);
-  // 250 cycles = 100kHz
-  // divide by 4 roughly 62 cycles or 111110
+  // we want to target a transmission speed of 100 kbit/s
+  // 100kbit/s is 12500 byte/s
+  // the clock speed is 25MHz
+  // (25,000,000 clock cycles / 1s) * (1s / 12500 bytes) = 2000 cycles / byte
+  // Each byte has 8 bits and each bit as 4 iic phases so 
+  // 2000 cycles / byte * 32 iic cycles / byte
+  // = 62.5 which we'll round to 62
+  // The ClockDivider "max" value is actually 1/2 the period so we want
+  // 31 = 0001 1111
   ClockDivider(
     reset=reset,
-    max[0]=false,
+    max[0]=true,
     max[1]=true,
     max[2]=true,
     max[3]=true,
     max[4]=true,
-    max[5]=true,
-    max[6]=true,
-    out=pulseClock
-  )
-  Clock8(
-    pulseClock=pulseClock,
-    reset=reset,
-    begin=s7,
-    state0=state0,
-    state7=state7
-  )
-  Copy(in=state7, out=s7)
-  // (512 bit of screen + 8 * (3 * 3 + 2) bytes transmission overhead)
-  // 512 + 704 bits
-  // = 1216
-  PulseClockDivider(
-    pulseClock=pulseClock,
-    reset=reset,
-    max[0]=false,
-    max[1]=false,
-    max[2]=false,
-    max[3]=false,
-    max[4]=false,
-    max[5]=false,
-    max[6]=true,
-    max[7]=true,
-    max[8]=false,
-    max[9]=false,
-    max[10]=true,
-    max[11]=false,
-    out=loop
+    out=phaseClock
   )
   IICByte(
-    pulseClock=pulseClock,
-    reset=reset,
-    begin=state0,
-    in=data[/* YOU DUMMY, YOU SHOULD USE ORDERS OF 2 TO MAKE A 2-4-16 CLOCK WITH FEWER GATES*/];
-  OUT sda, scl, ready;
-  Memory(load=writeM, in=nextM, address=addressM, out=M);
-  CPU(reset=reset, instruction=instruction, inM=M, pc=pc, outM=nextM, writeM=writeM, addressM=addressM);
+    clock0=phaseClock,
+    in=byte,
+    sda=sda,
+    scl=scl
+  );
+  QuarterClock(
+    clockIn=phaseClock,
+    quarter=bitClock,
+  );
+  EigthClock(
+    clockIn=bitClock,
+    eigth=byteClock
+  );
+  HalfClock(clockIn=byteClock, clockOut=wordClock);
+  Blip(in=wordClock, out=inc);
+  PC(inc=inc, reset=restart, out[0..14]=pc);
+  ROM32K(address=pc, out=data);
+  Mux16(a=data[0..7], b=data[8..15], sel=wordClock, out=byte);
+
+  // For now we'll loop over the same 139 bytes
+  Equal(
+    a=pc,
+    b[0]=true,
+    b[1]=true,
+    b[2]=false,
+    b[3]=true,
+    b[4]=false,
+    b[5]=false,
+    b[6]=false,
+    b[7]=true,
+    out=gotoStart
+  );
+  Or(a=reset, b=gotoStart, out=restart);
 }
