@@ -1,4 +1,4 @@
 a.out
 out/
 node_modules/
-.yalc
+.yalc*.out

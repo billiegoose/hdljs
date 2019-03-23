@@ -19,7 +19,7 @@ CHIP IICDumpLoop {
     max[3]=true,
     max[4]=true,
     out=phaseClock
-  )
+  );
   IICByte(
     clock0=phaseClock,
     in=byte,
@@ -28,29 +28,33 @@ CHIP IICDumpLoop {
   );
   QuarterClock(
     clockIn=phaseClock,
-    quarter=bitClock,
+    quarter=bitClock
   );
   EigthClock(
     clockIn=bitClock,
     eigth=byteClock
   );
   HalfClock(clockIn=byteClock, clockOut=wordClock);
-  Blip(in=wordClock, out=inc);
+  Blip(in=wordClock, out=blipUp);
+  Not(in=wordClock, out=notWordClock);
+  Blip(in=notWordClock, out=blipDown);
+  Or(a=blipUp, b=blipDown, out=inc);
   PC(inc=inc, reset=restart, out[0..14]=pc);
-  ROM32K(address=pc, out=data);
-  Mux16(a=data[0..7], b=data[8..15], sel=wordClock, out=byte);
+  ROM32K(address=pc, out[0..7]=byte1, out[8..15]=byte2);
+  Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=wordClock, out[0..7]=byte);
 
   // For now we'll loop over the same 139 bytes
+  // correction - 70 words
   Equal(
-    a=pc,
-    b[0]=true,
+    a[0..14]=pc,
+    b[0]=false,
     b[1]=true,
-    b[2]=false,
-    b[3]=true,
+    b[2]=true,
+    b[3]=false,
     b[4]=false,
     b[5]=false,
-    b[6]=false,
-    b[7]=true,
+    b[6]=true,
+    b[7]=false,
     out=gotoStart
   );
   Or(a=reset, b=gotoStart, out=restart);
