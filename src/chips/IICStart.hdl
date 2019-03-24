@@ -20,7 +20,7 @@ CHIP IICStart {
   Or(a=clock2, b=clock3, out=clock23);
   Nor(a=clock23, b=clock4, out=clock234);
 
-  // Generate the IIC "start" signal
+  // Generate the IIC "start" condition
   Mux(sel=clock234, a=true, b=false, out=sda);
   Mux(sel=clock234, a=true, b=clock1, out=scl);
 }
