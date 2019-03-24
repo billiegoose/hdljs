@@ -1,27 +1,27 @@
 CHIP IICStop {
-  IN clock0;
+  IN clock0, reset;
   OUT sda, scl;
 
   PARTS:
   SixteenthClock(
     clockIn=clock0,
+    reset=reset,
     half=clock1,
     quarter=clock2,
     eigth=clock3,
     sixteenth=clock4
   );
   // |        | clock0 | clock1 | scl | sda |
-  // | phase0 |    1   |    1   |  1  |  0  |
-  // | phase1 |    0   |    1   |  1  |  0  |
-  // | phase2 |    1   |    0   |  1  |  1  |
-  // | phase3 |    0   |    0   |  1  |  1  |
+  // | phase0 |    0   |    0   |  1  |  0  |
+  // | phase1 |    1   |    0   |  1  |  0  |
+  // | phase2 |    0   |    1   |  1  |  1  |
+  // | phase3 |    1   |    1   |  1  |  1  |
 
   // We only care about the 1st bit-cycle
-  And(a=clock2, b=clock3, out=clock23);
-  And(a=clock23, b=clock4, out=clock234);
+  Or(a=clock2, b=clock3, out=clock23);
+  Nor(a=clock23, b=clock4, out=clock234);
 
   // Generate the IIC "stop" condition
   Copy(in=true, out=scl);
-  Not(in=clock1, out=sda0);
-  Mux(sel=clock234, a=true, b=sda0, out=sda);
+  Mux(sel=clock234, a=true, b=clock1, out=sda);
 }

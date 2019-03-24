@@ -8,7 +8,6 @@ output-file IICStop.out,
 compare-to IICStop.cmp,
 output-list time%S1.4.1 clock0%B6.1.5 sda%B2.1.2 scl%B2.1.2;
 
-set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
@@ -40,8 +39,8 @@ set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
 
-set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
@@ -73,3 +72,4 @@ set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
