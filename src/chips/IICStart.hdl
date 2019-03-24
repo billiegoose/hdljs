@@ -1,19 +1,26 @@
 CHIP IICStart {
-  IN pulseClock, begin;
-  OUT sda, scl, ready;
+  IN clock0;
+  OUT sda, scl;
 
   PARTS:
-  // State machine
-  Blip(in=begin, out=state0);
-  Bit(in=state0, load=pulseClock, out=state1);
-  Bit(in=state1, load=pulseClock, out=state2);
-  // | state | idle | state1 | state2 |
-  // | scl   | 1    |   1    |   0    |
-  // | sda   | 1    |   0    |   0    |
+  SixteenthClock(
+    clockIn=clock0,
+    half=clock1,
+    quarter=clock2,
+    eigth=clock3,
+    sixteenth=clock4
+  );
+  // |        | clock0 | clock1 | scl | sda |
+  // | phase0 |    1   |    1   |  1  |  0  |
+  // | phase1 |    0   |    1   |  1  |  0  |
+  // | phase2 |    1   |    0   |  0  |  0  |
+  // | phase3 |    0   |    0   |  0  |  0  |
 
-  Or(a=state1, b=state2, out=active);
-  Not(in=active, out=ready);
+  // We only care about the 8th bit-cycle
+  Or(a=clock2, b=clock3, out=clock23);
+  Nor(a=clock23, b=clock4, out=clock234);
 
-  Not(in=active, out=sda);
-  Not(in=state2, out=scl);
+  // Generate the IIC "start" signal
+  Mux(sel=clock234, a=true, b=false, out=sda);
+  Mux(sel=clock234, a=true, b=clock1, out=scl);
 }

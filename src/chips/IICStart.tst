@@ -6,148 +6,70 @@
 load IICStart.hdl,
 output-file IICStart.out,
 compare-to IICStart.cmp,
-output-list time%S1.4.1 pulseClock%B6.1.5 begin%B3.1.3 sda%B2.1.2 scl%B2.1.2 ready%B3.1.3;
+output-list time%S1.4.1 clock0%B6.1.5 sda%B2.1.2 scl%B2.1.2;
 
-set pulseClock 1,
-set begin 0,
-tick,
-output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
 
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 1,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 1,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 1,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 1,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
-
-set pulseClock 1,
-set begin 0,
-tick,
-output;
-
-tock,
-output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
+set clock0 1, tick, tock, output;
+set clock0 0, tick, tock, output;
