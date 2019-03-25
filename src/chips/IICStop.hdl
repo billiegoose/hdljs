@@ -1,15 +1,12 @@
 CHIP IICStop {
   IN clock0, reset;
-  OUT sda, scl;
+  OUT sda, scl, done;
 
   PARTS:
-  SixteenthClock(
+  HalfClock(
     clockIn=clock0,
     reset=reset,
-    half=clock1,
-    quarter=clock2,
-    eigth=clock3,
-    sixteenth=clock4
+    clockOut=clock1
   );
   // |        | clock0 | clock1 | scl | sda |
   // | phase0 |    0   |    0   |  1  |  0  |
@@ -17,11 +14,14 @@ CHIP IICStop {
   // | phase2 |    0   |    1   |  1  |  1  |
   // | phase3 |    1   |    1   |  1  |  1  |
 
-  // We only care about the 1st bit-cycle
-  Or(a=clock2, b=clock3, out=clock23);
-  Nor(a=clock23, b=clock4, out=clock234);
-
   // Generate the IIC "stop" condition
   Copy(in=true, out=scl);
-  Mux(sel=clock234, a=true, b=clock1, out=sda);
+  Or(a=clock1, b=fin, out=sda);
+  
+  // Done-ness logic
+  Nor(a=clock0, b=clock1, out=clock01);
+  Not(in=reset, out=nreset);
+  Or(a=reset, b=clock01, out=setDone);
+  Bit(in=nreset, load=setDone, out=fin);
+  Copy(in=fin, out=done);
 }

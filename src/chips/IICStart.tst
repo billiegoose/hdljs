@@ -5,10 +5,12 @@
 
 load IICStart.hdl,
 output-file IICStart.out,
-compare-to IICStart.cmp,
-output-list time%S1.4.1 clock0%B6.1.5 sda%B2.1.2 scl%B2.1.2;
+// compare-to IICStart.cmp,
+output-list time%S1.4.1 clock0%B6.1.5 reset%B3.1.3 sda%B2.1.2 scl%B2.1.2 done%B2.1.2;
 
+set reset 1,
 set clock0 0, tick, tock, output;
+set reset 0,
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
@@ -41,7 +43,9 @@ set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;
 
+set reset 1,
 set clock0 0, tick, tock, output;
+set reset 0,
 set clock0 1, tick, tock, output;
 set clock0 0, tick, tock, output;
 set clock0 1, tick, tock, output;

@@ -2,7 +2,7 @@ CHIP IICTransmitRange {
   IN reset, startAt[16], stopAt[16], sendStart, sendStop;
   OUT address[16], sda, scl;
   PARTS:
-  // Should Register be set this clock cycle?
+  // When to update the state register
   Or8Way(
     in[0]=startDone,
     in[1]=byteDone,
@@ -10,7 +10,7 @@ CHIP IICTransmitRange {
     in[3]=stopDone,
     out=updateRegister
   );
-  // What value should the register have?
+  // The state register
   Register(
     in[0]=nextIdleState,
     in[1]=nextStartState,
@@ -28,6 +28,21 @@ CHIP IICTransmitRange {
     out[5]=ack1State,
     out[6]=stopState
   );
+
+  // State register derived values
+  Or(a=byte0State, b=byte1State, out=anyByteState);
+  Or(a=ack0State, b=ack1State, out=anyAckState);
+
+  Blip(in=startState, out=beginStart);
+
+  Blip(in=byte0State, out=beginByte0);
+
+  Blip(in=anyByteState, out=beginByte);
+
+  Blip(in=anyAckState, out=beginAck);
+
+  Blip(in=doneState, out=beginDone);
+
   // we want to target a transmission speed of 100 kbit/s
   // 100kbit/s is 12500 byte/s
   // the clock speed is 25MHz
@@ -39,7 +54,7 @@ CHIP IICTransmitRange {
   // The ClockDivider "max" value is actually 1/2 the period so we want
   // 31 = 0001 1111
   ClockDivider(
-    reset=blipReset,
+    reset=reset,
     max[0]=false,
     max[1]=true,
     max[2]=true,
@@ -48,52 +63,19 @@ CHIP IICTransmitRange {
     max[5]=true,
     out=clock0
   );
-  QuarterClock(
-    clockIn=clock0,
-    reset=blipReset,
-    quarter=bitClock
-  );
-  EigthClock(
-    clockIn=bitClock,
-    reset=blipReset,
-    quarter=halfbyteClock,
-    eigth=byteClock
-  );
-  HalfClock(
-    clockIn=byteClock,
-    reset=blipReset,
-    clockOut=wordClock
-  );
 
-  // State for start and stop conditions.
+  // start and stop addresses
   Equal(a=pc, b=startAt, out=atStart);
   Equal(a=pc, b=stopAt, out=atStop);
-  And(a=atStart, b=sendStart, out=sendingStart);
-  And(a=atStop,  b=sendStop,  out=sendingStop);
-
-  // When to increment the address counter
-  Blop(in=byteClock, out=incClock);
-  Not(in=atStop, out=countUp);
-  And(a=countUp, b=incClock, out=inc);
-
-  // Trigger to start sending message
-  Blip(in=reset, out=blipReset);
 
   // The address counter
-  PC(inc=inc, in=startAt, load=blipReset, out=pc);
-
-  // The final idle state
-  Blip(in=halfbyteClock, out=finalClock);
-  Or(a=blipReset, b=finalClock, out=loadFinal);
-  Mux(sel=blipReset, a=sendingStop, b=false, out=done0);
-  FastBit(in=done0, load=loadFinal, out=done);
+  PC(inc=beginByte0, in=startAt, load=beginStart, out=pc);
 
   // Select the byte to send
   ROM32KLessAnnoying(address=pc, out[0..7]=byte2, out[8..15]=byte1);
   Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=byte1State, out[0..7]=byte);
 
   // Generate SDA and SCL signals
-  Blip(in=startState, out=beginStart);
   IICStart(
     clock0=clock0,
     reset=beginStart,
@@ -101,8 +83,6 @@ CHIP IICTransmitRange {
     scl=sclStart,
     done=startDone
   );
-  Or(a=byte0State, b=byte1State, out=anyByteState);
-  Blip(in=anyByteState, out=beginByte);
   IICByte(
     clock0=clock0,
     reset=beginByte,
@@ -111,8 +91,6 @@ CHIP IICTransmitRange {
     scl=sclByte,
     done=byteDone
   );
-  Or(a=ack0State, b=ack1State, out=anyAckState);
-  Blip(in=anyAckState, out=beginAck);
   IICAckReceive(
     clock0=clock0,
     reset=beginAck,
@@ -120,7 +98,6 @@ CHIP IICTransmitRange {
     scl=sclAck,
     done=ackDone
   );
-  Blip(in=doneState, out=beginDone);
   IICStop(
     clock0=clock0,
     reset=beginDone,
