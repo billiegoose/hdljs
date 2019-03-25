@@ -90,49 +90,78 @@ CHIP IICTransmitRange {
 
   // Select the byte to send
   ROM32KLessAnnoying(address=pc, out[0..7]=byte2, out[8..15]=byte1);
-  Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=byteClock, out[0..7]=byte);
+  Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=byte1State, out[0..7]=byte);
 
   // Generate SDA and SCL signals
+  Blip(in=startState, out=beginStart);
   IICStart(
     clock0=clock0,
-    reset=blipReset,
+    reset=beginStart,
     sda=sdaStart,
-    scl=sclStart
+    scl=sclStart,
+    done=startDone
   );
-  Not(in=byteClock, out=nbyteClock);
-  Or(a=sdaStart, b=nbyteClock, out=sda0);
-  Or(a=sclStart, b=nbyteClock, out=scl0);
-  Blip(in=byteState, out=beginByte);
+  Or(a=byte0State, b=byte1State, out=anyByteState);
+  Blip(in=anyByteState, out=beginByte);
   IICByte(
     clock0=clock0,
     reset=beginByte,
     in=byte,
-    sda=sda2,
-    scl=scl2,
+    sda=sdaByte,
+    scl=sclByte,
     done=byteDone
   );
-  Blip(in=ackState, out=beginAckReceive);
+  Or(a=ack0State, b=ack1State, out=anyAckState);
+  Blip(in=anyAckState, out=beginAck);
   IICAckReceive(
     clock0=clock0,
-    reset=beginAckReceive,
-    sda=sda3,
-    scl=scl3,
+    reset=beginAck,
+    sda=sdaAck,
+    scl=sclAck,
     done=ackDone
   );
+  Blip(in=doneState, out=beginDone);
   IICStop(
     clock0=clock0,
-    reset=blipReset,
+    reset=beginDone,
     sda=sdaStop,
-    scl=sclStop
+    scl=sclStop,
+    done=stopDone
   );
 
-  // Handle whether to send the start condition, the byte at the 'pc' address, or the stop condition
-  Mux(sel=sendingStart, a=sda1, b=sda0, out=sda01);
-  Mux(sel=sendingStart, a=scl1, b=scl0, out=scl01);
-  Mux(sel=sendingStop, a=sda01, b=sda2, out=sda012);
-  Mux(sel=sendingStop, a=scl01, b=scl2, out=scl012);
-  Mux(sel=done, a=sda012, b=true, out=sda);
-  Mux(sel=done, a=scl012, b=true, out=scl);
+  // Determine which signal gets put on the actual sda and scl lines
+  And(a=sdaStart, b=startState, out=sdaStartCut);
+  And(a=sclStart, b=startState, out=sclStartCut);
+
+  And(a=sdaByte, b=anyByteState, out=sdaByteCut);
+  And(a=sclByte, b=anyByteState, out=sclByteCut);
+
+  And(a=sdaAck, b=anyAckState, out=sdaAckCut);
+  And(a=sclAck, b=anyAckState, out=sclAckCut);
+
+  And(a=sdaStop, b=stopState, out=sdaStopCut);
+  And(a=sclStop, b=stopState, out=sclStopCut);
+
+  And(a=true, b=idleState, out=sdaIdleCut);
+  And(a=true, b=idleState, out=sclIdleCut);
+
+  Or8Way(
+    in[0]=sdaStartCut,
+    in[1]=sdaByteCut,
+    in[2]=sdaAckCut,
+    in[3]=sdaStopCut,
+    in[4]=sdaIdleCut,
+    out=sda
+  );
+
+  Or8Way(
+    in[0]=sclStartCut,
+    in[1]=sclByteCut,
+    in[2]=sclAckCut,
+    in[3]=sclStopCut,
+    in[4]=sclIdleCut,
+    out=scl
+  );
 
   // Update state machine.
   // idleState =
