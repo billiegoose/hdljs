@@ -1,0 +1,6 @@
+CHIP HighImpedence {
+  OUT out;
+  PARTS:
+  // We can't really simulate this
+  Copy(in=false, out=out);
+}

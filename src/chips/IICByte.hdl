@@ -1,6 +1,6 @@
 CHIP IICByte {
   IN clock0, in[8], reset;
-  OUT sda, scl;
+  OUT sda, scl, done;
 
   PARTS:
   SixteenthClock(
@@ -11,7 +11,7 @@ CHIP IICByte {
     eigth=clock3,
     sixteenth=clock4
   );
-
+  
   // |           | clock0 | clock1 | scl | sda |
   // | substate0 |    0   |    0   |  0  |  b  |
   // | substate1 |    1   |    0   |  1  |  b  |
@@ -38,4 +38,19 @@ CHIP IICByte {
     in=in,
     out=sda
   );
+
+  // Done-ness logic
+  // And(a=clock0, b=clock1, out=clock01);
+  // And(a=clock2, b=clock3, out=clock23);
+  // And(a=clock01, b=clock23, out=clock0123);
+  // And(a=clock0123, b=clock4, out=clock01234);
+
+  Or(a=clock0, b=clock1, out=clock01);
+  Or(a=clock2, b=clock3, out=clock23);
+  Or(a=clock01, b=clock23, out=clock0123);
+  Nor(a=clock0123, b=clock4, out=clock01234);
+
+  Or(a=reset, b=clock01234, out=setDone);
+  Not(in=reset, out=nreset);
+  Bit(in=nreset, load=setDone, out=done);
 }

@@ -2,6 +2,32 @@ CHIP IICTransmitRange {
   IN reset, startAt[16], stopAt[16], sendStart, sendStop;
   OUT address[16], sda, scl;
   PARTS:
+  // Should Register be set this clock cycle?
+  Or8Way(
+    in[0]=startDone,
+    in[1]=byteDone,
+    in[2]=ackDone,
+    in[3]=stopDone,
+    out=updateRegister
+  );
+  // What value should the register have?
+  Register(
+    in[0]=nextIdleState,
+    in[1]=nextStartState,
+    in[2]=nextByte0State,
+    in[3]=nextAck0State,
+    in[4]=nextByte1State,
+    in[5]=nextAck1State,
+    in[6]=nextStopState,
+    load=updateRegister,
+    out[0]=idleState,
+    out[1]=startState,
+    out[2]=byte0State,
+    out[3]=ack0State,
+    out[4]=byte1State,
+    out[5]=ack1State,
+    out[6]=stopState
+  );
   // we want to target a transmission speed of 100 kbit/s
   // 100kbit/s is 12500 byte/s
   // the clock speed is 25MHz
@@ -76,12 +102,22 @@ CHIP IICTransmitRange {
   Not(in=byteClock, out=nbyteClock);
   Or(a=sdaStart, b=nbyteClock, out=sda0);
   Or(a=sclStart, b=nbyteClock, out=scl0);
+  Blip(in=byteState, out=beginByte);
   IICByte(
     clock0=clock0,
-    reset=blipReset,
+    reset=beginByte,
     in=byte,
-    sda=sda1,
-    scl=scl1
+    sda=sda2,
+    scl=scl2,
+    done=byteDone
+  );
+  Blip(in=ackState, out=beginAckReceive);
+  IICAckReceive(
+    clock0=clock0,
+    reset=beginAckReceive,
+    sda=sda3,
+    scl=scl3,
+    done=ackDone
   );
   IICStop(
     clock0=clock0,
@@ -89,8 +125,6 @@ CHIP IICTransmitRange {
     sda=sdaStop,
     scl=sclStop
   );
-  Or(a=sdaStop, b=byteClock, out=sda2);
-  Or(a=sclStop, b=byteClock, out=scl2);
 
   // Handle whether to send the start condition, the byte at the 'pc' address, or the stop condition
   Mux(sel=sendingStart, a=sda1, b=sda0, out=sda01);
@@ -99,6 +133,32 @@ CHIP IICTransmitRange {
   Mux(sel=sendingStop, a=scl01, b=scl2, out=scl012);
   Mux(sel=done, a=sda012, b=true, out=sda);
   Mux(sel=done, a=scl012, b=true, out=scl);
+
+  // Update state machine.
+  // idleState =
+  Copy(in=stopState, out=nextIdleState);
+
+  // startState =
+  And(a=reset, b=idleState, out=nextStartState);
+
+  // byte0State =
+  Not(in=atStop, out=natStop);
+  And(a=natStop, b=ack1State, out=moreWords);
+  Or(a=startState, b=moreWords, out=nextByte0State);
+
+  // ack0State =
+  Copy(in=byte0State, out=nextAck0State);
+
+  // byte1State =
+  Not(in=atStop, out=natStop);
+  And(a=natStop, b=ack0State, out=nextByte1State);
+
+  // ack1State =
+  Copy(in=byte1State, out=nextAck1State);
+
+  // stopState =
+  Or(a=ack0State, b=ack1State, out=anyAckState);
+  And(a=atStop, b=anyAckState, out=nextStopState);
 
   // For debugging fun
   Copy(in=pc, out=address);

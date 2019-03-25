@@ -1,0 +1,26 @@
+CHIP IICAckReceive {
+  IN clock0, reset;
+  OUT sda, scl, done;
+
+  PARTS:
+  HalfClock(
+    clockIn=clock0,
+    reset=reset,
+    clockOut=clock1
+  );
+  // |        | clock0 | clock1 | scl | sda |
+  // | phase0 |    0   |    0   |  0  |  0  |
+  // | phase1 |    1   |    0   |  1  |  0  |
+  // | phase2 |    0   |    1   |  1  |  0  |
+  // | phase3 |    1   |    1   |  0  |  0  |
+
+  // Set sda to 'z' and pulse clock
+  Xor(a=clock0, b=clock1, out=scl);
+  HighImpedence(out=sda);
+
+  // Done-ness logic
+  Nor(a=clock0, b=clock1, out=clock01);
+  Not(in=reset, out=nreset);
+  Or(a=reset, b=clock01, out=setDone);
+  Bit(in=nreset, load=setDone, out=done);
+}
