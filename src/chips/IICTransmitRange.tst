@@ -1,18 +1,69 @@
 load IICTransmitRange.hdl,
 output-file IICTransmitRange.out,
 // compare-to IICTransmitRange.cmp,
-output-list time%S1.8.1 sda%B2.1.2 scl%B2.1.2 pc%D1.3.1 byte1%X2.2.2 byte2%X2.2.2 byte%X2.2.2 bitClock%B4.1.4 byteClock%B4.1.4 wordClock%B4.1.4 sendStart%B5.1.5 atStart%B3.1.3 sendingStart%B10.1.10 sendStop%B5.1.5 atStop%B3.1.3 sendingStop%B10.1.10 done%B2.1.2 inc%B2.1.2;
+output-list time%S1.8.1 reset%B3.1.3 clock0%B3.1.3 sda%B2.1.2 scl%B2.1.2 pc%D1.3.1 byte%X2.2.2 atStart%B3.1.3 atStop%B3.1.3 startState%B3.1.3 startDone%B3.1.3 byte0State%B3.1.3 byteDone%B3.1.3 ack0State%B3.1.3 ackDone%B3.1.3 byte1State%B3.1.3 ack1State%B3.1.3 stopState%B3.1.3 stopDone%B3.1.3 doneState%B3.1.3;
 
 ROM32K load IICTransmitRange.hack,
 
-tick, tock;
 set startAt 0,
 set stopAt 70,
 set sendStart 1,
 set sendStop 1,
 set reset 1,
-tick, tock;
+tick, tock, output;
 set reset 0,
+tick, tock, output;
+
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
 tick, tock, output;
 
 repeat 31 {tick, tock;} output;

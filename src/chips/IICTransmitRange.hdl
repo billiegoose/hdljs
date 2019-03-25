@@ -1,32 +1,34 @@
 CHIP IICTransmitRange {
   IN reset, startAt[16], stopAt[16], sendStart, sendStop;
-  OUT address[16], sda, scl;
+  OUT address[16], sda, scl, done;
   PARTS:
   // When to update the state register
+  Blip(in=reset, out=blipReset);
   Or8Way(
-    in[0]=startDone,
-    in[1]=byteDone,
-    in[2]=ackDone,
-    in[3]=stopDone,
+    in[0]=blipReset,
+    in[1]=startDone,
+    in[2]=byteDone,
+    in[3]=ackDone,
+    in[4]=stopDone,
     out=updateRegister
   );
   // The state register
   Register(
-    in[0]=nextIdleState,
-    in[1]=nextStartState,
-    in[2]=nextByte0State,
-    in[3]=nextAck0State,
-    in[4]=nextByte1State,
-    in[5]=nextAck1State,
-    in[6]=nextStopState,
+    in[0]=nextStartState,
+    in[1]=nextByte0State,
+    in[2]=nextAck0State,
+    in[3]=nextByte1State,
+    in[4]=nextAck1State,
+    in[5]=nextStopState,
+    in[6]=nextDoneState,
     load=updateRegister,
-    out[0]=idleState,
-    out[1]=startState,
-    out[2]=byte0State,
-    out[3]=ack0State,
-    out[4]=byte1State,
-    out[5]=ack1State,
-    out[6]=stopState
+    out[0]=startState,
+    out[1]=byte0State,
+    out[2]=ack0State,
+    out[3]=byte1State,
+    out[4]=ack1State,
+    out[5]=stopState,
+    out[6]=doneState
   );
 
   // State register derived values
@@ -119,8 +121,8 @@ CHIP IICTransmitRange {
   And(a=sdaStop, b=stopState, out=sdaStopCut);
   And(a=sclStop, b=stopState, out=sclStopCut);
 
-  And(a=true, b=idleState, out=sdaIdleCut);
-  And(a=true, b=idleState, out=sclIdleCut);
+  And(a=true, b=doneState, out=sdaIdleCut);
+  And(a=true, b=doneState, out=sclIdleCut);
 
   Or8Way(
     in[0]=sdaStartCut,
@@ -141,11 +143,8 @@ CHIP IICTransmitRange {
   );
 
   // Update state machine.
-  // idleState =
-  Copy(in=stopState, out=nextIdleState);
-
   // startState =
-  And(a=reset, b=idleState, out=nextStartState);
+  Copy(in=reset, out=nextStartState);
 
   // byte0State =
   Not(in=atStop, out=natStop);
@@ -156,16 +155,17 @@ CHIP IICTransmitRange {
   Copy(in=byte0State, out=nextAck0State);
 
   // byte1State =
-  Not(in=atStop, out=natStop);
   And(a=natStop, b=ack0State, out=nextByte1State);
 
   // ack1State =
   Copy(in=byte1State, out=nextAck1State);
 
   // stopState =
-  Or(a=ack0State, b=ack1State, out=anyAckState);
   And(a=atStop, b=anyAckState, out=nextStopState);
 
+  // doneState =
+  Copy(in=stopState, out=nextDoneState);
+
   // For debugging fun
-  Copy(in=pc, out=address);
+  Copy16(in=pc, out=address);
 }
