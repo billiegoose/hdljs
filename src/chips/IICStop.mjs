@@ -1,7 +1,7 @@
 import { ChipDef } from '../components/ChipDef.mjs';
 
-export const IICStart = new ChipDef(`
-CHIP IICStart {
+export const IICStop = new ChipDef(`
+CHIP IICStop {
   IN clock0, reset;
   OUT sda, scl;
 
@@ -17,22 +17,21 @@ CHIP IICStart {
   // |        | clock0 | clock1 | scl | sda |
   // | phase0 |    0   |    0   |  1  |  0  |
   // | phase1 |    1   |    0   |  1  |  0  |
-  // | phase2 |    0   |    1   |  0  |  0  |
-  // | phase3 |    1   |    1   |  0  |  0  |
+  // | phase2 |    0   |    1   |  1  |  1  |
+  // | phase3 |    1   |    1   |  1  |  1  |
 
-  // We only care about the 8th bit-cycle
-  And(a=clock2, b=clock3, out=clock23);
-  And(a=clock23, b=clock4, out=clock234);
+  // We only care about the 1st bit-cycle
+  Or(a=clock2, b=clock3, out=clock23);
+  Nor(a=clock23, b=clock4, out=clock234);
 
-  // Generate the IIC "start" condition
-  Mux(sel=clock234, a=true, b=false, out=sda);
-  Not(in=clock1, out=scl0);
-  Mux(sel=clock234, a=true, b=scl0, out=scl);
+  // Generate the IIC "stop" condition
+  Copy(in=true, out=scl);
+  Mux(sel=clock234, a=true, b=clock1, out=sda);
 }
 `).test(`
 | time |   clock0   | sda | scl |
-| 1    |      0     |  1  |  1  |
-| 2    |      1     |  1  |  1  |
+| 1    |      0     |  0  |  1  |
+| 2    |      1     |  0  |  1  |
 | 3    |      0     |  1  |  1  |
 | 4    |      1     |  1  |  1  |
 | 5    |      0     |  1  |  1  |
@@ -59,12 +58,12 @@ CHIP IICStart {
 | 26   |      1     |  1  |  1  |
 | 27   |      0     |  1  |  1  |
 | 28   |      1     |  1  |  1  |
-| 29   |      0     |  0  |  1  |
-| 30   |      1     |  0  |  1  |
-| 31   |      0     |  0  |  0  |
-| 32   |      1     |  0  |  0  |
-| 33   |      0     |  1  |  1  |
-| 34   |      1     |  1  |  1  |
+| 29   |      0     |  1  |  1  |
+| 30   |      1     |  1  |  1  |
+| 31   |      0     |  1  |  1  |
+| 32   |      1     |  1  |  1  |
+| 33   |      0     |  0  |  1  |
+| 34   |      1     |  0  |  1  |
 | 35   |      0     |  1  |  1  |
 | 36   |      1     |  1  |  1  |
 | 37   |      0     |  1  |  1  |
@@ -91,8 +90,8 @@ CHIP IICStart {
 | 58   |      1     |  1  |  1  |
 | 59   |      0     |  1  |  1  |
 | 60   |      1     |  1  |  1  |
-| 61   |      0     |  0  |  1  |
-| 62   |      1     |  0  |  1  |
-| 63   |      0     |  0  |  0  |
-| 64   |      1     |  0  |  0  |
+| 61   |      0     |  1  |  1  |
+| 62   |      1     |  1  |  1  |
+| 63   |      0     |  1  |  1  |
+| 64   |      1     |  1  |  1  |
 `);

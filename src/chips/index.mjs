@@ -40,9 +40,11 @@ export * from './PC.mjs';
 // export * from './Keyboard.mjs';
 // export * from './Memory.mjs';
 export * from './ROM32K.mjs';
+export * from './ROM32KLessAnnoying.mjs';
 
 export * from './Equal.mjs';
 export * from './Blip.mjs';
+export * from './Blop.mjs';
 export * from './FastBit.mjs';
 export * from './ClockDivider.mjs';
 export * from './Mux4Way.mjs';
@@ -51,8 +53,10 @@ export * from './HalfClock.mjs';
 export * from './QuarterClock.mjs';
 export * from './EigthClock.mjs';
 export * from './SixteenthClock.mjs';
+export * from './IICStart.mjs';
+export * from './IICStop.mjs';
 export * from './IICByte.mjs';
-export * from './IICDumpLoop.mjs';
+export * from './IICTransmitRange.mjs';
 // export * from './SquareWave.mjs';
 // export * from './IICStart.mjs';
 

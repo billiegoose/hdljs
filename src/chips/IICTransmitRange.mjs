@@ -1,3 +1,6 @@
+import { ChipDef } from '../components/ChipDef.mjs';
+
+export const IICTransmitRange = new ChipDef(`
 CHIP IICTransmitRange {
   IN reset, startAt[16], stopAt[16], sendStart, sendStop;
   OUT address[16], sda, scl;
@@ -103,3 +106,4 @@ CHIP IICTransmitRange {
   // For debugging fun
   Copy(in=pc, out=address);
 }
+`);

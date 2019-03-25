@@ -4,15 +4,16 @@ CHIP ClockDivider {
   IN reset, max[16];
   OUT out;
   PARTS:
-  PC(load=loop, inc=nloop, reset=reset, in=0, out=count);
+  PC(load=loop, inc=nloop, reset=reset, in=false, out=count);
   Equal(a=count, b=max, out=loop);
   Not(in=loop, out=nloop);
 
-  Not(in=out, out=nout);
-  Mux(sel=reset, a=nout, b=0, out=bitin);
+  Not(in=pout, out=nout);
+  Mux(sel=reset, a=nout, b=false, out=bitin);
   Or(a=loop, b=reset, out=loadbit);
   Bit(in=bitin, load=loadbit, out=bitout);
-  Mux(sel=reset, a=bitout, b=0, out=out);
+  Mux(sel=reset, a=bitout, b=false, out=pout);
+  Copy(in=pout, out=out);
 }
 `)
 .test(`
