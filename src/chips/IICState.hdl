@@ -1,0 +1,57 @@
+CHIP IICState {
+  IN inc, reset;
+  OUT out[16];
+
+  PARTS:
+  Or(a=inc, b=reset, out=load);
+  Mux(a=false, b=true, sel=reset, out=in0);
+  Bit(in=in0, load=load, out=b0);
+  Copy(in=b0, out=out[0]);
+  Mux(a=b0, b=false, sel=reset, out=in1);
+  Bit(in=in1, load=load, out=b1);
+  Copy(in=b1, out=out[1]);
+  Mux(a=b1, b=false, sel=reset, out=in2);
+  Bit(in=in2, load=load, out=b2);
+  Copy(in=b2, out=out[2]);
+  Mux(a=b2, b=false, sel=reset, out=in3);
+  Bit(in=in3, load=load, out=b3);
+  Copy(in=b3, out=out[3]);
+  Mux(a=b3, b=false, sel=reset, out=in4);
+  Bit(in=in4, load=load, out=b4);
+  Copy(in=b4, out=out[4]);
+  Mux(a=b4, b=false, sel=reset, out=in5);
+  Bit(in=in5, load=load, out=b5);
+  Copy(in=b5, out=out[5]);
+  Mux(a=b5, b=false, sel=reset, out=in6);
+  Bit(in=in6, load=load, out=b6);
+  Copy(in=b6, out=out[6]);
+  Mux(a=b6, b=false, sel=reset, out=in7);
+  Bit(in=in7, load=load, out=b7);
+  Copy(in=b7, out=out[7]);
+  Mux(a=b7, b=false, sel=reset, out=in8);
+  Bit(in=in8, load=load, out=b8);
+  Copy(in=b8, out=out[8]);
+  Mux(a=b8, b=false, sel=reset, out=in9);
+  Bit(in=in9, load=load, out=b9);
+  Copy(in=b9, out=out[9]);
+
+  Mux(a=b9, b=false, sel=reset, out=in10);
+  Bit(in=in10, load=load, out=b10);
+  Copy(in=b10, out=out[10]);
+
+  Mux(a=b10, b=false, sel=reset, out=in11);
+  Bit(in=in11, load=load, out=b11);
+  Copy(in=b11, out=out[11]);
+  Mux(a=b11, b=false, sel=reset, out=in12);
+  Bit(in=in12, load=load, out=b12);
+  Copy(in=b12, out=out[12]);
+  Mux(a=b12, b=false, sel=reset, out=in13);
+  Bit(in=in13, load=load, out=b13);
+  Copy(in=b13, out=out[13]);
+  Mux(a=b13, b=false, sel=reset, out=in14);
+  Bit(in=in14, load=load, out=b14);
+  Copy(in=b14, out=out[14]);
+  Mux(a=b14, b=false, sel=reset, out=in15);
+  Bit(in=in15, load=load, out=b15);
+  Copy(in=b15, out=out[15]);
+}
