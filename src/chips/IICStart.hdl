@@ -23,5 +23,5 @@ CHIP IICStart {
   Not(in=reset, out=nreset);
   Or(a=reset, b=clock01, out=setDone);
   Bit(in=nreset, load=setDone, out=fin);
-  Copy(in=fin, out=done);
+  And(a=fin, b=nreset, out=done);
 }

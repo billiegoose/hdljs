@@ -1,7 +1,7 @@
 load IICTransmitRange.hdl,
 output-file IICTransmitRange.out,
 // compare-to IICTransmitRange.cmp,
-output-list time%S1.8.1 reset%B3.1.3 clock0%B3.1.3 sda%B2.1.2 scl%B2.1.2 pc%D1.3.1 byte%X2.2.2 atStart%B3.1.3 atStop%B3.1.3 startState%B3.1.3 startDone%B3.1.3 byte0State%B3.1.3 byteDone%B3.1.3 ack0State%B3.1.3 ackDone%B3.1.3 byte1State%B3.1.3 ack1State%B3.1.3 stopState%B3.1.3 stopDone%B3.1.3 doneState%B3.1.3;
+output-list time%S1.8.1 reset%B3.1.3 clock0%B3.1.3 sda%B2.1.2 scl%B2.1.2 pc%D1.3.1 stateRegister%B3.7.3 byte%X2.2.2 inc%B4.1.4 jump%B3.1.3 atStart%B4.1.4 startDone%B4.1.4 byteDone%B4.1.4 ackDone%B4.1.4 stopDone%B4.1.4 atStop%B4.1.4;
 
 ROM32K load IICTransmitRange.hack,
 
@@ -10,6 +10,10 @@ set stopAt 70,
 set sendStart 1,
 set sendStop 1,
 set reset 1,
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
+tick, tock, output;
 tick, tock, output;
 set reset 0,
 tick, tock, output;
