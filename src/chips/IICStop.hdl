@@ -15,13 +15,14 @@ CHIP IICStop {
   // | phase3 |    1   |    1   |  1  |  1  |
 
   // Generate the IIC "stop" condition
-  Copy(in=true, out=scl);
-  Or(a=clock1, b=fin, out=sda);
+  Not(in=doneInternal, out=ndone);
+  And(a=true, b=ndone, out=scl);
+  And(a=clock1, b=ndone, out=sda);
   
   // Done-ness logic
-  Nor(a=clock0, b=clock1, out=clock01);
   Not(in=reset, out=nreset);
-  Or(a=reset, b=clock01, out=setDone);
-  Bit(in=nreset, load=setDone, out=fin);
-  Copy(in=fin, out=done);
+  And(a=clock0, b=clock1, out=clock01);
+  Blop(in=clock01, out=rollover);
+  Or(a=reset, b=rollover, out=setDone);
+  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
 }

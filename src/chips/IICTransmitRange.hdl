@@ -51,6 +51,8 @@ CHIP IICTransmitRange {
 
   Blip(in=anyAckState, out=beginAck);
 
+  Blip(in=stopState, out=beginStop);
+
   Blip(in=doneState, out=beginDone);
 
   // we want to target a transmission speed of 100 kbit/s
@@ -120,7 +122,7 @@ CHIP IICTransmitRange {
   And(a=clock0, b=stopState, out=stopClock);
   IICStop(
     clock0=stopClock,
-    reset=beginDone,
+    reset=beginStop,
     sda=sdaStop,
     scl=sclStop,
     done=stopDone
