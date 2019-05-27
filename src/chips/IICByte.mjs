@@ -3,7 +3,7 @@ import { ChipDef } from '../components/ChipDef.mjs';
 export const IICByte = new ChipDef(`
 CHIP IICByte {
   IN clock0, in[8], reset;
-  OUT sda, scl;
+  OUT sda, scl, done;
 
   PARTS:
   SixteenthClock(
@@ -14,13 +14,15 @@ CHIP IICByte {
     eigth=clock3,
     sixteenth=clock4
   );
-
+  
   // |           | clock0 | clock1 | scl | sda |
   // | substate0 |    0   |    0   |  0  |  b  |
   // | substate1 |    1   |    0   |  1  |  b  |
   // | substate2 |    0   |    1   |  1  |  b  |
   // | substate3 |    1   |    1   |  0  |  b  |
-  Xor(a=clock0, b=clock1, out=scl);
+  Xor(a=clock0, b=clock1, out=sclInternal);
+  Not(in=doneInternal, out=ndone);
+  And(a=ndone, b=sclInternal, out=scl);
   // Since we want to send them in MSB -> LSB order,
   // we need to reverse them
   // 000 -> 111
@@ -41,5 +43,15 @@ CHIP IICByte {
     in=in,
     out=sda
   );
+
+  And(a=clock0, b=clock1, out=clock01);
+  And(a=clock2, b=clock3, out=clock23);
+  And(a=clock01, b=clock23, out=clock0123);
+  And(a=clock0123, b=clock4, out=clock01234);
+  Blop(in=clock01234, out=rollover);
+
+  Not(in=reset, out=nreset);
+  Or(a=reset, b=rollover, out=setDone);
+  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
 }
 `);

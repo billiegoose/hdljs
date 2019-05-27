@@ -1,10 +1,62 @@
 import { ChipDef } from '../components/ChipDef.mjs';
 
-export const IICTransmitRange = new ChipDef(`
-CHIP IICTransmitRange {
+export const IICTransmitRange = new ChipDef(`CHIP IICTransmitRange {
   IN reset, startAt[16], stopAt[16], sendStart, sendStop;
-  OUT address[16], sda, scl;
+  OUT address[16], sda, scl, done;
   PARTS:
+  // When to update the state register
+  Or8Way(
+    in[0]=resetState,
+    in[1]=startDoneSignal,
+    in[2]=byteDoneSignal,
+    in[3]=ackDoneSignal,
+    in[4]=stopDoneSignal,
+    out=inc
+  );
+  // The state register
+  IICState(
+    inc=inc,
+    reset=reset,
+    // if (jump) goto byte0State 
+    // (We only have one GOTO in this state machine, unless we add support for reading ACK and retransmitting)
+    jump=jump,
+    addr[0]=false,
+    addr[1]=false,
+    addr[2]=true,
+    // the states
+    out[0]=resetState,
+    out[1]=startState,
+    out[2]=byte0State,
+    out[3]=ack0State,
+    out[4]=byte1State,
+    out[5]=ack1State,
+    out[6]=stopState,
+    out[7]=doneState,
+    // used for printing state in test script
+    out[0..7]=stateRegister
+  );
+
+  // State register derived values
+  Or(a=byte0State, b=byte1State, out=anyByteState);
+  Or(a=ack0State, b=ack1State, out=anyAckState);
+
+  Or8Way(in[0]=startState, in[1]=byte0State, in[2]=ack0State, out=byte0Sel);
+  Or8Way(in[0]=byte1State, in[1]=ack0State, in[2]=stopState, in[3]=doneState, out=byte1Sel);
+
+  Blip(in=startState, out=beginStart);
+
+  Blip(in=byte0State, out=beginByte0);
+
+  Blip(in=byte1State, out=beginByte1);
+
+  Or(a=beginByte0, b=beginByte1, out=beginByte);
+
+  Blip(in=anyAckState, out=beginAck);
+
+  Blip(in=stopState, out=beginStop);
+
+  Blip(in=doneState, out=beginDone);
+
   // we want to target a transmission speed of 100 kbit/s
   // 100kbit/s is 12500 byte/s
   // the clock speed is 25MHz
@@ -16,7 +68,7 @@ CHIP IICTransmitRange {
   // The ClockDivider "max" value is actually 1/2 the period so we want
   // 31 = 0001 1111
   ClockDivider(
-    reset=blipReset,
+    reset=reset,
     max[0]=false,
     max[1]=true,
     max[2]=true,
@@ -25,85 +77,422 @@ CHIP IICTransmitRange {
     max[5]=true,
     out=clock0
   );
-  QuarterClock(
-    clockIn=clock0,
-    reset=blipReset,
-    quarter=bitClock
-  );
-  EigthClock(
-    clockIn=bitClock,
-    reset=blipReset,
-    quarter=halfbyteClock,
-    eigth=byteClock
-  );
-  HalfClock(
-    clockIn=byteClock,
-    reset=blipReset,
-    clockOut=wordClock
-  );
 
-  // State for start and stop conditions.
+  // start and stop addresses
   Equal(a=pc, b=startAt, out=atStart);
   Equal(a=pc, b=stopAt, out=atStop);
-  And(a=atStart, b=sendStart, out=sendingStart);
-  And(a=atStop,  b=sendStop,  out=sendingStop);
-
-  // When to increment the address counter
-  Blop(in=byteClock, out=incClock);
-  Not(in=atStop, out=countUp);
-  And(a=countUp, b=incClock, out=inc);
-
-  // Trigger to start sending message
-  Blip(in=reset, out=blipReset);
 
   // The address counter
-  PC(inc=inc, in=startAt, load=blipReset, out=pc);
-
-  // The final idle state
-  Blip(in=halfbyteClock, out=finalClock);
-  Or(a=blipReset, b=finalClock, out=loadFinal);
-  Mux(sel=blipReset, a=sendingStop, b=false, out=done0);
-  FastBit(in=done0, load=loadFinal, out=done);
+  PC(inc=beginByte0, in=startAt, load=beginStart, out=pc);
 
   // Select the byte to send
   ROM32KLessAnnoying(address=pc, out[0..7]=byte2, out[8..15]=byte1);
-  Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=byteClock, out[0..7]=byte);
+  Mux16(a[0..7]=byte1, b[0..7]=byte2, sel=byte0Sel, out[0..7]=byte);
 
   // Generate SDA and SCL signals
+  And(a=clock0, b=startState, out=startClock);
   IICStart(
-    clock0=clock0,
-    reset=blipReset,
+    clock0=startClock,
+    reset=beginStart,
     sda=sdaStart,
-    scl=sclStart
+    scl=sclStart,
+    done=startDone
   );
-  Not(in=byteClock, out=nbyteClock);
-  Or(a=sdaStart, b=nbyteClock, out=sda0);
-  Or(a=sclStart, b=nbyteClock, out=scl0);
-  IICByte(
-    clock0=clock0,
-    reset=blipReset,
-    in=byte,
-    sda=sda1,
-    scl=scl1
-  );
-  IICStop(
-    clock0=clock0,
-    reset=blipReset,
-    sda=sdaStop,
-    scl=sclStop
-  );
-  Or(a=sdaStop, b=byteClock, out=sda2);
-  Or(a=sclStop, b=byteClock, out=scl2);
+  And(a=startDone, b=startState, out=startDoneSignal);
 
-  // Handle whether to send the start condition, the byte at the 'pc' address, or the stop condition
-  Mux(sel=sendingStart, a=sda1, b=sda0, out=sda01);
-  Mux(sel=sendingStart, a=scl1, b=scl0, out=scl01);
-  Mux(sel=sendingStop, a=sda01, b=sda2, out=sda012);
-  Mux(sel=sendingStop, a=scl01, b=scl2, out=scl012);
-  Mux(sel=done, a=sda012, b=true, out=sda);
-  Mux(sel=done, a=scl012, b=true, out=scl);
+  And(a=clock0, b=anyByteState, out=anyByteClock);
+  IICByte(
+    clock0=anyByteClock,
+    reset=beginByte,
+    in=byte,
+    sda=sdaByte,
+    scl=sclByte,
+    done=byteDone
+  );
+  And(a=byteDone, b=anyByteState, out=byteDoneSignal);
+
+  And(a=clock0, b=anyAckState, out=anyAckClock);
+  IICAckReceive(
+    clock0=anyAckClock,
+    reset=beginAck,
+    sda=sdaAck,
+    scl=sclAck,
+    done=ackDone
+  );
+  And(a=ackDone, b=anyAckState, out=ackDoneSignal);
+
+  And(a=clock0, b=stopState, out=stopClock);
+  IICStop(
+    clock0=stopClock,
+    reset=beginStop,
+    sda=sdaStop,
+    scl=sclStop,
+    done=stopDone
+  );
+  And(a=stopDone, b=stopState, out=stopDoneSignal);
+
+  // Determine which signal gets put on the actual sda and scl lines
+  And(a=sdaStart, b=startState, out=sdaStartCut);
+  And(a=sclStart, b=startState, out=sclStartCut);
+
+  And(a=sdaByte, b=anyByteState, out=sdaByteCut);
+  And(a=sclByte, b=anyByteState, out=sclByteCut);
+
+  And(a=sdaAck, b=anyAckState, out=sdaAckCut);
+  And(a=sclAck, b=anyAckState, out=sclAckCut);
+
+  And(a=sdaStop, b=stopState, out=sdaStopCut);
+  And(a=sclStop, b=stopState, out=sclStopCut);
+
+  And(a=true, b=doneState, out=sdaIdleCut);
+  And(a=true, b=doneState, out=sclIdleCut);
+
+  Or8Way(
+    in[0]=sdaStartCut,
+    in[1]=sdaByteCut,
+    in[2]=sdaAckCut,
+    in[3]=sdaStopCut,
+    in[4]=sdaIdleCut,
+    out=sda
+  );
+
+  Or8Way(
+    in[0]=sclStartCut,
+    in[1]=sclByteCut,
+    in[2]=sclAckCut,
+    in[3]=sclStopCut,
+    in[4]=sclIdleCut,
+    out=scl
+  );
+
+  // If there are more bytes, jump back to byte0State
+  Not(in=atStop, out=natStop);
+  And(a=natStop, b=ack1State, out=moreWords);
+  And(a=ackDoneSignal, b=moreWords, out=jump);
+
+  Copy(in=doneState, out=done);
 
   // For debugging fun
-  Copy(in=pc, out=address);
+  Copy16(in=pc, out=address);
 }
+`).test(`
+|   time   | reset | clock0  |stateRegister| byte | sda | scl |
+| 1        |   1   |    0    |   0000001   |  00  |  0  |  0  |
+| 2        |   0   |    0    |   0000010   |  00  |  0  |  1  |
+| 63       |   0   |    0    |   0000010   |  00  |  0  |  1  |
+| 64       |   0   |    1    |   0000010   |  00  |  0  |  1  |
+| 126      |   0   |    1    |   0000010   |  00  |  0  |  1  |
+| 127      |   0   |    0    |   0000010   |  00  |  0  |  0  |
+| 189      |   0   |    0    |   0000010   |  00  |  0  |  0  |
+| 190      |   0   |    1    |   0000010   |  00  |  0  |  0  |
+| 252      |   0   |    1    |   0000010   |  00  |  0  |  0  |
+| 253      |   0   |    0    |   0000010   |  00  |  0  |  0  |
+| 254      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 315      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 316      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 378      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 379      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 441      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 442      |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 504      |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 505      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 567      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 568      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 630      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 631      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 693      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 694      |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 756      |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 757      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 819      |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 820      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 882      |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 883      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 945      |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 946      |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1008     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1009     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1071     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1072     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1134     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1135     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1197     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1198     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1259     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1260     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1322     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1323     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1385     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1386     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1448     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1449     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1511     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1512     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1574     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1575     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1637     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1638     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1700     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1701     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1763     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1764     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 1826     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1827     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 1889     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1890     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 1952     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 1953     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 2015     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 2016     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 2078     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 2079     |   0   |    0    |   0000100   |  00  |  0  |  0  |
+| 2141     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 2142     |   0   |    1    |   0000100   |  00  |  0  |  1  |
+| 2204     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 2205     |   0   |    0    |   0000100   |  00  |  0  |  1  |
+| 2267     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 2268     |   0   |    1    |   0000100   |  00  |  0  |  0  |
+| 2330     |   0   |    0    |   0001000   |  00  |  0  |  0  |
+| 2331     |   0   |    0    |   0001000   |  00  |  0  |  0  |
+| 2393     |   0   |    1    |   0001000   |  00  |  0  |  1  |
+| 2394     |   0   |    1    |   0001000   |  00  |  0  |  1  |
+| 2456     |   0   |    0    |   0001000   |  00  |  0  |  1  |
+| 2457     |   0   |    0    |   0001000   |  00  |  0  |  1  |
+| 2519     |   0   |    1    |   0001000   |  00  |  0  |  0  |
+| 2520     |   0   |    1    |   0001000   |  00  |  0  |  0  |
+| 2582     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 2583     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 2584     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 2645     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 2646     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 2708     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 2709     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 2771     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 2772     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 2834     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 2835     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 2897     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 2898     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 2960     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 2961     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 3023     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 3024     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 3086     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3087     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3149     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3150     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3212     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3213     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3275     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3276     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3338     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3339     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3401     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3402     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3464     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3465     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3527     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3528     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3589     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3590     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3652     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3653     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3715     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3716     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3778     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3779     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 3841     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3842     |   0   |    0    |   0010000   |  3c  |  1  |  0  |
+| 3904     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3905     |   0   |    1    |   0010000   |  3c  |  1  |  1  |
+| 3967     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 3968     |   0   |    0    |   0010000   |  3c  |  1  |  1  |
+| 4030     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 4031     |   0   |    1    |   0010000   |  3c  |  1  |  0  |
+| 4093     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 4094     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 4156     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 4157     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 4219     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 4220     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 4282     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 4283     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 4345     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 4346     |   0   |    0    |   0010000   |  3c  |  0  |  0  |
+| 4408     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 4409     |   0   |    1    |   0010000   |  3c  |  0  |  1  |
+| 4471     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 4472     |   0   |    0    |   0010000   |  3c  |  0  |  1  |
+| 4534     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 4535     |   0   |    1    |   0010000   |  3c  |  0  |  0  |
+| 4597     |   0   |    0    |   0100000   |  3c  |  0  |  0  |
+| 4598     |   0   |    0    |   0100000   |  3c  |  0  |  0  |
+| 4660     |   0   |    1    |   0100000   |  3c  |  0  |  1  |
+| 4661     |   0   |    1    |   0100000   |  3c  |  0  |  1  |
+| 4723     |   0   |    0    |   0100000   |  3c  |  0  |  1  |
+| 4724     |   0   |    0    |   0100000   |  3c  |  0  |  1  |
+| 4786     |   0   |    1    |   0100000   |  3c  |  0  |  0  |
+| 4787     |   0   |    1    |   0100000   |  3c  |  0  |  0  |
+| 4849     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 4850     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 4912     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 4913     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 4914     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 4975     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 4976     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 5038     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 5039     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 5101     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 5102     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 5164     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 5165     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 5227     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 5228     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 5290     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 5291     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 5353     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5354     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5416     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5417     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5479     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 5480     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 5542     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 5543     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 5605     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5606     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5668     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5669     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5731     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 5732     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 5794     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 5795     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 5857     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5858     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 5919     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5920     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 5982     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 5983     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 6045     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 6046     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 6108     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 6109     |   0   |    0    |   0000100   |  3c  |  1  |  0  |
+| 6171     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 6172     |   0   |    1    |   0000100   |  3c  |  1  |  1  |
+| 6234     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 6235     |   0   |    0    |   0000100   |  3c  |  1  |  1  |
+| 6297     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 6298     |   0   |    1    |   0000100   |  3c  |  1  |  0  |
+| 6360     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 6361     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 6423     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 6424     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 6486     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 6487     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 6549     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 6550     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 6612     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 6613     |   0   |    0    |   0000100   |  3c  |  0  |  0  |
+| 6675     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 6676     |   0   |    1    |   0000100   |  3c  |  0  |  1  |
+| 6738     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 6739     |   0   |    0    |   0000100   |  3c  |  0  |  1  |
+| 6801     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 6802     |   0   |    1    |   0000100   |  3c  |  0  |  0  |
+| 6864     |   0   |    0    |   0001000   |  3c  |  0  |  0  |
+| 6865     |   0   |    0    |   0001000   |  3c  |  0  |  0  |
+| 6927     |   0   |    1    |   0001000   |  3c  |  0  |  1  |
+| 6928     |   0   |    1    |   0001000   |  3c  |  0  |  1  |
+| 6990     |   0   |    0    |   0001000   |  3c  |  0  |  1  |
+| 6991     |   0   |    0    |   0001000   |  3c  |  0  |  1  |
+| 7053     |   0   |    1    |   0001000   |  3c  |  0  |  0  |
+| 7054     |   0   |    1    |   0001000   |  3c  |  0  |  0  |
+| 7116     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7117     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7179     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7180     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7242     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7243     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7244     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7305     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 7306     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 7368     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 7369     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 7431     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 7432     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 7494     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 7495     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 7557     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 7558     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 7620     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7621     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7683     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7684     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7746     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7747     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7809     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 7810     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 7872     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7873     |   0   |    0    |   0010000   |  b0  |  1  |  0  |
+| 7935     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7936     |   0   |    1    |   0010000   |  b0  |  1  |  1  |
+| 7998     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 7999     |   0   |    0    |   0010000   |  b0  |  1  |  1  |
+| 8061     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 8062     |   0   |    1    |   0010000   |  b0  |  1  |  0  |
+| 8124     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8125     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8187     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8188     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8249     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8250     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8312     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8313     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8375     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8376     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8438     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8439     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8501     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8502     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8564     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8565     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8627     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8628     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8690     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8691     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8753     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8754     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 8816     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8817     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 8879     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8880     |   0   |    0    |   0010000   |  b0  |  0  |  0  |
+| 8942     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 8943     |   0   |    1    |   0010000   |  b0  |  0  |  1  |
+| 9005     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 9006     |   0   |    0    |   0010000   |  b0  |  0  |  1  |
+| 9068     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 9069     |   0   |    1    |   0010000   |  b0  |  0  |  0  |
+| 9131     |   0   |    0    |   0100000   |  b0  |  0  |  0  |
+| 9132     |   0   |    0    |   0100000   |  b0  |  0  |  0  |
+| 9194     |   0   |    1    |   0100000   |  b0  |  0  |  1  |
+| 9195     |   0   |    1    |   0100000   |  b0  |  0  |  1  |
+| 9257     |   0   |    0    |   0100000   |  b0  |  0  |  1  |
+| 9258     |   0   |    0    |   0100000   |  b0  |  0  |  1  |
+| 9320     |   0   |    1    |   0100000   |  b0  |  0  |  0  |
+| 9321     |   0   |    1    |   0100000   |  b0  |  0  |  0  |
+| 9383     |   0   |    0    |   1000000   |  b0  |  0  |  1  |
+| 9384     |   0   |    0    |   1000000   |  b0  |  0  |  1  |
+| 9446     |   0   |    1    |   1000000   |  b0  |  0  |  1  |
+| 9447     |   0   |    1    |   1000000   |  b0  |  0  |  1  |
+| 9509     |   0   |    0    |   1000000   |  b0  |  1  |  1  |
+| 9510     |   0   |    0    |   1000000   |  b0  |  1  |  1  |
+| 9572     |   0   |    1    |   1000000   |  b0  |  1  |  1  |
+| 9573     |   0   |    1    |   1000000   |  b0  |  1  |  1  |
+| 9635     |   0   |    0    |   0000000   |  b0  |  1  |  1  |
+| 9636     |   0   |    0    |   0000000   |  b0  |  1  |  1  |
+| 9698     |   0   |    1    |   0000000   |  b0  |  1  |  1  |
+| 9699     |   0   |    1    |   0000000   |  b0  |  1  |  1  |
+| 9761     |   0   |    0    |   0000000   |  b0  |  1  |  1  |
+| 9762     |   0   |    0    |   0000000   |  b0  |  1  |  1  |
+| 9824     |   0   |    1    |   0000000   |  b0  |  1  |  1  |
+| 9825     |   0   |    1    |   0000000   |  b0  |  1  |  1  |
 `);

@@ -168,6 +168,8 @@ CHIP IICTransmitRange {
   And(a=natStop, b=ack1State, out=moreWords);
   And(a=ackDoneSignal, b=moreWords, out=jump);
 
+  Copy(in=doneState, out=done);
+
   // For debugging fun
   Copy16(in=pc, out=address);
 }
