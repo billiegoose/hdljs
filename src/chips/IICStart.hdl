@@ -1,29 +1,40 @@
 CHIP IICStart {
-  IN clock0, reset, enable;
+  IN clock0, reset;
   OUT sda, scl, done;
 
   PARTS:
-  HalfClock(
-    clockIn=clock0,
+  Copy(in=false, out=sda);
+  // Catch trailing edge
+  Blop(in=clock0, out=clockFall);
+  FastBit(
+    in=true,
+    load=clockFall,
     reset=reset,
-    clockOut=clock1
+    out=nscl
   );
+  Not(in=nscl, out=sclInternal);
+  Copy(in=sclInternal, out=scl);
+
+  Blop(in=sclInternal, out=sclFall);
+  FastBit(
+    in=true,
+    load=sclFall,
+    reset=reset,
+    slowOut=phase2
+  );
+
+  And(a=clockFall, b=phase2, out=finalPhase);
+  FastBit(
+    in=true,
+    load=finalPhase,
+    reset=reset,
+    out=done
+  );
+
   // |        | clock0 | clock1 | scl | sda |
   // | en=0   |    X   |    X   |  0  |  0  |
   // | phase0 |    0   |    0   |  1  |  0  |
   // | phase1 |    1   |    0   |  1  |  0  |
   // | phase2 |    0   |    1   |  0  |  0  |
   // | phase3 |    1   |    1   |  0  |  0  |
-
-  // Generate the IIC "start" condition
-  Copy(in=false, out=sda);
-  Nor(a=clock1, b=fin, out=scl);
-
-  // Done-ness logic
-  Nor(a=clock0, b=clock1, out=clock01);
-  Not(in=reset, out=nreset);
-  Or(a=reset, b=clock01, out=setDone);
-  Bit(in=nreset, load=setDone, out=fin);
-  And(a=fin, b=nreset, out=done0);
-  And(a=done0, b=enable, out=done);
 }
