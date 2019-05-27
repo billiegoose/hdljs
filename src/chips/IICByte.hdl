@@ -17,7 +17,9 @@ CHIP IICByte {
   // | substate1 |    1   |    0   |  1  |  b  |
   // | substate2 |    0   |    1   |  1  |  b  |
   // | substate3 |    1   |    1   |  0  |  b  |
-  Xor(a=clock0, b=clock1, out=scl);
+  Xor(a=clock0, b=clock1, out=sclInternal);
+  Not(in=doneInternal, out=ndone);
+  And(a=ndone, b=sclInternal, out=scl);
   // Since we want to send them in MSB -> LSB order,
   // we need to reverse them
   // 000 -> 111
@@ -39,18 +41,13 @@ CHIP IICByte {
     out=sda
   );
 
-  // Done-ness logic
-  // And(a=clock0, b=clock1, out=clock01);
-  // And(a=clock2, b=clock3, out=clock23);
-  // And(a=clock01, b=clock23, out=clock0123);
-  // And(a=clock0123, b=clock4, out=clock01234);
+  And(a=clock0, b=clock1, out=clock01);
+  And(a=clock2, b=clock3, out=clock23);
+  And(a=clock01, b=clock23, out=clock0123);
+  And(a=clock0123, b=clock4, out=clock01234);
+  Blop(in=clock01234, out=rollover);
 
-  Or(a=clock0, b=clock1, out=clock01);
-  Or(a=clock2, b=clock3, out=clock23);
-  Or(a=clock01, b=clock23, out=clock0123);
-  Nor(a=clock0123, b=clock4, out=clock01234);
-
-  Or(a=reset, b=clock01234, out=setDone);
   Not(in=reset, out=nreset);
-  Bit(in=nreset, load=setDone, out=done);
+  Or(a=reset, b=rollover, out=setDone);
+  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
 }

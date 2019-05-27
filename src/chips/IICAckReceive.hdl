@@ -15,12 +15,17 @@ CHIP IICAckReceive {
   // | phase3 |    1   |    1   |  0  |  0  |
 
   // Set sda to 'z' and pulse clock
-  Xor(a=clock0, b=clock1, out=scl);
-  HighImpedence(out=sda);
+  Xor(a=clock0, b=clock1, out=sclInternal);
+  Not(in=doneInternal, out=ndone);
+  And(a=sclInternal, b=ndone, out=scl);
+
+  HighImpedence(out=sdaInternal);
+  And(a=sdaInternal, b=ndone, out=sda);
 
   // Done-ness logic
-  Nor(a=clock0, b=clock1, out=clock01);
   Not(in=reset, out=nreset);
-  Or(a=reset, b=clock01, out=setDone);
-  Bit(in=nreset, load=setDone, out=done);
+  And(a=clock0, b=clock1, out=clock01);
+  Blop(in=clock01, out=rollover);
+  Or(a=reset, b=rollover, out=setDone);
+  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
 }

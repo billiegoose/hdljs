@@ -45,7 +45,9 @@ CHIP IICTransmitRange {
 
   Blip(in=byte0State, out=beginByte0);
 
-  Blip(in=anyByteState, out=beginByte);
+  Blip(in=byte1State, out=beginByte1);
+
+  Or(a=beginByte0, b=beginByte1, out=beginByte);
 
   Blip(in=anyAckState, out=beginAck);
 
