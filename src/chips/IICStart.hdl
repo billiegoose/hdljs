@@ -1,5 +1,5 @@
 CHIP IICStart {
-  IN clock0, reset;
+  IN clock0, reset, enable;
   OUT sda, scl, done;
 
   PARTS:
@@ -9,6 +9,7 @@ CHIP IICStart {
     clockOut=clock1
   );
   // |        | clock0 | clock1 | scl | sda |
+  // | en=0   |    X   |    X   |  0  |  0  |
   // | phase0 |    0   |    0   |  1  |  0  |
   // | phase1 |    1   |    0   |  1  |  0  |
   // | phase2 |    0   |    1   |  0  |  0  |
@@ -23,5 +24,6 @@ CHIP IICStart {
   Not(in=reset, out=nreset);
   Or(a=reset, b=clock01, out=setDone);
   Bit(in=nreset, load=setDone, out=fin);
-  And(a=fin, b=nreset, out=done);
+  And(a=fin, b=nreset, out=done0);
+  And(a=done0, b=enable, out=done);
 }
