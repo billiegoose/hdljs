@@ -129,37 +129,53 @@ CHIP IICTransmitRange {
   );
   And(a=stopDone, b=stopState, out=stopDoneSignal);
 
-  // Determine which signal gets put on the actual sda and scl lines
-  And(a=sdaStart, b=startState, out=sdaStartCut);
-  And(a=sclStart, b=startState, out=sclStartCut);
+  // // Determine which signal gets put on the actual sda and scl lines
+  // And(a=sdaStart, b=startState, out=sdaStartCut);
+  // And(a=sclStart, b=startState, out=sclStartCut);
 
-  And(a=sdaByte, b=anyByteState, out=sdaByteCut);
-  And(a=sclByte, b=anyByteState, out=sclByteCut);
+  // And(a=sdaByte, b=anyByteState, out=sdaByteCut);
+  // And(a=sclByte, b=anyByteState, out=sclByteCut);
 
-  And(a=sdaAck, b=anyAckState, out=sdaAckCut);
-  And(a=sclAck, b=anyAckState, out=sclAckCut);
+  // And(a=sdaAck, b=anyAckState, out=sdaAckCut);
+  // And(a=sclAck, b=anyAckState, out=sclAckCut);
 
-  And(a=sdaStop, b=stopState, out=sdaStopCut);
-  And(a=sclStop, b=stopState, out=sclStopCut);
+  // And(a=sdaStop, b=stopState, out=sdaStopCut);
+  // And(a=sclStop, b=stopState, out=sclStopCut);
 
-  And(a=true, b=doneState, out=sdaIdleCut);
-  And(a=true, b=doneState, out=sclIdleCut);
+  // And(a=true, b=doneState, out=sdaIdleCut);
+  // And(a=true, b=doneState, out=sclIdleCut);
+
+  // Or8Way(
+  //   in[0]=sdaStartCut,
+  //   in[1]=sdaByteCut,
+  //   in[2]=sdaAckCut,
+  //   in[3]=sdaStopCut,
+  //   in[4]=sdaIdleCut,
+  //   out=sda
+  // );
+
+  // Or8Way(
+  //   in[0]=sclStartCut,
+  //   in[1]=sclByteCut,
+  //   in[2]=sclAckCut,
+  //   in[3]=sclStopCut,
+  //   in[4]=sclIdleCut,
+  //   out=scl
+  // );
 
   Or8Way(
-    in[0]=sdaStartCut,
-    in[1]=sdaByteCut,
-    in[2]=sdaAckCut,
-    in[3]=sdaStopCut,
-    in[4]=sdaIdleCut,
+    in[0]=sdaStart,
+    in[1]=sdaByte,
+    in[2]=sdaAck,
+    in[3]=sdaStop,
     out=sda
   );
 
   Or8Way(
-    in[0]=sclStartCut,
-    in[1]=sclByteCut,
-    in[2]=sclAckCut,
-    in[3]=sclStopCut,
-    in[4]=sclIdleCut,
+    // in[0]=sclStart,
+    in[1]=sclByte,
+    in[2]=sclAck,
+    // in[3]=sclStop,
     out=scl
   );
 
