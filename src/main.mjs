@@ -14,4 +14,4 @@ fs.writeFileSync('out/testbench.sv', compileVerilogTestHarnessChip(lastChip, las
 // fs.writeFileSync('out/goboard.sv', compileGoBoardWrapper(lastChip))
 // console.log(lastChip.examples)
 // console.log(compileGoBoardWrapper(lastChip));
-// testJs(jsImplementations);
+testJs(jsImplementations);

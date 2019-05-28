@@ -22,5 +22,5 @@ module HighImpedence (
   output out_0
   );
 
-  assign out_0 = z;
+  assign out_0 = 0; // 1'bz;
 endmodule`);
