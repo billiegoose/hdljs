@@ -1,35 +1,51 @@
 CHIP IICStart {
-  IN clock0, reset;
+  IN clock0, reset, start;
   OUT sda, scl, done;
 
   PARTS:
+  // Start logic
+  Blip(in=start, out=startRise);
+  FastBit(
+    in=startRise,
+    load=startRise,
+    reset=reset,
+    out=active
+  );
+  And(a=clock0, b=active, out=activeClock);
+  // Reset logic
+  Or(a=reset, b=doneRise, out=resetInternal);
+
   Copy(in=false, out=sda);
   // Catch trailing edge
-  Blop(in=clock0, out=clockFall);
+  Blop(in=activeClock, out=clockFall);
+  Not(in=startRise, out=nstartRise);
+  Or(a=clockFall, b=startRise, out=loadScl);
   FastBit(
-    in=true,
-    load=clockFall,
-    reset=reset,
-    out=nscl
+    in=startRise,
+    load=loadScl,
+    reset=resetInternal,
+    out=sclInternal
   );
-  Not(in=nscl, out=sclInternal);
   Copy(in=sclInternal, out=scl);
 
   Blop(in=sclInternal, out=sclFall);
   FastBit(
     in=true,
     load=sclFall,
-    reset=reset,
+    reset=resetInternal,
     slowOut=phase2
   );
 
   And(a=clockFall, b=phase2, out=finalPhase);
+  Or(a=finalPhase, b=startRise, out=loadDone);
   FastBit(
-    in=true,
-    load=finalPhase,
+    in=nstartRise,
+    load=loadDone,
     reset=reset,
-    out=done
+    out=doneInternal
   );
+  Copy(in=doneInternal, out=done);
+  Blip(in=doneInternal, out=doneRise);
 
   // |        | clock0 | clock1 | scl | sda |
   // | en=0   |    X   |    X   |  0  |  0  |

@@ -91,7 +91,8 @@ CHIP IICTransmitRange {
   And(a=clock0, b=startState, out=startClock);
   IICStart(
     clock0=startClock,
-    reset=beginStart,
+    reset=reset,
+    start=beginStart,
     sda=sdaStart,
     scl=sclStart,
     done=startDone
