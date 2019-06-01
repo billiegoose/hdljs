@@ -1,31 +1,51 @@
 CHIP IICAckReceive {
-  IN clock0, reset;
+  IN clock0, reset, start;
   OUT sda, scl, done;
 
   PARTS:
-  HalfClock(
-    clockIn=clock0,
-    reset=reset,
-    clockOut=clock1
-  );
   // |        | clock0 | clock1 | scl | sda |
   // | phase0 |    0   |    0   |  0  |  0  |
   // | phase1 |    1   |    0   |  1  |  0  |
   // | phase2 |    0   |    1   |  1  |  0  |
   // | phase3 |    1   |    1   |  0  |  0  |
 
-  // Set sda to 'z' and pulse clock
-  Xor(a=clock0, b=clock1, out=sclInternal);
-  Not(in=doneInternal, out=ndone);
-  And(a=sclInternal, b=ndone, out=scl);
+  // Start logic
+  Blip(in=start, out=startRise);
+  Not(in=startRise, out=nstartRise);
+  FastBit(
+    in=startRise,
+    load=startRise,
+    reset=reset,
+    out=active
+  );
+  // Reset logic
+  Or(a=reset, b=startRise, out=resetClock);
+  HalfClock(
+    clockIn=clock0,
+    reset=resetClock,
+    clockOut=clock1
+  );
 
+  And(a=clock0, b=ndone, out=activeClock0);
+  And(a=clock1, b=ndone, out=activeClock1);
+
+  // Set sda to 'z'
   HighImpedence(out=sdaInternal);
   And(a=sdaInternal, b=ndone, out=sda);
+  
+  // Pulse clock
+  Xor(a=activeClock0, b=activeClock1, out=sclInternal);
+  Copy(in=sclInternal, out=scl);
 
   // Done-ness logic
-  Not(in=reset, out=nreset);
-  And(a=clock0, b=clock1, out=clock01);
-  Blop(in=clock01, out=rollover);
-  Or(a=reset, b=rollover, out=setDone);
-  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
+  And(a=clock0, b=clock1, out=finalPhase);
+  Blop(in=finalPhase, out=loadDone);
+  FastBit(
+    in=nstartRise,
+    load=loadDone,
+    reset=reset,
+    out=doneInternal
+  );
+  Copy(in=doneInternal, out=done);
+  Not(in=doneInternal, out=ndone);
 }

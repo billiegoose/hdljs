@@ -113,7 +113,8 @@ CHIP IICTransmitRange {
   And(a=clock0, b=anyAckState, out=anyAckClock);
   IICAckReceive(
     clock0=anyAckClock,
-    reset=beginAck,
+    reset=reset,
+    start=beginAck,
     sda=sdaAck,
     scl=sclAck,
     done=ackDone

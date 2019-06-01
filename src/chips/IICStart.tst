@@ -6,7 +6,7 @@
 load IICStart.hdl,
 output-file IICStart.out,
 compare-to IICStart.cmp,
-output-list time%S1.4.1 clock0%B4.1.4 reset%B3.1.3 start%B3.1.3 sda%B2.1.2 scl%B2.1.2 done%B3.1.2;
+output-list time%S1.4.1 clock0%B4.1.3 reset%B3.1.3 start%B3.1.3 sda%B2.1.2 scl%B2.1.2 done%B3.1.2;
 
 set reset 1, tick, tock, output;
 set reset 0,
