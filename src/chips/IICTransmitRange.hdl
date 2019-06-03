@@ -102,7 +102,8 @@ CHIP IICTransmitRange {
   And(a=clock0, b=anyByteState, out=anyByteClock);
   IICByte(
     clock0=anyByteClock,
-    reset=beginByte,
+    reset=reset,
+    start=beginByte,
     in=byte,
     sda=sdaByte,
     scl=sclByte,
