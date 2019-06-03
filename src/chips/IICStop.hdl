@@ -1,28 +1,45 @@
 CHIP IICStop {
-  IN clock0, reset;
+  IN clock0, reset, start;
   OUT sda, scl, done;
 
   PARTS:
-  HalfClock(
-    clockIn=clock0,
-    reset=reset,
-    clockOut=clock1
-  );
   // |        | clock0 | clock1 | scl | sda |
   // | phase0 |    0   |    0   |  1  |  0  |
   // | phase1 |    1   |    0   |  1  |  0  |
   // | phase2 |    0   |    1   |  1  |  1  |
   // | phase3 |    1   |    1   |  1  |  1  |
 
+  // Start logic
+  Blip(in=start, out=startRise);
+  Not(in=startRise, out=nstartRise);
+  FastBit(
+    in=startRise,
+    load=startRise,
+    reset=reset,
+    out=active
+  );
+  // Reset logic
+  Or(a=reset, b=startRise, out=resetClock);
+  HalfClock(
+    clockIn=clock0,
+    reset=resetClock,
+    clockOut=clock1
+  );
+
   // Generate the IIC "stop" condition
-  Not(in=doneInternal, out=ndone);
-  And(a=true, b=ndone, out=scl);
+  And(a=active, b=ndone, out=scl);
   And(a=clock1, b=ndone, out=sda);
   
   // Done-ness logic
-  Not(in=reset, out=nreset);
-  And(a=clock0, b=clock1, out=clock01);
-  Blop(in=clock01, out=rollover);
-  Or(a=reset, b=rollover, out=setDone);
-  FastBit(in=nreset, load=setDone, out=done, slowOut=doneInternal);
+  And(a=clock0, b=clock1, out=finalPhase);
+  Blop(in=finalPhase, out=finalPhaseFall);
+  Or(a=finalPhaseFall, b=startRise, out=loadDone);
+  FastBit(
+    in=nstartRise,
+    load=loadDone,
+    reset=reset,
+    out=doneInternal
+  );
+  Copy(in=doneInternal, out=done);
+  Not(in=doneInternal, out=ndone);
 }

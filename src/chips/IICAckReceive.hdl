@@ -39,7 +39,8 @@ CHIP IICAckReceive {
 
   // Done-ness logic
   And(a=clock0, b=clock1, out=finalPhase);
-  Blop(in=finalPhase, out=loadDone);
+  Blop(in=finalPhase, out=finalPhaseFall);
+  Or(a=finalPhaseFall, b=startRise, out=loadDone);
   FastBit(
     in=nstartRise,
     load=loadDone,

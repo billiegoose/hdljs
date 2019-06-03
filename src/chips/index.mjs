@@ -58,7 +58,7 @@ export * from './IICState.mjs';
 export * from './IICStart.mjs';
 export * from './IICAckReceive.mjs';
 // export * from './IICByte.mjs';
-// export * from './IICStop.mjs';
+export * from './IICStop.mjs';
 // export * from './IICTransmitRange.mjs';
 
 // export * from './SquareWave.mjs';

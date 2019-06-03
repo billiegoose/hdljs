@@ -124,7 +124,8 @@ CHIP IICTransmitRange {
   And(a=clock0, b=stopState, out=stopClock);
   IICStop(
     clock0=stopClock,
-    reset=beginStop,
+    reset=reset,
+    start=beginStop,
     sda=sdaStop,
     scl=sclStop,
     done=stopDone
