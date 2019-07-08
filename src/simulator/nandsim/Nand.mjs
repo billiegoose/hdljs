@@ -1,7 +1,7 @@
 import { NandSim } from './NandSim.mjs'
 import { SuperLightweightObservable } from './SuperLightweightObservable.mjs'
 
-const sim = new NandSim()
+export const sim = new NandSim()
 const NandList = []
 
 export class Nand {
@@ -33,5 +33,8 @@ export class Nand {
   }
   set b (observer) {
     this._b.subscribe(observer)
+  }
+  place () {
+    sim.addNand(this.a.value, this.b.value, this.out.value)
   }
 }
