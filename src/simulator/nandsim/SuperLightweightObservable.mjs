@@ -1,14 +1,13 @@
 export class SuperLightweightObservable {
   _value = null
   observers = []
-  constructor () {
-
-  }
+  constructor () {}
   subscribe(observer) {
     if (this._value === null) {
       if (!this.observers.includes(observer)) {
         this.observers.push(observer)
-        observer.subscribe(this)
+        // Subscribe back
+        if (typeof observer.subscribe === 'function') observer.subscribe(this)
       }
     } else {
       observer.next(this._value)

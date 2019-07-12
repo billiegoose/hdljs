@@ -1,7 +1,4 @@
-import { Nand, sim } from './Nand.mjs'
-import { Logic } from './NandSim.mjs'
-
-// Some tests
+import { Nand } from './Nand.mjs'
 
 // Define connections
 let n1 = new Nand()
@@ -38,9 +35,37 @@ n5.b.name('C').input()
 n8.out.name('sum').output()
 n9.out.name('carry').output()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { sim } from './Nand.mjs'
+import { Logic } from './NandSim.mjs'
+
 // Tests
 sim.setPins({ A: Logic.LO, B: Logic.LO, C: Logic.LO })
-console.log(sim)
+// console.log(sim)
 console.log(sim.readInputs())
 console.log(sim.evalOutputs())
 

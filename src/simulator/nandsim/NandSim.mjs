@@ -1,4 +1,4 @@
-const Logic = {
+export const Logic = {
   UK: 0,
   LO: 1,
   HI: 2,
