@@ -62,12 +62,6 @@ export class Nand {
   get id () {
     return `${this.constructor.name}_${this._id}`
   }
-  set out (observer) {
-    this._out.subscribe(observer)
-  }
-  get out () {
-    return this._out
-  }
   get a () {
     return this._a
   }
@@ -79,5 +73,11 @@ export class Nand {
   }
   set b (observer) {
     this._b.subscribe(observer)
+  }
+  get out () {
+    return this._out
+  }
+  set out (observer) {
+    this._out.subscribe(observer)
   }
 }

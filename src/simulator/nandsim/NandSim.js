@@ -52,7 +52,7 @@ export class NandSim {
     }
   }
   lookupIndex(index) {
-    return this.names[index][0]
+    return this.names[index][this.names[index].length - 1]
   }
   setPin(index, value) {
     this.values[index] = value;
