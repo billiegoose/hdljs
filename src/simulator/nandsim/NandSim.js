@@ -1,16 +1,4 @@
-export const Logic = {
-  UK: 0,
-  LO: 1,
-  HI: 2,
-};
-
-function translateLogic (logic) {
-  switch (logic) {
-    case Logic.HI: return '^';
-    case Logic.LO: return '_';
-    case Logic.UK: return '?';
-  }
-}
+import { Logic } from './Logic.js'
 
 function nand (a, b) {
   if (a === Logic.LO || b === Logic.LO) return Logic.HI;
@@ -87,7 +75,7 @@ export class NandSim {
     for (const name of names) {
       const index = this.lookupPin(name)
       const val = this.readPin(index)
-      results[name] = translateLogic(val)
+      results[name] = val
     }
     return results
   }
@@ -138,7 +126,7 @@ export class NandSim {
       const name = this.lookupIndex(index)
       this.evalPin(index)
       const val = this.readPin(index)
-      results[name] = translateLogic(val)
+      results[name] = val
     }
     return results
   }
@@ -147,7 +135,7 @@ export class NandSim {
     for (const index of this.inputs) {
       const name = this.lookupIndex(index)
       const val = this.readPin(index)
-      results[name] = translateLogic(val)
+      results[name] = val
     }
     return results
   }

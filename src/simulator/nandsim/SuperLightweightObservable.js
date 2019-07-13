@@ -1,7 +1,8 @@
 export class SuperLightweightObservable {
-  _value = null
-  observers = []
-  constructor () {}
+  constructor () {
+    this._value = null
+    this.observers = []
+  }
   subscribe(observer) {
     if (this._value === null) {
       if (!this.observers.includes(observer)) {

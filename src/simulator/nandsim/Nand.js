@@ -1,5 +1,5 @@
-import { NandSim } from './NandSim.mjs'
-import { SuperLightweightObservable } from './SuperLightweightObservable.mjs'
+import { NandSim } from './NandSim.js'
+import { SuperLightweightObservable } from './SuperLightweightObservable.js'
 
 export const sim = new NandSim()
 const NandList = []
@@ -52,8 +52,8 @@ class OutputPin extends Pin {
 }
 
 export class Nand {
-  _id = NandList.length
   constructor() {
+    this._id = NandList.length
     NandList.push(this)
     this._a = new InputPin(this)
     this._b = new InputPin(this)
