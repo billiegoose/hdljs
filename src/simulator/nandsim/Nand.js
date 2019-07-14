@@ -3,9 +3,12 @@ import { Gate, InputPin, OutputPin, sim } from './Gate.js'
 export class Nand extends Gate {
   constructor() {
     super();
-    this._a = new InputPin(this, 'a')
-    this._b = new InputPin(this, 'b')
-    this._out = new OutputPin(this, 'out')
+    const a = new InputPin()
+    a.attach(this, 'a')
+    const b = new InputPin()
+    b.attach(this, 'b')
+    const out = new OutputPin()
+    out.attach(this, 'out')
   }
   finalizer () {
     sim.addNand(this.a.value, this.b.value, this.out.value)

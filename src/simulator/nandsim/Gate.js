@@ -5,29 +5,32 @@ export const sim = new NandSim()
 const partlist = {}
 
 const allPinsHaveValues = (chip) => {
-  for (const prop of Object.keys(chip)) {
+  for (const prop of Object.getOwnPropertyNames(chip)) {
     if (chip[prop] instanceof Pin) {
-      if (typeof chip[prop].value === 'undefined') return false
+      if (chip[prop].value === null) return false
     }
   }
   return true
 }
 
 const place = (chip) => {
-  if (chip.finalizer && allPinsHaveValues(chip)) chip.finalizer()
+  if (chip.finalizer && allPinsHaveValues(chip)) {
+    chip.finalizer()
+  }
 }
 
 class Pin extends SuperLightweightObservable {
-  constructor(chip, name) {
+  constructor() {
     super()
-    if (chip) {
-      this.subscribe({ next: () => place(chip) })
-      if (name) {
-        Object.defineProperty(chip, name, {
-          get: () => this,
-          set: (observer) => this.subscribe(observer)
-        })
-      }
+  }
+  attach (chip, name) {
+    this.subscribe({ next: () => place(chip) })
+    if (name) {
+      Object.defineProperty(chip, name, {
+        get: () => this,
+        set: (observer) => this.subscribe(observer)
+      })
+      this.name(`${chip.id}.${name}`)
     }
   }
   name (name) {
