@@ -1,6 +1,5 @@
 import { Gate } from '../Gate.js'
-import { Nand } from '../Nand.js'
-import { Not } from './Not.js'
+import { Nand, Not } from './index.js'
 
 export class And extends Gate {
   constructor() {
