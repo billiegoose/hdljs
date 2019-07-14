@@ -1,4 +1,5 @@
-import { Nand, sim } from './Nand.js'
+import { sim } from './Gate.js'
+import { Nand } from './Nand.js'
 import { Logic } from './Logic.js'
 
 describe("Nand", () => {

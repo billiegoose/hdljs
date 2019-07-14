@@ -1,5 +1,5 @@
 import { Not } from "./chips/Not.js";
-import { sim } from "./Nand.js";
+import { sim } from "./Gate.js";
 import { Logic } from "./Logic.js";
 
 describe("Not", () => {

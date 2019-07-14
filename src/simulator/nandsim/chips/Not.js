@@ -1,29 +1,15 @@
+import { Gate, InputPin, OutputPin } from '../Gate.js'
 import { Nand } from '../Nand.js'
 
-const NotList = []
-
-export class Not {
+export class Not extends Gate {
   constructor() {
-    this._id = NotList.length
-    NotList.push(this)
-    this._nand = new Nand()
-    this._nand.a = this._nand.b
-    this.in.name(`${this.id}.in`)
-    this.out.name(`${this.id}.out`)
-  }
-  get id () {
-    return `${this.constructor.name}_${this._id}`
-  }
-  get in () {
-    return this._nand.a
-  }
-  set in (observer) {
-    this._nand.a = observer
-  }
-  get out () {
-    return this._nand.out
-  }
-  set out (observer) {
-    this._nand.out = observer
+    super()
+    this._in = new InputPin(this, 'in')
+    this._out = new OutputPin(this, 'out')
+
+    const nand = new Nand()
+    nand.a = nand.b
+    this.in = nand.a
+    this.out = nand.out
   }
 }
