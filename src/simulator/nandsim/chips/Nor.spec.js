@@ -1,10 +1,10 @@
-import { Or } from "./Or.js";
+import { Nor } from "./Nor.js";
 import { sim } from "../Gate.js";
 import { Logic } from "../Logic.js";
 
-describe("Or", () => {
+describe("Nor", () => {
   // Define connections
-  let and = new Or();
+  let and = new Nor();
 
   // Define Inputs
   and.a.name("a").input();
@@ -15,12 +15,12 @@ describe("Or", () => {
 
   test.each`
     a           | b           | out
-    ${Logic.LO} | ${Logic.LO} | ${Logic.LO}
-    ${Logic.LO} | ${Logic.HI} | ${Logic.HI}
-    ${Logic.HI} | ${Logic.LO} | ${Logic.HI}
-    ${Logic.HI} | ${Logic.HI} | ${Logic.HI}
-    ${Logic.UK} | ${Logic.HI} | ${Logic.HI}
-    ${Logic.HI} | ${Logic.UK} | ${Logic.HI}
+    ${Logic.LO} | ${Logic.LO} | ${Logic.HI}
+    ${Logic.LO} | ${Logic.HI} | ${Logic.LO}
+    ${Logic.HI} | ${Logic.LO} | ${Logic.LO}
+    ${Logic.HI} | ${Logic.HI} | ${Logic.LO}
+    ${Logic.UK} | ${Logic.HI} | ${Logic.LO}
+    ${Logic.HI} | ${Logic.UK} | ${Logic.LO}
     ${Logic.LO} | ${Logic.UK} | ${Logic.UK}
     ${Logic.UK} | ${Logic.LO} | ${Logic.UK}
   `("$a | $b == $out", ({ a, b, out }) => {
