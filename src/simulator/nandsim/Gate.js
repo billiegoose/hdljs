@@ -28,7 +28,7 @@ class Pin extends SuperLightweightObservable {
     if (name) {
       Object.defineProperty(chip, name, {
         get: () => this,
-        set: (observer) => this.subscribe(observer)
+        set: this.wire.bind(this)
       })
       this.name(`${chip.id}.${name}`)
     }
@@ -41,11 +41,14 @@ class Pin extends SuperLightweightObservable {
     })
     return this
   }
+  wire (observer) {
+    this.subscribe(observer)
+  }
 }
 
 export class InputPin extends Pin {
-  constructor(chip, name) {
-    super(chip, name)
+  constructor() {
+    super()
   }
   input () {
     this.value = sim.addPin()
@@ -55,8 +58,8 @@ export class InputPin extends Pin {
 }
 
 export class OutputPin extends Pin {
-  constructor(chip, name) {
-    super(chip, name)
+  constructor() {
+    super()
     this.value = sim.addPin()
   }
   output () {
@@ -66,6 +69,49 @@ export class OutputPin extends Pin {
       }
     })
     return
+  }
+}
+
+export class Bus extends SuperLightweightObservable {
+  constructor(...pins) {
+    super()
+    this._pins = pins
+    for (let i = 0; i < pins.length; i++) {
+      pins[i].attach(this, String(i))
+    }
+    Object.defineProperty(this, 'length', {
+      value: pins.length,
+      writable: false,
+    })
+  }
+  attach (chip, name) {
+    Object.defineProperty(chip, name, {
+      get: () => this,
+      set: this.wire.bind(this)
+    })
+    this.name(`${chip.id}.${name}`)
+  }
+  name (name) {
+    for (let i = 0; i < this.length; i++) {
+      this[i].subscribe({
+        next (value) {
+          sim.namePin(value, `${name}[${i}]`)
+        }
+      })
+    }
+    return this
+  }
+  wire (...pins) {
+    if (pins.length !== this.length) throw new Error(`Cannot assign ${pins.length} pin(s) to a bus of width ${this.length}`)
+    for (let i = 0; i < pins.length; i++) {
+      this[i].subscribe(pins[i])
+    }
+  }
+  slice (start, end) {
+    return new Bus(...this._pins.slice(start, end))
+  }
+  [Symbol.iterator] () {
+    return this._pins[Symbol.iterator]();
   }
 }
 
