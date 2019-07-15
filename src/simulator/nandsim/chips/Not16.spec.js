@@ -7,12 +7,10 @@ describe("Not16", () => {
   let n = new Not16();
 
   // Define Inputs
-  n.in.name("input");
-  [...n.in].map(pin => pin.input());
+  n.in.name("input").input();
 
   // Define Outputs
-  n.out.name("out");
-  [...n.out].map(pin => pin.output());
+  n.out.name("out").output();
 
   test.each`
     input                 | out
@@ -22,16 +20,9 @@ describe("Not16", () => {
     ${"0011110011000011"} | ${"1100001100111100"}
     ${"0001001000110100"} | ${"1110110111001011"}
   `("~$input == $out", ({ input, out }) => {
-    let pins = {}
-    for (let i = 0; i < input.length; i++) {
-      pins[`input[${i}]`] = input[i]
-    }
-    sim.setPins(pins);
-    expect(sim.readInputs()).toEqual(pins);
-    pins = {}
-    for (let i = 0; i < out.length; i++) {
-      pins[`out[${i}]`] = out[i]
-    }
-    expect(sim.evalOutputs()).toEqual(pins);
+    sim.setPins({ input });
+    expect(sim.readPins(['input'])).toEqual({ input });
+    sim.evalOutputs()
+    expect(sim.readPins(['out'])).toEqual({ out });
   });
 });

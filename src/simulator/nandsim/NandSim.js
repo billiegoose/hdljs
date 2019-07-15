@@ -23,17 +23,22 @@ export class NandSim {
     this.dffs = {};
     this.inputs = [];
     this.outputs = [];
+    this.buses = {}
     this.cycleDetectionStack = [];
   }
   addPin() {
     this.values.push(Logic.UK)
     return this.values.length - 1;
   }
+  // TODO: Modify to be name-based and support busses
   defineInput(index) {
     this.inputs.push(index)
   }
   defineOutput(index) {
     this.outputs.push(index)
+  }
+  nameBus(name, indices) {
+    this.buses[name] = indices
   }
   namePin(index, name) {
     if (!this.names[index]) this.names[index] = []
@@ -51,6 +56,9 @@ export class NandSim {
       }
     }
   }
+  lookupBus(name) {
+    return this.buses[name];
+  }
   lookupIndex(index) {
     return this.names[index][this.names[index].length - 1]
   }
@@ -60,8 +68,17 @@ export class NandSim {
   setPins(inputs) {
     this.resetPins()
     for (const [name, value] of Object.entries(inputs)) {
-      const index = this.lookupPin(name)
-      this.setPin(index, value)
+      // heuristic for Bus vs Pin
+      // value is a string
+      if (value.length > 1) {
+        for (let i = 0; i < value.length; i++) {
+          const index = this.lookupPin(`${name}[${i}]`)
+          this.setPin(index, value[i])
+        }
+      } else {
+        const index = this.lookupPin(name)
+        this.setPin(index, value)
+      }
     }
   }
   resetPins() {
@@ -70,12 +87,19 @@ export class NandSim {
   readPin(index) {
     return this.values[index];
   }
+  readBus(name) {
+    return this.buses[name].map(index => this.readPin(index)).join('');
+  }
   readPins(...names) {
     const results = {}
     for (const name of names) {
-      const index = this.lookupPin(name)
-      const val = this.readPin(index)
-      results[name] = val
+      if (this.lookupBus(name) !== void 0) {
+        results[name] = this.readBus(name)
+      } else {
+        const index = this.lookupPin(name)
+        const val = this.readPin(index)
+        results[name] = val
+      }
     }
     return results
   }

@@ -94,8 +94,11 @@ export class Bus extends SuperLightweightObservable {
   name (name) {
     for (let i = 0; i < this.length; i++) {
       this[i].subscribe({
-        next (value) {
+        next: (value) => {
           sim.namePin(value, `${name}[${i}]`)
+          if (allPinsHaveValues(this)) {
+            sim.nameBus(name, this._pins.map(pin => pin.value))
+          }
         }
       })
     }
@@ -112,6 +115,14 @@ export class Bus extends SuperLightweightObservable {
   }
   [Symbol.iterator] () {
     return this._pins[Symbol.iterator]();
+  }
+  input () {
+    for (const pin of this) pin.input()
+    return this
+  }
+  output () {
+    for (const pin of this) pin.output()
+    return this
   }
 }
 
