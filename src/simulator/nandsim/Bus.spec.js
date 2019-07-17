@@ -160,6 +160,6 @@ describe("Bus", () => {
     bus[7].value = 7;
     sim.setPins({ MrBus: value });
     expect(sim.readBus("MrBus")).toEqual(value);
-    expect(sim.readPins(["MrBus"])).toEqual({ MrBus: value });
+    expect(sim.readPins("MrBus")).toEqual({ MrBus: value });
   });
 });

@@ -9,5 +9,6 @@ export { Nor } from './Nor.js';
 export { Not } from './Not.js';
 export { Not16 } from './Not16.js';
 export { Or } from './Or.js';
+export { Or4Way } from './Or4Way.js';
 export { RisingEdge } from './RisingEdge.js';
 export { Xor } from './Xor.js';

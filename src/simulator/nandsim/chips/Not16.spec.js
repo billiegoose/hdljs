@@ -1,6 +1,5 @@
 import { Not16 } from "./index.js";
 import { sim } from "../Gate.js";
-import { Logic } from "../Logic.js";
 
 describe("Not16", () => {
   // Define connections
@@ -21,8 +20,8 @@ describe("Not16", () => {
     ${"0001001000110100"} | ${"1110110111001011"}
   `("~$input == $out", ({ input, out }) => {
     sim.setPins({ input });
-    expect(sim.readPins(['input'])).toEqual({ input });
+    expect(sim.readPins('input')).toEqual({ input });
     sim.evalOutputs()
-    expect(sim.readPins(['out'])).toEqual({ out });
+    expect(sim.readPins('out')).toEqual({ out });
   });
 });
