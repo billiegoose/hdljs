@@ -1,6 +1,5 @@
 import { Gate } from '../Gate.js'
-import { DFF } from '../DFF.js'
-import { Mux } from './index.js'
+import { DFF, Mux } from './index.js'
 
 export class Bit extends Gate {
   constructor() {

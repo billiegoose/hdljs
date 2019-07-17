@@ -1,6 +1,5 @@
 import { Gate } from '../Gate.js'
-import { DFF } from '../DFF.js'
-import { Not, And } from './index.js'
+import { And, DFF, Not } from './index.js'
 
 export class FallingEdge extends Gate {
   constructor() {

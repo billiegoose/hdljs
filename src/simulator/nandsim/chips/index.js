@@ -1,7 +1,13 @@
-export { Nand } from '../Nand.js';
-export { Not } from './Not.js';
 export { And } from './And.js';
-export { Or } from './Or.js';
-export { Nor } from './Nor.js';
+export { Bit } from './Bit.js';
+export { DFF } from '../DFF.js';
+export { Dmux } from './Dmux.js';
+export { FallingEdge } from './FallingEdge.js';
 export { Mux } from './Mux.js';
+export { Nand } from '../Nand.js';
+export { Nor } from './Nor.js';
+export { Not } from './Not.js';
 export { Not16 } from './Not16.js';
+export { Or } from './Or.js';
+export { RisingEdge } from './RisingEdge.js';
+export { Xor } from './Xor.js';
