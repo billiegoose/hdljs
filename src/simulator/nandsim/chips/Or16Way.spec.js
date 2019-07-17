@@ -1,9 +1,9 @@
-import { Or8Way } from "./index.js";
+import { Or16Way } from "./index.js";
 import { sim } from "../Gate.js";
 
-describe("Or8Way", () => {
+describe("Or16Way", () => {
   // Define connections
-  let or = new Or8Way();
+  let or = new Or16Way();
 
   // Define Inputs
   or.in.name("input").input();
@@ -12,14 +12,14 @@ describe("Or8Way", () => {
   or.out.name("out").output();
 
   test.each`
-    input         | out
-    ${"00000000"} | ${"0"}
-    ${"11111111"} | ${"1"}
-    ${"00010000"} | ${"1"}
-    ${"00000001"} | ${"1"}
-    ${"00100110"} | ${"1"}
-    ${"000000?0"} | ${"?"}
-    ${"00?00000"} | ${"?"}
+    input     | out
+    ${"0000000000000000"} | ${"0"}
+    ${"1111111111111111"} | ${"1"}
+    ${"0000000000010000"} | ${"1"}
+    ${"0000000000000001"} | ${"1"}
+    ${"1000000000000000"} | ${"1"}
+    ${"0010011000100110"} | ${"1"}
+    ${"00000000000000?0"} | ${"?"}
   `("or $input == $out", ({ input, out }) => {
     sim.setPins({ input });
     expect(sim.readPins("input")).toEqual({ input });

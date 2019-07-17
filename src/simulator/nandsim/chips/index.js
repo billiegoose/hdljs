@@ -11,5 +11,6 @@ export { Not16 } from './Not16.js';
 export { Or } from './Or.js';
 export { Or4Way } from './Or4Way.js';
 export { Or8Way } from './Or8Way.js';
+export { Or16Way } from './Or16Way.js';
 export { RisingEdge } from './RisingEdge.js';
 export { Xor } from './Xor.js';
