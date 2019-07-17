@@ -28,7 +28,8 @@ class Pin extends SuperLightweightObservable {
     if (name) {
       Object.defineProperty(chip, name, {
         get: () => this,
-        set: this.wire.bind(this)
+        set: this.wire.bind(this),
+        enumerable: true
       })
       this.name(`${chip.id}.${name}`)
     }
@@ -87,7 +88,8 @@ export class Bus extends SuperLightweightObservable {
   attach (chip, name) {
     Object.defineProperty(chip, name, {
       get: () => this,
-      set: this.wire.bind(this)
+      set: this.wire.bind(this),
+      enumerable: true
     })
     this.name(`${chip.id}.${name}`)
   }
@@ -132,6 +134,9 @@ export class Gate {
     if (!partlist[name]) partlist[name] = []
     this._id = partlist[name].length
     partlist[name].push(this)
+    Object.defineProperty(this, '_id', {
+      enumerable: false,
+    })
   }
   get id () {
     return `${this.constructor.name}_${this._id}`
