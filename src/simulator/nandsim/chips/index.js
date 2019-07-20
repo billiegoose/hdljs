@@ -1,9 +1,12 @@
 export { And } from './And.js';
+export { And16 } from './And16.js';
 export { Bit } from './Bit.js';
 export { DFF } from '../DFF.js';
 export { Dmux } from './Dmux.js';
+export { Dmux4Way } from './Dmux4Way.js';
 export { FallingEdge } from './FallingEdge.js';
 export { Mux } from './Mux.js';
+export { Mux16 } from './Mux16.js';
 export { Nand } from '../Nand.js';
 export { Nor } from './Nor.js';
 export { Not } from './Not.js';
@@ -15,3 +18,4 @@ export { Or16 } from './Or16.js';
 export { Or16Way } from './Or16Way.js';
 export { RisingEdge } from './RisingEdge.js';
 export { Xor } from './Xor.js';
+export { Xor16 } from './Xor16.js';

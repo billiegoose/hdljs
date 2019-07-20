@@ -19,7 +19,7 @@ describe("And", () => {
     ${Logic.LO} | ${Logic.HI} | ${Logic.LO}
     ${Logic.HI} | ${Logic.LO} | ${Logic.LO}
     ${Logic.HI} | ${Logic.HI} | ${Logic.HI}
-  `("$a ^ $b == $out", ({ a, b, out }) => {
+  `("$a ∧ $b == $out", ({ a, b, out }) => {
     sim.setPins({ a, b });
     expect(sim.readInputs()).toEqual({ a, b });
     expect(sim.evalOutputs()).toEqual({ out });

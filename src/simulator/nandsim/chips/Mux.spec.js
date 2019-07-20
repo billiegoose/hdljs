@@ -24,7 +24,7 @@ describe("Mux", () => {
     ${Logic.HI} | ${Logic.LO} | ${Logic.HI} | ${Logic.LO}
     ${Logic.HI} | ${Logic.HI} | ${Logic.LO} | ${Logic.HI}
     ${Logic.HI} | ${Logic.HI} | ${Logic.HI} | ${Logic.HI}
-  `("[$a, $b][$sel] == out", ({ a, b, sel, out }) => {
+  `("[$a, $b][$sel] == $out", ({ a, b, sel, out }) => {
     sim.setPins({ a, b, sel });
     expect(sim.readInputs()).toEqual({ a, b, sel });
     expect(sim.evalOutputs()).toEqual({ out });

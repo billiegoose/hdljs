@@ -23,7 +23,7 @@ describe("Dmux", () => {
     ${"1"} | ${"?"} | ${"?"} | ${"?"}
     ${"?"} | ${"0"} | ${"?"} | ${"0"}
     ${"?"} | ${"1"} | ${"0"} | ${"?"}
-  `("[$a, $b][$sel] == out", ({ input, sel, a, b }) => {
+  `("[$a, $b][$sel] == $input", ({ input, sel, a, b }) => {
     sim.setPins({ input, sel });
     expect(sim.readInputs()).toEqual({ input, sel });
     expect(sim.evalOutputs()).toEqual({ a, b });

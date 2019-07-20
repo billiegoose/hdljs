@@ -23,7 +23,7 @@ describe("Xor", () => {
     ${Logic.HI} | ${Logic.UK} | ${Logic.UK}
     ${Logic.LO} | ${Logic.UK} | ${Logic.UK}
     ${Logic.UK} | ${Logic.LO} | ${Logic.UK}
-  `("$a | $b == $out", ({ a, b, out }) => {
+  `("$a ⊕ $b == $out", ({ a, b, out }) => {
     sim.setPins({ a, b });
     expect(sim.readInputs()).toEqual({ a, b });
     expect(sim.evalOutputs()).toEqual({ out });

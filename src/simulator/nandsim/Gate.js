@@ -29,7 +29,8 @@ class Pin extends SuperLightweightObservable {
       Object.defineProperty(chip, name, {
         get: () => this,
         set: this.wire.bind(this),
-        enumerable: true
+        enumerable: true,
+        configurable: true
       })
       this.name(`${chip.id}.${name}`)
     }
@@ -89,7 +90,8 @@ export class Bus extends SuperLightweightObservable {
     Object.defineProperty(chip, name, {
       get: () => this,
       set: this.wire.bind(this),
-      enumerable: true
+      enumerable: true,
+      configurable: true
     })
     this.name(`${chip.id}.${name}`)
   }
