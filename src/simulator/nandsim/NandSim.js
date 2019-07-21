@@ -69,11 +69,20 @@ export class NandSim {
     this.resetPins()
     for (const [name, value] of Object.entries(inputs)) {
       // heuristic for Bus vs Pin
-      // value is a string
+      // value is a string (or array of strings)
       if (value.length > 1) {
+        let indices = this.lookupBus(name)
         for (let i = 0; i < value.length; i++) {
-          const index = this.lookupPin(`${name}[${i}]`)
-          this.setPin(index, value[i])
+          const index = indices[i]
+          // bus of buses?
+          if (Array.isArray(index)) {
+            for (let j = 0; j < index.length; j++) {
+              const index = indices[i][j]
+              this.setPin(index, value[i][j])
+            }
+          } else {
+            this.setPin(index, value[i])
+          }
         }
       } else {
         const index = this.lookupPin(name)
@@ -88,7 +97,13 @@ export class NandSim {
     return this.values[index];
   }
   readBus(name) {
-    return this.buses[name].map(index => this.readPin(index)).join('');
+    if (Array.isArray(this.buses[name][0])) {
+      return this.buses[name].map(arr =>
+        arr.map(index => this.readPin(index)).join('')
+      )
+    } else {
+      return this.buses[name].map(index => this.readPin(index)).join('');
+    }
   }
   readPins(...names) {
     const results = {}

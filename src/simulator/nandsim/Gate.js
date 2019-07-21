@@ -5,10 +5,8 @@ export const sim = new NandSim()
 const partlist = {}
 
 const allPinsHaveValues = (chip) => {
-  for (const prop of Object.getOwnPropertyNames(chip)) {
-    if (chip[prop] instanceof Pin) {
-      if (chip[prop].value === null) return false
-    }
+  for (const prop of chip._ports) {
+    if (chip[prop].value === null) return false
   }
   return true
 }
@@ -34,6 +32,7 @@ class Pin extends SuperLightweightObservable {
       })
       this.name(`${chip.id}.${name}`)
     }
+    chip._ports.push(name)
   }
   name (name) {
     this.subscribe({
@@ -82,6 +81,7 @@ export class OutputPin extends Pin {
 export class Bus extends SuperLightweightObservable {
   constructor(...pins) {
     super()
+    this._ports = []
     this._pins = pins
     for (let i = 0; i < pins.length; i++) {
       pins[i].attach(this, String(i))
@@ -92,25 +92,24 @@ export class Bus extends SuperLightweightObservable {
     })
   }
   attach (chip, name) {
+    this.subscribe({ next: () => place(chip) })
     Object.defineProperty(chip, name, {
       get: () => this,
       set: (bus) => this.wire(...bus),
       enumerable: true,
       configurable: true
     })
-    this.name(`${chip.id}.${name}`)
+    if (chip.id) {
+      this.name(`${chip.id}.${name}`)
+    }
+    chip._ports.push(name)
+  }
+  get id () {
+    return this._name
   }
   name (name) {
-    for (let i = 0; i < this.length; i++) {
-      this[i].subscribe({
-        next: (value) => {
-          sim.namePin(value, `${name}[${i}]`)
-          if (allPinsHaveValues(this)) {
-            sim.nameBus(name, this._pins.map(pin => pin.value))
-          }
-        }
-      })
-    }
+    this._name = name;
+    place(this);
     return this
   }
   wire (...pins) {
@@ -133,6 +132,15 @@ export class Bus extends SuperLightweightObservable {
     for (const pin of this) pin.output()
     return this
   }
+  finalizer () {
+    this.value = this._pins.map(pin => pin.value)
+    if (this._name) {
+      for (let i = 0; i < this.length; i++) {
+        sim.namePin(this._pins[i].value, `${this._name}[${i}]`)
+      }
+      sim.nameBus(this._name, this._pins.map(pin => pin.value))
+    }
+  }
 }
 
 export class Gate {
@@ -144,6 +152,7 @@ export class Gate {
     Object.defineProperty(this, '_id', {
       enumerable: false,
     })
+    this._ports = []
   }
   get id () {
     return `${this.constructor.name}_${this._id}`

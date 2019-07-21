@@ -1,4 +1,4 @@
-import { Gate } from '../Gate.js'
+import { Gate, Bus } from '../Gate.js'
 import { Nand, Not } from './index.js'
 
 export class Mux extends Gate {
@@ -13,9 +13,10 @@ export class Mux extends Gate {
     not.in.attach(this, 'sel')
 
     n1.a = not.out
-    n1.b.attach(this, 'a')
     n2.a = not.in
-    n2.b.attach(this, 'b')
+
+    const bus = new Bus(n1.b, n2.b)
+    bus.attach(this, 'in')
 
     n3.a = n1.out
     n3.b = n2.out

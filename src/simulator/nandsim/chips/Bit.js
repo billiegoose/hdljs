@@ -8,9 +8,9 @@ export class Bit extends Gate {
     const mux = new Mux()
     const dff = new DFF()
 
-    mux.a = dff.out
+    dff.out = mux.in[0]
     dff.in = mux.out
-    mux.b.attach(this, 'in')
+    mux.in[1].attach(this, 'in')
     mux.sel.attach(this, 'load')
     dff.out.attach(this, 'out')
   }
