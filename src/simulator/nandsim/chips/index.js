@@ -4,6 +4,7 @@ export { Bit } from './Bit.js';
 export { DFF } from '../DFF.js';
 export { Dmux } from './Dmux.js';
 export { Dmux4Way } from './Dmux4Way.js';
+export { Dmux8Way } from './Dmux8Way.js';
 export { FallingEdge } from './FallingEdge.js';
 export { Mux } from './Mux.js';
 export { Mux16 } from './Mux16.js';

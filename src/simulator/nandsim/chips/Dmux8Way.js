@@ -1,16 +1,17 @@
 import { Bus, Gate } from '../Gate.js'
-import { Dmux } from './index.js'
+import { Dmux, Dmux4Way } from './index.js'
 
-export class Dmux4Way extends Gate {
+export class Dmux8Way extends Gate {
   constructor() {
     super()
 
     const layer1 = new Dmux()
-    const layer2H = new Dmux()
-    const layer2L = new Dmux()
+    const layer2H = new Dmux4Way()
+    const layer2L = new Dmux4Way()
 
-    const sel = new Bus(layer1.sel, layer2H.sel)
-    layer2H.sel = layer2L.sel
+    const sel = new Bus(layer1.sel, ...layer2H.sel)
+
+    layer2H.sel = [...layer2L.sel]
     sel.attach(this, 'sel')
 
     layer1.in.attach(this, 'in')

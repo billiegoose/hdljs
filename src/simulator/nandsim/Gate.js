@@ -46,6 +46,11 @@ class Pin extends SuperLightweightObservable {
   wire (observer) {
     this.subscribe(observer)
   }
+  // This is for symmetry with Bus.
+  // We should probably unify Pin and Bus at some point.
+  [Symbol.iterator] () {
+    return [this][Symbol.iterator]();
+  }
 }
 
 export class InputPin extends Pin {
@@ -89,7 +94,7 @@ export class Bus extends SuperLightweightObservable {
   attach (chip, name) {
     Object.defineProperty(chip, name, {
       get: () => this,
-      set: this.wire.bind(this),
+      set: (bus) => this.wire(...bus),
       enumerable: true,
       configurable: true
     })

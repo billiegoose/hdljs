@@ -1,4 +1,4 @@
-import { Gate } from '../Gate.js'
+import { Gate, Bus } from '../Gate.js'
 import { And, Not } from './index.js'
 
 export class Dmux extends Gate {
@@ -13,10 +13,11 @@ export class Dmux extends Gate {
 
     andA.a.attach(this, 'in')
     andA.b = not.out
-    andA.out.attach(this, 'a')
 
     andB.a = andA.a
     andB.b = not.in
-    andB.out.attach(this, 'b')
+
+    const out = new Bus(andB.out, andA.out)
+    out.attach(this, 'out')
   }
 }
