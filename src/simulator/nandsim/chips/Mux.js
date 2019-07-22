@@ -15,7 +15,7 @@ export class Mux extends Gate {
     n1.a = not.out
     n2.a = not.in
 
-    const bus = new Bus(n1.b, n2.b)
+    const bus = new Bus(n2.b, n1.b)
     bus.attach(this, 'in')
 
     n3.a = n1.out

@@ -8,6 +8,8 @@ export { Dmux8Way } from './Dmux8Way.js';
 export { FallingEdge } from './FallingEdge.js';
 export { Mux } from './Mux.js';
 export { Mux16 } from './Mux16.js';
+export { Mux4Way16 } from './Mux4Way16.js';
+export { Mux8Way16 } from './Mux8Way16.js';
 export { Nand } from '../Nand.js';
 export { Nor } from './Nor.js';
 export { Not } from './Not.js';
