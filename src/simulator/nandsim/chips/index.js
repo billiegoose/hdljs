@@ -9,6 +9,7 @@ export { Dmux8Way } from './Dmux8Way.js';
 export { FallingEdge } from './FallingEdge.js';
 export { FullAdder } from './FullAdder.js';
 export { HalfAdder } from './HalfAdder.js';
+export { Inc16 } from './Inc16.js';
 export { Mux } from './Mux.js';
 export { Mux16 } from './Mux16.js';
 export { Mux4Way16 } from './Mux4Way16.js';

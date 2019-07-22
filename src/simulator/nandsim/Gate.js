@@ -78,6 +78,11 @@ export class OutputPin extends Pin {
   }
 }
 
+export const hi = new InputPin()
+hi.value = sim.HI
+export const lo = new InputPin()
+lo.value = sim.LO
+
 export class Bus extends SuperLightweightObservable {
   constructor(...pins) {
     super()

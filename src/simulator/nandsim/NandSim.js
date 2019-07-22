@@ -25,6 +25,8 @@ export class NandSim {
     this.outputs = [];
     this.buses = {}
     this.cycleDetectionStack = [];
+    this.HI = this.addPin()
+    this.LO = this.addPin()
   }
   addPin() {
     this.values.push(Logic.UK)
@@ -92,6 +94,8 @@ export class NandSim {
   }
   resetPins() {
     this.values.fill(Logic.UK)
+    this.setPin(this.HI, Logic.HI)
+    this.setPin(this.LO, Logic.LO)
   }
   readPin(index) {
     return this.values[index];
@@ -140,7 +144,10 @@ export class NandSim {
       const {a, b} = this.triplets[index];
       if (nand(this.values[a], this.values[b]) === Logic.UK) {
         if (this.cycleDetectionStack.includes(index)) {
-          const msg = this.cycleDetectionStack.join(' -> ')
+          this.cycleDetectionStack.push(index)
+          const msg = this.cycleDetectionStack.map(index =>
+            this.lookupIndex(index) || index
+          ).join(' -> ')
           this.cycleDetectionStack = []
           throw new Error(`Cycle detected in combinational logic: ${msg}`)
         }
