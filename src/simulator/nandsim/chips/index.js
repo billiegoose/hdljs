@@ -1,5 +1,6 @@
 export { And } from './And.js';
 export { Add16 } from './Add16.js';
+export { ALU } from './ALU.js';
 export { And16 } from './And16.js';
 export { Bit } from './Bit.js';
 export { DFF } from '../DFF.js';
