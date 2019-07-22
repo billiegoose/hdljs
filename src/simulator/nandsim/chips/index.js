@@ -1,4 +1,5 @@
 export { And } from './And.js';
+export { Add16 } from './Add16.js';
 export { And16 } from './And16.js';
 export { Bit } from './Bit.js';
 export { DFF } from '../DFF.js';
@@ -6,6 +7,8 @@ export { Dmux } from './Dmux.js';
 export { Dmux4Way } from './Dmux4Way.js';
 export { Dmux8Way } from './Dmux8Way.js';
 export { FallingEdge } from './FallingEdge.js';
+export { FullAdder } from './FullAdder.js';
+export { HalfAdder } from './HalfAdder.js';
 export { Mux } from './Mux.js';
 export { Mux16 } from './Mux16.js';
 export { Mux4Way16 } from './Mux4Way16.js';
