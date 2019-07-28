@@ -7,19 +7,44 @@ module SSD1306 (
   output o_D0,
   output o_D1,
   output o_RES,
-  output o_DC,
+  reg output o_DC,
   output [7:0] o_BYTE,
   output o_READY
 );
-  reg [15:0] address = 16'h0;
-  wire [7:0] txByte;
+  
+  /** The STATE MACHINE for the screen looks like this:
+   *
+   * SCREEN_RESET -> SCREEN_INIT -> FRAME_INIT -> FRAME_STREAM -.
+   *       ^-- reset button              ^-.__________________.-'
+   */
+  parameter s_SCREEN_RESET = 2'b00;
+  parameter s_SCREEN_INIT = 2'b01;
+  parameter s_FRAME_INIT = 2'b10;
+  parameter s_FRAME_STREAM = 2'b11;
+
+  reg [1:0] r_STATE = s_SCREEN_RESET;
+
+  parameter a_SCREEN_INIT_FIRST = 8'd0;
+  parameter a_SCREEN_INIT_LAST = 8'd26;
+  parameter a_FRAME_INIT_FIRST = 8'd26;
+  parameter a_FRAME_INIT_LAST = 8'd32;
+  parameter a_FRAME_DATA_FIRST = 8'd0;
+  parameter a_FRAME_DATA_LAST = 8'd1024;
+
+  reg [15:0] command_address = 16'h0;
+  reg [15:0] data_address = 16'h0;
+  wire [7:0] w_data;
 
   SPI_ROM SPI_ROM (
-    .address(address),
-    .out(txByte)
+    .address(command_address),
+    .out(w_data)
   );
 
-  assign o_BYTE = txByte;
+  reg [7:0] r_data;
+
+  assign o_RES = ~i_Reset;
+
+  assign o_BYTE = r_data;
 
   parameter SPI_MODE = 0; // CPOL = 0, CPHA = 0
   parameter CLKS_PER_HALF_BIT = 1;  // 6.25 MHz
@@ -36,7 +61,7 @@ module SSD1306 (
     .i_Clk(i_Clk),         // FPGA Clock
 
     // TX (MOSI) Signals
-    .i_TX_Byte(txByte),    // Byte to transmit on MOSI
+    .i_TX_Byte(r_data),    // Byte to transmit on MOSI
     .i_TX_DV(r_TX_DV),     // Data Valid Pulse with i_TX_Byte
     .o_TX_Ready(o_READY),  // Transmit Ready for Byte
 
@@ -50,22 +75,78 @@ module SSD1306 (
     .i_SPI_MISO(1'b0)
   );
 
-  reg r_TX_DV_delayed = 1'b0;
+  reg r_READY = 1'b0;
 
   always @(negedge i_Clk) begin
     if (i_Reset) begin
-      address <= 0;
+      o_DC <= 1'b0;
+      command_address <= 8'b0;
       r_TX_DV <= 1'b0;
+      r_STATE <= #1 s_SCREEN_RESET;
     end else begin
-      if (o_READY == 1'b1) begin
-        r_TX_DV <= 1'b1;
-      end else begin
-        r_TX_DV <= 1'b0;
-      end
-      r_TX_DV_delayed <= r_TX_DV;
-      if (r_TX_DV_delayed == 1'b1) begin
-        address <= address + 1;
-      end
+      case (r_STATE)
+
+        s_SCREEN_RESET: begin
+          o_DC <= 1'b0;
+          r_TX_DV <= 1'b0;
+          if (o_READY == 1'b1) begin
+            command_address <= a_SCREEN_INIT_FIRST;
+            r_STATE <= #1 s_SCREEN_INIT;
+          end
+        end
+
+        s_SCREEN_INIT: begin
+          o_DC <= 1'b0;
+          if (o_READY == 1'b1) begin
+            if (command_address == a_SCREEN_INIT_LAST) begin
+              r_STATE <= #1 s_FRAME_INIT;
+              command_address <= #1 a_FRAME_INIT_FIRST;
+              r_TX_DV <= 1'b0;
+            end else begin
+              r_data <= w_data;
+              command_address <= #1 command_address + 1;
+              r_TX_DV <= 1'b1;
+            end
+          end else begin
+            r_TX_DV <= 1'b0;
+          end
+        end
+
+        s_FRAME_INIT: begin
+          o_DC = 1'b0;
+          if (o_READY == 1'b1) begin
+            if (command_address == a_FRAME_INIT_LAST) begin
+              r_STATE <= #1 s_FRAME_STREAM;
+              data_address <= a_FRAME_DATA_FIRST;
+              r_TX_DV <= 1'b0;
+            end else begin
+              r_data <= w_data;
+              command_address <= #1 command_address + 1;
+              r_TX_DV <= 1'b1;
+            end
+          end else begin
+            r_TX_DV <= 1'b0;
+          end
+        end
+
+        s_FRAME_STREAM: begin
+          o_DC = 1'b1;
+          if (o_READY == 1'b1) begin
+            if (data_address == a_FRAME_DATA_LAST) begin
+              r_STATE <= #1 s_FRAME_INIT;
+              command_address <= #1 a_FRAME_INIT_FIRST;
+              r_TX_DV <= 1'b0;
+            end else begin
+              r_data <= data_address[7:0];
+              data_address <= #1 data_address + 1;
+              r_TX_DV <= 1'b1;
+            end
+          end else begin
+            r_TX_DV <= 1'b0;
+          end
+        end
+        
+      endcase
     end
   end
 endmodule
