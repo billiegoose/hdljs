@@ -24,12 +24,12 @@ module SSD1306 (
 
   reg [1:0] r_STATE = s_SCREEN_RESET;
 
-  parameter a_SCREEN_INIT_FIRST = 8'd0;
-  parameter a_SCREEN_INIT_LAST = 8'd26;
-  parameter a_FRAME_INIT_FIRST = 8'd26;
-  parameter a_FRAME_INIT_LAST = 8'd32;
-  parameter a_FRAME_DATA_FIRST = 8'd0;
-  parameter a_FRAME_DATA_LAST = 8'd1024;
+  parameter a_SCREEN_INIT_FIRST = 16'd0;
+  parameter a_SCREEN_INIT_LAST = 16'd26;
+  parameter a_FRAME_INIT_FIRST = 16'd26;
+  parameter a_FRAME_INIT_LAST = 16'd32;
+  parameter a_FRAME_DATA_FIRST = 16'd0;
+  parameter a_FRAME_DATA_LAST = 16'd1024;
 
   reg [15:0] command_address = 16'h0;
   reg [15:0] data_address = 16'h0;
@@ -135,9 +135,10 @@ module SSD1306 (
             if (data_address == a_FRAME_DATA_LAST) begin
               r_STATE <= #1 s_FRAME_INIT;
               command_address <= #1 a_FRAME_INIT_FIRST;
+              data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
             end else begin
-              r_data <= data_address[7:0];
+              r_data <= data_address[9:2];
               data_address <= #1 data_address + 1;
               r_TX_DV <= 1'b1;
             end
