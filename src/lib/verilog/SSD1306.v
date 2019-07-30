@@ -1,4 +1,5 @@
 `include "./SPI_ROM.v"
+`include "./SPI_RAM.v"
 `include "./spi-master/SPI_Master.v"
 
 module SSD1306 (
@@ -33,11 +34,22 @@ module SSD1306 (
 
   reg [15:0] command_address = 16'h0;
   reg [15:0] data_address = 16'h0;
-  wire [7:0] w_data;
+  wire [7:0] w_command_byte;
+  wire [7:0] w_data_byte;
 
   SPI_ROM SPI_ROM (
     .address(command_address),
-    .out(w_data)
+    .out(w_command_byte)
+  );
+
+  SPI_RAM SPI_RAM (
+    .w_Data(8'h00),
+    .w_Enable(1'b0),
+    .w_Address(10'h0),
+    .w_Clk(i_Clk),
+    .r_Address(data_address[9:0]),
+    .r_Clk(i_Clk),
+    .r_Data(w_data_byte),
   );
 
   reg [7:0] r_data;
@@ -106,7 +118,7 @@ module SSD1306 (
               command_address <= #1 a_FRAME_INIT_FIRST;
               r_TX_DV <= 1'b0;
             end else begin
-              r_data <= w_data;
+              r_data <= w_command_byte;
               command_address <= #1 command_address + 1;
               r_TX_DV <= 1'b1;
             end
@@ -124,7 +136,7 @@ module SSD1306 (
               counter <= counter + 1;
               r_TX_DV <= 1'b0;
             end else begin
-              r_data <= w_data;
+              r_data <= w_command_byte;
               command_address <= #1 command_address + 1;
               r_TX_DV <= 1'b1;
             end
@@ -142,7 +154,7 @@ module SSD1306 (
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
             end else begin
-              r_data <= 8'b1 << (counter[5:3] + data_address[2:0]);
+              r_data <= w_data_byte;
               data_address <= #1 data_address + 1;
               r_TX_DV <= 1'b1;
             end
