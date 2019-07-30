@@ -59,7 +59,7 @@ module Go_Board (
 
   reg [31:0] Clk_Cnt = 32'b0;
 
-  parameter CLOCK_REDUCTION = 2**4;
+  parameter CLOCK_REDUCTION = 2**1;
 
   always @(posedge i_Clk) begin
     Clk_Cnt <= (Clk_Cnt + 1) % CLOCK_REDUCTION;

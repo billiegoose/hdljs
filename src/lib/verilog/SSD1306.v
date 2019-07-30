@@ -77,6 +77,8 @@ module SSD1306 (
 
   reg r_READY = 1'b0;
 
+  reg [15:0] counter = 16'h0;
+
   always @(negedge i_Clk) begin
     if (i_Reset) begin
       o_DC <= 1'b0;
@@ -88,6 +90,7 @@ module SSD1306 (
 
         s_SCREEN_RESET: begin
           o_DC <= 1'b0;
+          counter <= 8'h00;
           r_TX_DV <= 1'b0;
           if (o_READY == 1'b1) begin
             command_address <= a_SCREEN_INIT_FIRST;
@@ -118,6 +121,7 @@ module SSD1306 (
             if (command_address == a_FRAME_INIT_LAST) begin
               r_STATE <= #1 s_FRAME_STREAM;
               data_address <= a_FRAME_DATA_FIRST;
+              counter <= counter + 1;
               r_TX_DV <= 1'b0;
             end else begin
               r_data <= w_data;
@@ -138,7 +142,7 @@ module SSD1306 (
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
             end else begin
-              r_data <= data_address[9:2];
+              r_data <= 8'b1 << (counter[5:3] + data_address[2:0]);
               data_address <= #1 data_address + 1;
               r_TX_DV <= 1'b1;
             end
