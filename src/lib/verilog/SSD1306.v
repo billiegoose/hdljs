@@ -5,6 +5,7 @@
 module SSD1306 (
   input i_Clk,
   input i_Reset,
+  input i_Keyboard_MISO,
   output o_D0,
   output o_D1,
   output o_RES,
@@ -12,6 +13,7 @@ module SSD1306 (
   output reg o_CS,
   output reg o_CS2,
   output [7:0] o_BYTE,
+  output reg [7:0] o_Key_Event,
   output o_READY
 );
   
@@ -35,8 +37,8 @@ module SSD1306 (
   parameter a_FRAME_INIT_LAST = 16'd32;
   parameter a_FRAME_DATA_FIRST = 16'd0;
   parameter a_FRAME_DATA_LAST = 16'd1024;
-  parameter a_KEYBOARD_READ_FIRST = 16'd6;
-  parameter a_KEYBOARD_READ_LAST = 16'd7;
+  parameter a_KEYBOARD_READ_FIRST = 16'd0; // 16'd6;
+  parameter a_KEYBOARD_READ_LAST = 16'd1; // 16'd7;
 
   reg [15:0] command_address = 16'h0;
   reg [15:0] data_address = 16'h0;
@@ -68,8 +70,9 @@ module SSD1306 (
   parameter CLKS_PER_HALF_BIT = 1;  // 6.25 MHz
 
   reg r_TX_DV = 1'b0;
-  // logic [7:0] r_Master_RX_Byte;
-
+  reg [7:0] r_RX_Byte;
+  reg r_RX_DV;
+  
   // Instantiate UUT
   SPI_Master #(.SPI_MODE(SPI_MODE), .CLKS_PER_HALF_BIT(CLKS_PER_HALF_BIT))
   SPI_Master_UUT
@@ -84,13 +87,13 @@ module SSD1306 (
     .o_TX_Ready(o_READY),  // Transmit Ready for Byte
 
     // RX (MISO) Signals
-    //  .o_RX_DV(r_Master_RX_DV),       // Data Valid pulse (1 clock cycle)
-    //  .o_RX_Byte(r_Master_RX_Byte),   // Byte received on MISO
+    .o_RX_DV(r_RX_DV),       // Data Valid pulse (1 clock cycle)
+    .o_RX_Byte(r_RX_Byte),   // Byte received on MISO
 
     // SPI Interface
     .o_SPI_Clk(o_D0),
     .o_SPI_MOSI(o_D1),
-    .i_SPI_MISO(1'b0)
+    .i_SPI_MISO(i_Keyboard_MISO)
   );
 
   reg r_READY = 1'b0;
@@ -105,7 +108,9 @@ module SSD1306 (
       r_STATE <= #1 s_SCREEN_RESET;
       o_CS <= 1'b1;
       o_CS2 <= 1'b1;
+      o_Key_Event <= 8'hFF;
     end else begin
+      o_Key_Event <= o_Key_Event;
       case (r_STATE)
 
         s_SCREEN_RESET: begin
@@ -183,19 +188,21 @@ module SSD1306 (
           o_DC <= 1'b1;
           o_CS <= 1'b1;
           o_CS2 <= 1'b0;
-          if (o_READY == 1'b1) begin
+          if (r_RX_DV == 1'b1) begin
+            o_Key_Event <= r_RX_Byte;
+            // o_Key_Event <= #1 r_RX_Byte;
             if (command_address == a_KEYBOARD_READ_LAST) begin
               r_STATE <= #1 s_KEYBOARD_UPDATE;
               command_address <= #1 a_FRAME_INIT_FIRST;
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
-              o_CS <= 1'b1;
-              o_CS2 <= 1'b1;
-            end else begin
-              r_data <= w_command_byte;
-              command_address <= #1 command_address + 1;
-              r_TX_DV <= 1'b1;
+              o_CS <= #1 1'b1;
+              o_CS2 <= #1 1'b1;
             end
+          end else if (o_READY == 1'b1) begin
+            r_data <= w_command_byte;
+            command_address <= #1 command_address + 1;
+            r_TX_DV <= 1'b1;
           end else begin
             r_TX_DV <= 1'b0;
           end
@@ -205,6 +212,9 @@ module SSD1306 (
           r_STATE <= #1 s_FRAME_INIT;
           command_address <= #1 a_FRAME_INIT_FIRST;
           data_address <= #1 a_FRAME_DATA_FIRST;
+          // r_STATE <= #1 s_KEYBOARD_READ;
+          // command_address <= #1 a_KEYBOARD_READ_FIRST;
+          // data_address <= #1 a_FRAME_DATA_FIRST;
           r_TX_DV <= 1'b0;
           o_CS <= 1'b1;
           o_CS2 <= 1'b1;

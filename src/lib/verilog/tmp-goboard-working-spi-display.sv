@@ -34,7 +34,7 @@ module Go_Board (
   output io_PMOD_4,
   output io_PMOD_7,
   output io_PMOD_8,
-  // inout io_PMOD_9,
+  output io_PMOD_9,
   // inout io_PMOD_10
 );
 
@@ -55,7 +55,8 @@ module Go_Board (
   reg clock = 0;
   wire reset = i_Switch_2;
 
-  wire [15:0] txByte;
+  wire [7:0] txByte;
+  wire [7:0] rxByte;
 
   reg [31:0] Clk_Cnt = 32'b0;
 
@@ -84,11 +85,14 @@ module Go_Board (
   assign io_PMOD_7 = CS;
   wire CS2;
   assign io_PMOD_8 = CS2;
+  wire MISO;
+  assign io_PMOD_9 = MISO;
 
 
   SSD1306 SSD1306 (
     .i_Clk(clock),
     .i_Reset(reset),
+    .i_Keyboard_MISO(MISO),
     .o_D0(D0),
     .o_D1(D1),
     .o_RES(RES),
@@ -96,6 +100,7 @@ module Go_Board (
     .o_CS(CS),
     .o_CS2(CS2),
     .o_BYTE(txByte),
+    .o_Key_Event(rxByte),
     .o_READY()
   );
 
@@ -158,7 +163,7 @@ module Go_Board (
   // end
 
   DoubleDigitDisplay DoubleDigitDisplay_0 (
-    .i_Byte(txByte),
+    .i_Byte(rxByte),
     .o_Segment1_A(o_Segment1_A),
     .o_Segment1_B(o_Segment1_B),
     .o_Segment1_C(o_Segment1_C),
