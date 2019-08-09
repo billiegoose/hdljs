@@ -10,6 +10,7 @@ module SSD1306 (
   output o_RES,
   output reg o_DC,
   output reg o_CS,
+  output reg o_CS2,
   output [7:0] o_BYTE,
   output o_READY
 );
@@ -19,12 +20,14 @@ module SSD1306 (
    * SCREEN_RESET -> SCREEN_INIT -> FRAME_INIT -> FRAME_STREAM -.
    *       ^-- reset button              ^-.__________________.-'
    */
-  parameter s_SCREEN_RESET = 2'b00;
-  parameter s_SCREEN_INIT = 2'b01;
-  parameter s_FRAME_INIT = 2'b10;
-  parameter s_FRAME_STREAM = 2'b11;
+  parameter s_SCREEN_RESET = 3'b000;
+  parameter s_SCREEN_INIT = 3'b001;
+  parameter s_FRAME_INIT = 3'b010;
+  parameter s_FRAME_STREAM = 3'b011;
+  parameter s_KEYBOARD_READ = 3'b100;
+  parameter s_KEYBOARD_UPDATE = 3'b101;
 
-  reg [1:0] r_STATE = s_SCREEN_RESET;
+  reg [2:0] r_STATE = s_SCREEN_RESET;
 
   parameter a_SCREEN_INIT_FIRST = 16'd0;
   parameter a_SCREEN_INIT_LAST = 16'd26;
@@ -32,6 +35,8 @@ module SSD1306 (
   parameter a_FRAME_INIT_LAST = 16'd32;
   parameter a_FRAME_DATA_FIRST = 16'd0;
   parameter a_FRAME_DATA_LAST = 16'd1024;
+  parameter a_KEYBOARD_READ_FIRST = 16'd6;
+  parameter a_KEYBOARD_READ_LAST = 16'd7;
 
   reg [15:0] command_address = 16'h0;
   reg [15:0] data_address = 16'h0;
@@ -99,11 +104,13 @@ module SSD1306 (
       r_TX_DV <= 1'b0;
       r_STATE <= #1 s_SCREEN_RESET;
       o_CS <= 1'b1;
+      o_CS2 <= 1'b1;
     end else begin
       case (r_STATE)
 
         s_SCREEN_RESET: begin
           o_CS <= 1'b0;
+          o_CS2 <= 1'b1;
           o_DC <= 1'b0;
           counter <= 8'h00;
           r_TX_DV <= 1'b0;
@@ -133,6 +140,7 @@ module SSD1306 (
         s_FRAME_INIT: begin
           o_DC <= 1'b0;
           o_CS <= 1'b0;
+          o_CS2 <= 1'b1;
           if (o_READY == 1'b1) begin
             if (command_address == a_FRAME_INIT_LAST) begin
               r_STATE <= #1 s_FRAME_STREAM;
@@ -152,13 +160,15 @@ module SSD1306 (
         s_FRAME_STREAM: begin
           o_DC <= 1'b1;
           o_CS <= 1'b0;
+          o_CS2 <= 1'b1;
           if (o_READY == 1'b1) begin
             if (data_address == a_FRAME_DATA_LAST) begin
-              r_STATE <= #1 s_FRAME_INIT;
-              command_address <= #1 a_FRAME_INIT_FIRST;
+              r_STATE <= #1 s_KEYBOARD_READ;
+              command_address <= #1 a_KEYBOARD_READ_FIRST;
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
-              o_CS <= 1'b1;
+              o_CS <=  1'b1;
+              o_CS2 <= 1'b1;
             end else begin
               r_data <= w_data_byte;
               data_address <= #1 data_address + 1;
@@ -168,7 +178,38 @@ module SSD1306 (
             r_TX_DV <= 1'b0;
           end
         end
-        
+
+        s_KEYBOARD_READ: begin
+          o_DC <= 1'b1;
+          o_CS <= 1'b1;
+          o_CS2 <= 1'b0;
+          if (o_READY == 1'b1) begin
+            if (command_address == a_KEYBOARD_READ_LAST) begin
+              r_STATE <= #1 s_KEYBOARD_UPDATE;
+              command_address <= #1 a_FRAME_INIT_FIRST;
+              data_address <= #1 a_FRAME_DATA_FIRST;
+              r_TX_DV <= 1'b0;
+              o_CS <= 1'b1;
+              o_CS2 <= 1'b1;
+            end else begin
+              r_data <= w_command_byte;
+              command_address <= #1 command_address + 1;
+              r_TX_DV <= 1'b1;
+            end
+          end else begin
+            r_TX_DV <= 1'b0;
+          end
+        end
+
+        s_KEYBOARD_UPDATE: begin
+          r_STATE <= #1 s_FRAME_INIT;
+          command_address <= #1 a_FRAME_INIT_FIRST;
+          data_address <= #1 a_FRAME_DATA_FIRST;
+          r_TX_DV <= 1'b0;
+          o_CS <= 1'b1;
+          o_CS2 <= 1'b1;
+        end
+
       endcase
     end
   end
