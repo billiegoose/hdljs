@@ -34,7 +34,7 @@ module Go_Board (
   output io_PMOD_4,
   output io_PMOD_7,
   output io_PMOD_8,
-  output io_PMOD_9,
+  input io_PMOD_9,
   // inout io_PMOD_10
 );
 
