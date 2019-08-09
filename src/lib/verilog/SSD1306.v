@@ -8,7 +8,8 @@ module SSD1306 (
   output o_D0,
   output o_D1,
   output o_RES,
-  reg output o_DC,
+  output reg o_DC,
+  output reg o_CS,
   output [7:0] o_BYTE,
   output o_READY
 );
@@ -97,10 +98,12 @@ module SSD1306 (
       command_address <= 8'b0;
       r_TX_DV <= 1'b0;
       r_STATE <= #1 s_SCREEN_RESET;
+      o_CS <= 1'b1;
     end else begin
       case (r_STATE)
 
         s_SCREEN_RESET: begin
+          o_CS <= 1'b0;
           o_DC <= 1'b0;
           counter <= 8'h00;
           r_TX_DV <= 1'b0;
@@ -128,7 +131,8 @@ module SSD1306 (
         end
 
         s_FRAME_INIT: begin
-          o_DC = 1'b0;
+          o_DC <= 1'b0;
+          o_CS <= 1'b0;
           if (o_READY == 1'b1) begin
             if (command_address == a_FRAME_INIT_LAST) begin
               r_STATE <= #1 s_FRAME_STREAM;
@@ -146,13 +150,15 @@ module SSD1306 (
         end
 
         s_FRAME_STREAM: begin
-          o_DC = 1'b1;
+          o_DC <= 1'b1;
+          o_CS <= 1'b0;
           if (o_READY == 1'b1) begin
             if (data_address == a_FRAME_DATA_LAST) begin
               r_STATE <= #1 s_FRAME_INIT;
               command_address <= #1 a_FRAME_INIT_FIRST;
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
+              o_CS <= 1'b1;
             end else begin
               r_data <= w_data_byte;
               data_address <= #1 data_address + 1;

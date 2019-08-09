@@ -31,8 +31,8 @@ module Go_Board (
   output io_PMOD_1,
   output io_PMOD_2,
   output io_PMOD_3,
-  output io_PMOD_4
-  // inout io_PMOD_7,
+  output io_PMOD_4,
+  output io_PMOD_7,
   // inout io_PMOD_8,
   // inout io_PMOD_9,
   // inout io_PMOD_10
@@ -80,6 +80,8 @@ module Go_Board (
   wire DC;
   assign io_PMOD_4 = DC;
   assign o_LED_4 = DC;
+  wire CS;
+  assign io_PMOD_7 = CS;
 
 
   SSD1306 SSD1306 (
@@ -89,6 +91,7 @@ module Go_Board (
     .o_D1(D1),
     .o_RES(RES),
     .o_DC(DC),
+    .o_CS(CS),
     .o_BYTE(txByte),
     .o_READY()
   );
