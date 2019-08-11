@@ -67,7 +67,7 @@ module SSD1306 (
   assign o_BYTE = r_data;
 
   parameter SPI_MODE = 0; // CPOL = 0, CPHA = 0
-  parameter CLKS_PER_HALF_BIT = 1;  // 6.25 MHz
+  parameter CLKS_PER_HALF_BIT = 4; //1;  // 6.25 MHz
 
   reg r_TX_DV = 1'b0;
   reg [7:0] r_RX_Byte;
@@ -189,15 +189,13 @@ module SSD1306 (
           o_CS <= 1'b1;
           o_CS2 <= 1'b0;
           if (r_RX_DV == 1'b1) begin
-            o_Key_Event <= r_RX_Byte;
-            // o_Key_Event <= #1 r_RX_Byte;
             if (command_address == a_KEYBOARD_READ_LAST) begin
               r_STATE <= #1 s_KEYBOARD_UPDATE;
               command_address <= #1 a_FRAME_INIT_FIRST;
               data_address <= #1 a_FRAME_DATA_FIRST;
               r_TX_DV <= 1'b0;
-              o_CS <= #1 1'b1;
-              o_CS2 <= #1 1'b1;
+              // o_CS <= #1 1'b1;
+              // o_CS2 <= #1 1'b1;
             end
           end else if (o_READY == 1'b1) begin
             r_data <= w_command_byte;
@@ -209,6 +207,9 @@ module SSD1306 (
         end
 
         s_KEYBOARD_UPDATE: begin
+          if (r_RX_Byte != 8'b0) begin
+            o_Key_Event <= r_RX_Byte;
+          end
           r_STATE <= #1 s_FRAME_INIT;
           command_address <= #1 a_FRAME_INIT_FIRST;
           data_address <= #1 a_FRAME_DATA_FIRST;
@@ -216,8 +217,8 @@ module SSD1306 (
           // command_address <= #1 a_KEYBOARD_READ_FIRST;
           // data_address <= #1 a_FRAME_DATA_FIRST;
           r_TX_DV <= 1'b0;
-          o_CS <= 1'b1;
-          o_CS2 <= 1'b1;
+          // o_CS <= 1'b1;
+          // o_CS2 <= 1'b1;
         end
 
       endcase
