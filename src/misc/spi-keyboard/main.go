@@ -111,11 +111,22 @@ var keyCodeMap = map[uint16]uint8 {
   109: 0x4E,
   110: 0x49,
   111: 0x4C,
-  133: 0xE3,
-  134: 0xE7,
+  125: 0xE3,
+  126: 0xE7,
 }
 
-var shiftBit gpio.Level = gpio.Low
+var modifiers uint8 = 0
+
+var modMap = map[uint8]uint8 {
+  0xE0: 1 << 0, // L CTRL
+  0xE1: 1 << 1, // L SHIFT
+  0xE2: 1 << 2, // L ALT
+  0xE3: 1 << 3, // L META
+  0xE4: 1 << 4, // R CTRL
+  0xE5: 1 << 5, // R SHIFT
+  0xE6: 1 << 6, // R ALT
+  0xE7: 1 << 7, // R META
+}
 
 func WriteKeyEvent(e keylogger.InputEvent) {
   code, ok := keyCodeMap[e.Code]
@@ -133,6 +144,16 @@ func WriteKeyEvent(e keylogger.InputEvent) {
   keypress := e.KeyPress()
   keyrelease := e.KeyRelease()
 
+  // Update modifier keys
+  bitflag, ok := modMap[code]
+  if ok && keypress {
+    modifiers |= bitflag
+  } else if ok && keyrelease {
+    modifiers &^= bitflag
+  }
+
+  fmt.Printf("mod = %X\n", modifiers)
+
   var bits [9]gpio.Level
   // send in MSB order
   if keyrelease {
@@ -140,13 +161,7 @@ func WriteKeyEvent(e keylogger.InputEvent) {
   } else {
     bits[0] = gpio.Low // Key press
   }
-  if keypress && code == 0x7F {
-    shiftBit = gpio.High
-  }
-  bits[1] = shiftBit // Shift key
-  if keyrelease && code == 0x7F {
-    shiftBit = gpio.Low
-  }
+  bits[1] = (code >> 6) & 1 == 1
   bits[2] = (code >> 5) & 1 == 1
   bits[3] = (code >> 4) & 1 == 1
   bits[4] = (code >> 3) & 1 == 1
@@ -157,7 +172,6 @@ func WriteKeyEvent(e keylogger.InputEvent) {
 
   bitToSend := bits[0]
   bitIndex := 0
-
 
   // wait until next chip select event
   for {
@@ -188,9 +202,6 @@ func WriteKeyEvent(e keylogger.InputEvent) {
   // print pretty message
   if keyrelease {
     code |= 0x80
-  }
-  if shiftBit {
-    code |= 0x40
   }
   fmt.Printf("code = %X\n", code)
 }
