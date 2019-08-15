@@ -15,7 +15,7 @@ module SSD1306 (
   output reg o_CS2,
   output [7:0] o_BYTE,
   output reg [7:0] o_Key_Event,
-  output reg [7:0] o_Key,
+  output [7:0] o_Key,
   output o_READY
 );
 

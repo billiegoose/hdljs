@@ -100,7 +100,7 @@ module Go_Board (
     .o_CS(CS),
     .o_CS2(CS2),
     .o_BYTE(txByte),
-    .o_Key_Event(rxByte),
+    .o_Key(rxByte),
     .o_READY()
   );
 
