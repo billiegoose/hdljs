@@ -40,7 +40,7 @@ var keyCodeMap = map[uint16]uint8 {
   26: 0x2F,
   27: 0x30,
   28: 0x28,
-  29: 0xE0,
+  29: 0x70, // L_CTRL
   30: 0x04,
   31: 0x16,
   32: 0x07,
@@ -53,7 +53,7 @@ var keyCodeMap = map[uint16]uint8 {
   39: 0x33,
   40: 0x34,
   41: 0x35,
-  42: 0xE1,
+  42: 0x72, // L_SHIFT
   43: 0x31,
   44: 0x1D,
   45: 0x1B,
@@ -65,9 +65,9 @@ var keyCodeMap = map[uint16]uint8 {
   51: 0x36,
   52: 0x37,
   53: 0x38,
-  54: 0xE5,
+  54: 0x73, // R_SHIFT
   55: 0x55,
-  56: 0xE2,
+  56: 0x74, // L_ALT
   57: 0x2C,
   58: 0x39,
   59: 0x3A,
@@ -97,10 +97,10 @@ var keyCodeMap = map[uint16]uint8 {
   87: 0x44,
   88: 0x45,
   96: 0x58,
-  97: 0xE4,
+  97: 0x71, // R_CTRL
   98: 0x54,
   99: 0x46,
-  100: 0xE6,
+  100: 0x75, // R_ALT
   102: 0x4A,
   103: 0x52,
   104: 0x4B,
@@ -111,21 +111,21 @@ var keyCodeMap = map[uint16]uint8 {
   109: 0x4E,
   110: 0x49,
   111: 0x4C,
-  125: 0xE3,
-  126: 0xE7,
+  125: 0x76, // L_META
+  126: 0x77, // R_META
 }
 
 var modifiers uint8 = 0
 
 var modMap = map[uint8]uint8 {
-  0xE0: 1 << 0, // L CTRL
-  0xE1: 1 << 1, // L SHIFT
-  0xE2: 1 << 2, // L ALT
-  0xE3: 1 << 3, // L META
-  0xE4: 1 << 4, // R CTRL
-  0xE5: 1 << 5, // R SHIFT
-  0xE6: 1 << 6, // R ALT
-  0xE7: 1 << 7, // R META
+  0x70: 1 << 0, // L CTRL
+  0x72: 1 << 1, // L SHIFT
+  0x74: 1 << 2, // L ALT
+  0x76: 1 << 3, // L META
+  0x71: 1 << 4, // R CTRL
+  0x73: 1 << 5, // R SHIFT
+  0x75: 1 << 6, // R ALT
+  0x77: 1 << 7, // R META
 }
 
 func WriteKeyEvent(e keylogger.InputEvent) {

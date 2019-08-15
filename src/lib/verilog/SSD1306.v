@@ -1,5 +1,6 @@
 `include "./SPI_ROM.v"
 `include "./SPI_RAM.v"
+`include "./KEYBOARD_RAM.v"
 `include "./spi-master/SPI_Master.v"
 
 module SSD1306 (
@@ -14,9 +15,10 @@ module SSD1306 (
   output reg o_CS2,
   output [7:0] o_BYTE,
   output reg [7:0] o_Key_Event,
+  output reg [7:0] o_Key,
   output o_READY
 );
-  
+
   /** The STATE MACHINE for the screen looks like this:
    *
    * SCREEN_RESET -> SCREEN_INIT -> FRAME_INIT -> FRAME_STREAM -.
@@ -58,6 +60,15 @@ module SSD1306 (
     .r_Address(data_address[9:0]),
     .r_Clk(i_Clk),
     .r_Data(w_data_byte),
+  );
+
+  reg w_Keyboard_Enable;
+
+  KEYBOARD_RAM KEYBOARD_RAM (
+    .w_KeyEvent(o_Key_Event),
+    .w_Enable(w_Keyboard_Enable),
+    .w_Clk(i_Clk),
+    .o_Data(o_Key),
   );
 
   reg [7:0] r_data;
@@ -111,6 +122,7 @@ module SSD1306 (
       o_Key_Event <= 8'hFF;
     end else begin
       o_Key_Event <= o_Key_Event;
+      w_Keyboard_Enable <= 1'b0;
       case (r_STATE)
 
         s_SCREEN_RESET: begin
@@ -209,6 +221,7 @@ module SSD1306 (
         s_KEYBOARD_UPDATE: begin
           if (r_RX_Byte != 8'b0) begin
             o_Key_Event <= r_RX_Byte;
+            w_Keyboard_Enable <= 1'b1;
           end
           r_STATE <= #1 s_FRAME_INIT;
           command_address <= #1 a_FRAME_INIT_FIRST;
