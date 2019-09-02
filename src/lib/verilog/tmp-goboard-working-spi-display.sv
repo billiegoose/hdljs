@@ -4,6 +4,8 @@
 `include "./lib/DoubleDigitDisplay.sv"
 `include "./lib/SSD1306.v"
 
+`include "./lib/NOIZE.sv"
+
 module Go_Board (
   input  i_Clk,
   input  i_Switch_1,
@@ -35,7 +37,7 @@ module Go_Board (
   output io_PMOD_7,
   output io_PMOD_8,
   input io_PMOD_9,
-  // inout io_PMOD_10
+  output io_PMOD_10,
 );
 
   wire w_Switch_1;
@@ -178,5 +180,13 @@ module Go_Board (
     .o_Segment2_E(o_Segment2_E),
     .o_Segment2_F(o_Segment2_F),
     .o_Segment2_G(o_Segment2_G)
+  );
+
+  wire w_AudioOut;
+  assign io_PMOD_10 = w_AudioOut;
+
+  NOIZE NOIZE (
+    .i_Clk(i_Clk),
+    .o_Out(w_AudioOut)
   );
 endmodule
