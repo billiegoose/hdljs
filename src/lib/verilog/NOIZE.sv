@@ -26,13 +26,13 @@ module NOIZE (
       end
       case (volume)
        3'd0: snd_compare <= 3'b0;
-       3'd1: snd_compare <= sweep >> 6;
-       3'd2: snd_compare <= sweep >> 5;
-       3'd3: snd_compare <= sweep >> 4;
-       3'd4: snd_compare <= sweep >> 3;
-       3'd5: snd_compare <= sweep >> 2;
-       3'd6: snd_compare <= sweep >> 1;
-       3'd7: snd_compare <= sweep;
+       3'd1: snd_compare <= sweep >> 12;
+       3'd2: snd_compare <= sweep >> 11;
+       3'd3: snd_compare <= sweep >> 10;
+       3'd4: snd_compare <= sweep >> 9;
+       3'd5: snd_compare <= sweep >> 8;
+       3'd6: snd_compare <= sweep >> 7;
+       3'd7: snd_compare <= sweep >> 6;
       endcase
     end
     // let the signal through VOLUME % of the time
