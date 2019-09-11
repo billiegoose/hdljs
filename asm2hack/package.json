@@ -1,0 +1,14 @@
+{
+  "name": "asm2hack",
+  "version": "0.0.0",
+  "description": "",
+  "main": "cli.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "cat input.asm | node --experimental-modules . > output.hack",
+    "test": "diff -b original.hack output.hack"
+  },
+  "keywords": [],
+  "author": "William Hilton <wmhilton@gmail.com>",
+  "license": "MIT"
+}
