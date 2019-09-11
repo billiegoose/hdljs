@@ -1,3 +1,5 @@
+import { CommandType } from './types.mjs'
+
 export default class Parser {
   constructor (input) {
     Object.defineProperty(this, 'lines', {enumerable: false, writable: true})
@@ -12,7 +14,7 @@ export default class Parser {
     this.comp = ''
     this.jump = ''
     this.symbol = ''
-    this.commandType = 9 // 9 just means "not determined yet" here
+    this.commandType = CommandType.NotDeterminedYet
 
     let line = this.lines.shift()
     let len = line.length
@@ -30,14 +32,14 @@ export default class Parser {
       }
       // skip whitespace and comments
       if (nextchar !== ' ' && !comment) {
-        if (this.commandType === 9) {
+        if (this.commandType === CommandType.NotDeterminedYet) {
           if (nextchar === '@') {
-            this.commandType = 0
+            this.commandType = CommandType.A
             this.address++
           } else if (nextchar === '(') {
-            this.commandType = 2
+            this.commandType = CommandType.L
           } else {
-            this.commandType = 1
+            this.commandType = CommandType.C
             this.address++
           }
         }

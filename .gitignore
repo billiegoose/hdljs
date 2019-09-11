@@ -2,3 +2,4 @@ a.out
 out/
 node_modules/
 .yalc*.out
+asm2hack/examples/*.hack

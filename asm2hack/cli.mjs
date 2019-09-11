@@ -2,48 +2,22 @@
 // Accept input ASM in stdin
 // Output HACK to stdout
 import fs from 'fs'
-import Parser from './parser.mjs'
-import Code from './code.mjs'
-import SymbolTable from './symbolTable.mjs'
+import translate from './translate.mjs'
 
-const input = fs.readFileSync(process.stdin.fd, 'utf8');
-let c = new Code()
-let st = new SymbolTable()
-// symbol table pass
-let p = new Parser(input)
-while (p.hasMoreCommands()) {
-  p.advance()
-  switch (p.commandType) {
-    case 2: {
-      if (!st.contains(p.symbol)) {
-        st.addEntry(p.symbol, p.address)
-      }
-    }
-  }
+const files = process.argv.slice(2)
+
+if (files.length === 0) {
+  console.log('Usage: asm2hack filename')
+  process.exit()
 }
-// code generation pass
-p = new Parser(input)
-while (p.hasMoreCommands()) {
-  p.advance()
-  switch (p.commandType) {
-    case 0: {
-      if (Number.isNaN(parseInt(p.symbol))) {
-        if (!st.contains(p.symbol)) {
-          st.addVariable(p.symbol)
-        }
-        p.symbol = st.getAddress(p.symbol)
-      }
-      process.stdout.write(c.literal(p.symbol))
-      process.stdout.write('\n')
-      break
-    }
-    case 1: {
-      process.stdout.write('111')
-      process.stdout.write(c.comp(p.comp))
-      process.stdout.write(c.dest(p.dest))
-      process.stdout.write(c.jump(p.jump))
-      process.stdout.write('\n')
-      break
-    }
+
+for (const file of files) {
+  if (!file.endsWith('.asm')) {
+    console.warn(`Ignoring ${file} because it is not a .asm file`)
+  } else {
+    const base = file.replace(/\.asm$/, '')
+    const input = fs.readFileSync(file, 'utf8')
+    const output = translate(input)
+    fs.writeFileSync(`${base}.hack`, output, 'utf8')
   }
 }

@@ -8,8 +8,8 @@
     "asm2hack": "cli.mjs"
   },
   "scripts": {
-    "start": "cat input.asm | node --experimental-modules . > output.hack",
-    "test": "diff -b original.hack output.hack"
+    "start": "node --experimental-modules . examples/*.asm",
+    "test": "diff -b -x '*.asm' examples fixtures"
   },
   "keywords": [],
   "author": "William Hilton <wmhilton@gmail.com>",
