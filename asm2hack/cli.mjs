@@ -1,3 +1,4 @@
+#!/usr/bin/env node --experimental-modules --no-warnings
 // Accept input ASM in stdin
 // Output HACK to stdout
 import fs from 'fs'

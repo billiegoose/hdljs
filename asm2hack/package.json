@@ -4,6 +4,9 @@
   "description": "",
   "main": "cli.mjs",
   "type": "module",
+  "bin": {
+    "asm2hack": "cli.mjs"
+  },
   "scripts": {
     "start": "cat input.asm | node --experimental-modules . > output.hack",
     "test": "diff -b original.hack output.hack"
