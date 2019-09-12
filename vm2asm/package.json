@@ -1,0 +1,16 @@
+{
+  "name": "vm2asm",
+  "version": "0.0.0",
+  "description": "",
+  "main": "cli.mjs",
+  "type": "module",
+  "bin": {
+    "vm2asm": "cli.mjs"
+  },
+  "scripts": {
+    "start": "node --experimental-modules . examples/*.vm",
+  },
+  "keywords": [],
+  "author": "William Hilton <wmhilton@gmail.com>",
+  "license": "MIT"
+}

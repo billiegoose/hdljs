@@ -3,3 +3,4 @@ out/
 node_modules/
 .yalc*.out
 asm2hack/examples/*.hack
+vm2asm/examples/**/*.asm
