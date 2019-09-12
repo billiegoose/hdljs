@@ -18,6 +18,33 @@ D=M+1 //
 M=D   //
 `
 
+const TRUE = `@1
+D=-A`
+
+const FALSE = `@0
+D=A`
+
+const binOp = (op) => `${popStack}${moveToReg('R13')}${popStack}@R13
+D=D${op}M
+${pushStack}`
+
+const unOp = (op) => `${popStack}D=${op}D
+${pushStack}`
+
+let condCount = 0
+const condOp = (cond) => `${popStack}${moveToReg('R13')}${popStack}@R13
+D=D-M
+@asmcond${condCount}
+D;J${cond}
+${FALSE}
+@asmcondend${condCount}
+0;JMP
+(asmcond${condCount})
+${TRUE}
+(asmcondend${condCount++})
+${pushStack}
+`
+
 export default class Code {
   constructor() {
     this.output = ''
@@ -34,12 +61,39 @@ export default class Code {
     this.output += `// ${command}\n`
     switch(command) {
       case 'add': {
-        this.output += popStack
-        this.output += moveToReg('R13')
-        this.output += popStack
-        this.output += '@R13\n'
-        this.output += 'D=D+M\n'
-        this.output += pushStack
+        this.output += binOp('+')
+        return
+      }
+      case 'sub': {
+        this.output += binOp('-')
+        return
+      }
+      case 'neg': {
+        this.output += unOp('-')
+        return
+      }
+      case 'eq': {
+        this.output += condOp('EQ')
+        return
+      }
+      case 'gt': {
+        this.output += condOp('GT')
+        return
+      }
+      case 'lt': {
+        this.output += condOp('LT')
+        return
+      }
+      case 'and': {
+        this.output += binOp('&')
+        return
+      }
+      case 'or': {
+        this.output += binOp('|')
+        return
+      }
+      case 'not': {
+        this.output += unOp('!')
         return
       }
     }

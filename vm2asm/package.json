@@ -8,7 +8,7 @@
     "vm2asm": "cli.mjs"
   },
   "scripts": {
-    "start": "node --experimental-modules . examples/*.vm",
+    "start": "node --experimental-modules . examples/*.vm"
   },
   "keywords": [],
   "author": "William Hilton <wmhilton@gmail.com>",
