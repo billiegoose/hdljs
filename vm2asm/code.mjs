@@ -174,7 +174,7 @@ export default class Code {
             break
           }
           case 'static': {
-            this.output += `@${filename}.${index}\n`
+            this.output += `@${this.filename}.${index}\n`
             this.output += 'D=M\n'
             this.output += pushStack
             break
@@ -217,7 +217,7 @@ export default class Code {
           }
           case 'static': {
             this.output += popStack
-            this.output += `@${filename}.${index}\n`
+            this.output += `@${this.filename}.${index}\n`
             this.output += 'M=D\n'
             break
           }
