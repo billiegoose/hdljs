@@ -18,7 +18,7 @@ for (const dir of dirs) {
   for (const file of fs.readdirSync(dir)) {
     if (file.endsWith('.vm')) {
       const input = fs.readFileSync(path.join(dir, file), 'utf8')
-      translator.translate(input)
+      translator.translate(path.basename(file), input)
     }
   }
   fs.writeFileSync(`${dir}/${base}.asm`, translator.output, 'utf8')

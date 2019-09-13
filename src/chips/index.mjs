@@ -38,7 +38,7 @@ export * from './PC.mjs';
 
 // export * from './Screen.mjs';
 // export * from './Keyboard.mjs';
-// export * from './Memory.mjs';
+export * from './Memory.mjs';
 export * from './ROM32K.mjs';
 export * from './ROM32KLessAnnoying.mjs';
 
@@ -49,16 +49,16 @@ export * from './FastBit.mjs';
 export * from './ClockDivider.mjs';
 export * from './Mux4Way.mjs';
 export * from './Mux8Way.mjs';
-export * from './HalfClock.mjs';
+// export * from './HalfClock.mjs';
 // export * from './QuarterClock.mjs';
 // export * from './EigthClock.mjs';
-export * from './SixteenthClock.mjs';
-export * from './HighImpedence.mjs';
-export * from './IICState.mjs';
-export * from './IICStart.mjs';
-export * from './IICAckReceive.mjs';
-export * from './IICStop.mjs';
-export * from './IICByte.mjs';
+// export * from './SixteenthClock.mjs';
+// export * from './HighImpedence.mjs';
+// export * from './IICState.mjs';
+// export * from './IICStart.mjs';
+// export * from './IICAckReceive.mjs';
+// export * from './IICStop.mjs';
+// export * from './IICByte.mjs';
 // export * from './IICTransmitRange.mjs';
 
 // export * from './SquareWave.mjs';
@@ -71,5 +71,5 @@ export * from './IICByte.mjs';
 // export * from './SSD1306Driver.mjs';
 
 
-// export * from './CPU.mjs';
-// export * from './Computer.mjs';
+export * from './CPU.mjs';
+export * from './Computer.mjs';

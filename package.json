@@ -9,7 +9,8 @@
     "run": "node --experimental-modules src/main.mjs",
     "watch": "npm-watch run",
     "test": "cd out && iverilog design.sv testbench.sv && vvp -N a.out",
-    "upload": "scripts/upload.sh"
+    "upload": "scripts/upload.sh",
+    "uart": "screen -L /dev/cu.usbserial-1443301 115200 cs8 -cstopb"
   },
   "keywords": [],
   "author": "William Hilton <wmhilton@gmail.com>",

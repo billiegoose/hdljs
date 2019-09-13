@@ -6,7 +6,7 @@ export default class Translator {
   constructor() {
     this.code = new Code()
   }
-  translate (input) {
+  translate (filename, input) {
     // // symbol table pass
     // let p = new Parser(input)
     // while (p.hasMoreCommands()) {
@@ -21,6 +21,7 @@ export default class Translator {
     // }
     // code generation pass
     let p = new Parser(input)
+    this.code.setFileName(filename)
     while (p.hasMoreCommands()) {
       p.advance()
       switch (p.commandType) {
