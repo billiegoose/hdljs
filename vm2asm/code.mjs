@@ -6,8 +6,7 @@ M=D
 `
 
 const popStack = `@SP   // Decrement stack pointer
-D=M-1 //
-AM=D // also update A in prep for next command
+AM=M-1 // also update A in prep for next command
 D=M  // Pop value
 `
 
@@ -15,8 +14,7 @@ const pushStack = `@SP // Push value to stack
 A=M //
 M=D //
 @SP   // Increment stack pointer
-D=M+1 //
-M=D   //
+M=M+1 //
 `
 
 const TRUE = `@1
@@ -57,24 +55,18 @@ const readPointer = (base, index) => read('M', base, index)
 
 const readDirect = (base, index) => read('A', base, index)
 
-const write = (register, base, index) => `@R13 // write ${register} ${base} ${index}
-M=D
-@${base}
+const popWrite = (register, base, index) => `@${base} // write ${register} ${base} ${index}
 D=${register}
 @${index}
 D=A+D
-@R14
-M=D
-@R13
-D=M
-@R14
+${moveToReg('R13')}${popStack}@R13
 A=M
 M=D // end write
 `
 
-const writePointer = (base, index) => write('M', base, index)
+const writePointer = (base, index) => popWrite('M', base, index)
 
-const writeDirect = (base, index) => write('A', base, index)
+const writeDirect = (base, index) => popWrite('A', base, index)
 
 export default class Code {
   constructor() {
@@ -188,32 +180,26 @@ export default class Code {
         switch (segment) {
           case 'constant': throw new Error(`Cannot pop to constant segment`)
           case 'local': {
-            this.output += popStack
             this.output += writePointer('LCL', index)
             break
           }
           case 'argument': {
-            this.output += popStack
             this.output += writePointer('ARG', index)
             break
           }
           case 'this': {
-            this.output += popStack
             this.output += writePointer('THIS', index)
             break
           }
           case 'that': {
-            this.output += popStack
             this.output += writePointer('THAT', index)
             break
           }
           case 'pointer': {
-            this.output += popStack
             this.output += writeDirect(3, index)
             break
           }
           case 'temp': {
-            this.output += popStack
             this.output += writeDirect(5, index)
             break
           }
@@ -243,9 +229,10 @@ export default class Code {
     this.output += `D;JNE\n`
   }
   writeCall(functionName, numArgs){
+    numArgs = parseInt(numArgs)
     this.output += `// call ${functionName} ${numArgs}\n`
     // generate a unique call site (return address) label
-    let label = `${this.filename}.${this.functionName}-$-${functionName}`
+    let label = `${this.functionName}-$-${functionName}`
     let i = (this.callsites[label] || 0) + 1
     this.callsites[label] = i
     let returnAddress = `${label}$${i}`
@@ -273,15 +260,15 @@ export default class Code {
     this.output += `M=D\n`
     // set ARG = SP - n
     // note: D still contains @SP
-    this.output += `@${parseInt(numArgs) - 5}\n`
+    this.output += `@${numArgs - 5}\n`
     this.output += `D=D-A\n`
     this.output += `@ARG\n`
     this.output += `M=D\n`
     // jump to function
-    this.output += `@${this.filename}.${this.functionName}\n`
+    this.output += `@${this.functionName}\n`
     this.output += `0;JMP\n`
     // declare return address
-    this.output += `(${returnAddress})`
+    this.output += `(${returnAddress})\n`
   }
   writeReturn(){
     this.output += `// return\n`
@@ -332,12 +319,15 @@ export default class Code {
     this.output += `0;JMP\n`
   }
   writeFunction(functionName, numLocals){
+    numLocals = parseInt(numLocals)
     this.output += `// function ${functionName} ${numLocals}\n`
     this.functionName = functionName
-    this.output += `(${this.filename}.${this.functionName})\n`
+    this.output += `(${this.functionName})\n`
+    this.output += `@LCL\n`
+    this.output += `A=M\n`
     for (let i = 0; i < numLocals; i++) {
-      this.output += 'D=0\n'
-      this.output += writePointer('LCL', i)
+      this.output += `M=0\n`
+      this.output += `A=A+1\n`
     }
   }
 }
