@@ -40,6 +40,24 @@ export default class Parser {
         case 'pop':
           this.commandType = CommandType.Pop
           break
+        case 'label':
+          this.commandType = CommandType.Label
+          break
+        case 'goto':
+          this.commandType = CommandType.Goto
+          break
+        case 'if-goto':
+          this.commandType = CommandType.If
+          break
+        case 'function':
+          this.commandType = CommandType.Function
+          break
+        case 'return':
+          this.commandType = CommandType.Return
+          break
+        case 'call':
+          this.commandType = CommandType.Call
+          break
       }
       this.arg1 = arg1
       this.arg2 = arg2

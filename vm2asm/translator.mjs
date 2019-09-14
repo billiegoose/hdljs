@@ -28,11 +28,27 @@ export default class Translator {
         case CommandType.Push:
         case CommandType.Pop: {
           this.code.writePushPop(p.command, p.arg1, p.arg2)
-          break;
+          break
         }
         case CommandType.Arithmetic: {
           this.code.writeArithmetic(p.command, p.arg1, p.arg2)
-          break;
+          break
+        }
+        case CommandType.Label: {
+          this.code.writeLabel(p.arg1)
+          break
+        }
+        case CommandType.Goto: {
+          this.code.writeGoto(p.arg1)
+          break
+        }
+        case CommandType.If: {
+          this.code.writeIf(p.arg1)
+          break
+        }
+        case CommandType.Function: {
+          this.code.writeFunction(p.arg1)
+          break
         }
       }
     }

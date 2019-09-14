@@ -1,3 +1,4 @@
+import path from 'path'
 import { CommandType, ArithmeticCommand } from './types.mjs'
 
 const moveToReg = (reg) => `@${reg}
@@ -78,9 +79,9 @@ const writeDirect = (base, index) => write('A', base, index)
 export default class Code {
   constructor() {
     this.output = ''
-    this.writePreamble()
+    this.writeInit()
   }
-  writePreamble() {
+  writeInit() {
     this.output += '// initializes the stack pointer\n'
     this.output += '@256\n'
     this.output += 'D=A\n'
@@ -88,7 +89,7 @@ export default class Code {
     this.output += 'M=D\n\n'
   }
   setFileName(filename) {
-    this.filename = filename
+    this.filename = path.basename(filename, '.vm')
   }
   writeArithmetic (command) {
     this.output += `// ${command}\n`
@@ -223,6 +224,36 @@ export default class Code {
           }
         }
       }
+    }
+  }
+  writeLabel(label){
+    this.output += `// label ${label}\n`
+    this.output += `(${this.filename}.${this.functionName}$${label})\n`
+  }
+  writeGoto(label){
+    this.output += `// goto ${label}\n`
+    this.output += `@${this.filename}.${this.functionName}$${label}\n`
+    this.output += `0;JMP\n`
+  }
+  writeIf(label){
+    this.output += `// if-goto ${label}\n`
+    this.output += popStack
+    this.output += `@${this.filename}.${this.functionName}$${label}\n`
+    this.output += `D;JNE\n`
+  }
+  writeCall(functionName, numArgs){
+
+  }
+  writeReturn(){
+
+  }
+  writeFunction(functionName, numLocals){
+    this.functionName = functionName
+    this.output += `// function ${functionName} ${numLocals}\n`
+    this.output += `(${this.filename}.${this.functionName})\n`
+    for (let i = 0; i < numLocals; i++) {
+      this.output += 'D=0\n'
+      this.output += writePointer('LCL', index)
     }
   }
 }
