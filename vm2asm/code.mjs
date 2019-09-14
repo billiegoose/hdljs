@@ -56,9 +56,9 @@ const readPointer = (base, index) => read('M', base, index)
 const readDirect = (base, index) => read('A', base, index)
 
 const popWrite = (register, base, index) => `@${base} // write ${register} ${base} ${index}
-D=${register}
+D=${register}${ (parseInt(index) != 0) ? `
 @${index}
-D=A+D
+D=A+D` : ''}
 ${moveToReg('R13')}${popStack}@R13
 A=M
 M=D // end write
