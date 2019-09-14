@@ -255,17 +255,17 @@ export default class Code {
     this.output += pushStack
     // set LCL = SP
     this.output += `@SP\n`
-    this.output += `D=A\n`
+    this.output += `D=M\n`
     this.output += `@LCL\n`
     this.output += `M=D\n`
     // set ARG = SP - n
     // note: D still contains @SP
-    this.output += `@${numArgs - 5}\n`
+    this.output += `@${numArgs + 5}\n`
     this.output += `D=D-A\n`
     this.output += `@ARG\n`
     this.output += `M=D\n`
     // jump to function
-    this.output += `@${this.functionName}\n`
+    this.output += `@${functionName}\n`
     this.output += `0;JMP\n`
     // declare return address
     this.output += `(${returnAddress})\n`
@@ -285,8 +285,9 @@ export default class Code {
     this.output += `M=D\n`
     // reset SP to where it was right before the jump
     this.output += `@LCL\n`
-    this.output += `D=A\n`
+    this.output += `D=M\n`
     this.output += `@SP\n`
+    this.output += `M=D\n`
     // pop THAT, THIS, ARG, LCL
     this.output += popStack
     this.output += `@THAT\n`
@@ -323,11 +324,16 @@ export default class Code {
     this.output += `// function ${functionName} ${numLocals}\n`
     this.functionName = functionName
     this.output += `(${this.functionName})\n`
+    // initialize locals
     this.output += `@LCL\n`
     this.output += `A=M\n`
     for (let i = 0; i < numLocals; i++) {
       this.output += `M=0\n`
       this.output += `A=A+1\n`
     }
+    // update stack pointer
+    this.output += `D=A\n`
+    this.output += `@SP\n`
+    this.output += `M=D\n`
   }
 }
