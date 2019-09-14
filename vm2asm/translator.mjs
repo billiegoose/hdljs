@@ -47,7 +47,15 @@ export default class Translator {
           break
         }
         case CommandType.Function: {
-          this.code.writeFunction(p.arg1)
+          this.code.writeFunction(p.arg1, p.arg2)
+          break
+        }
+        case CommandType.Return: {
+          this.code.writeReturn()
+          break
+        }
+        case CommandType.Call: {
+          this.code.writeCall(p.arg1, p.arg2)
           break
         }
       }

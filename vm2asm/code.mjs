@@ -79,7 +79,8 @@ const writeDirect = (base, index) => write('A', base, index)
 export default class Code {
   constructor() {
     this.output = ''
-    this.writeInit()
+    // this.writeInit()
+    this.callsites = {}
   }
   writeInit() {
     this.output += '// initializes the stack pointer\n'
@@ -242,18 +243,101 @@ export default class Code {
     this.output += `D;JNE\n`
   }
   writeCall(functionName, numArgs){
-
+    this.output += `// call ${functionName} ${numArgs}\n`
+    // generate a unique call site (return address) label
+    let label = `${this.filename}.${this.functionName}-$-${functionName}`
+    let i = (this.callsites[label] || 0) + 1
+    this.callsites[label] = i
+    let returnAddress = `${label}$${i}`
+    // push return address
+    this.output += `@${returnAddress}\n`
+    this.output += `D=A\n`
+    this.output += pushStack
+    // push LCL, ARG, THIS, THAT
+    this.output += `@LCL\n`
+    this.output += `D=M\n`
+    this.output += pushStack
+    this.output += `@ARG\n`
+    this.output += `D=M\n`
+    this.output += pushStack
+    this.output += `@THIS\n`
+    this.output += `D=M\n`
+    this.output += pushStack
+    this.output += `@THAT\n`
+    this.output += `D=M\n`
+    this.output += pushStack
+    // set LCL = SP
+    this.output += `@SP\n`
+    this.output += `D=A\n`
+    this.output += `@LCL\n`
+    this.output += `M=D\n`
+    // set ARG = SP - n
+    // note: D still contains @SP
+    this.output += `@${parseInt(numArgs) - 5}\n`
+    this.output += `D=D-A\n`
+    this.output += `@ARG\n`
+    this.output += `M=D\n`
+    // jump to function
+    this.output += `@${this.filename}.${this.functionName}\n`
+    this.output += `0;JMP\n`
+    // declare return address
+    this.output += `(${returnAddress})`
   }
   writeReturn(){
-
+    this.output += `// return\n`
+    // ARG is going to become the new SP so keep a copy of it.
+    // We're running out of VM-reserved registers so here we'll dip into the
+    // `temp` segment by saving it to R12
+    this.output += `@ARG\n`
+    this.output += `D=M\n`
+    this.output += `@R12\n`
+    this.output += `M=D\n`
+    // pop return value to R15
+    this.output += popStack
+    this.output += `@R15\n`
+    this.output += `M=D\n`
+    // reset SP to where it was right before the jump
+    this.output += `@LCL\n`
+    this.output += `D=A\n`
+    this.output += `@SP\n`
+    // pop THAT, THIS, ARG, LCL
+    this.output += popStack
+    this.output += `@THAT\n`
+    this.output += `M=D\n`
+    this.output += popStack
+    this.output += `@THIS\n`
+    this.output += `M=D\n`
+    this.output += popStack
+    this.output += `@ARG\n`
+    this.output += `M=D\n`
+    this.output += popStack
+    this.output += `@LCL\n`
+    this.output += `M=D\n`
+    // pop return address to R14
+    this.output += popStack
+    this.output += `@R14\n`
+    this.output += `M=D\n`
+    // reset SP to ARG
+    this.output += `@R12\n`
+    this.output += `D=M\n`
+    this.output += `@SP\n`
+    this.output += `M=D\n`
+    // push return value back to stack
+    this.output += `@R15\n`
+    this.output += `D=M\n`
+    this.output += pushStack
+    // jump to return address
+    this.output += `@R14\n`
+    this.output += `A=M\n`
+    this.output += `0;JMP\n`
   }
   writeFunction(functionName, numLocals){
-    this.functionName = functionName
     this.output += `// function ${functionName} ${numLocals}\n`
+    this.functionName = functionName
     this.output += `(${this.filename}.${this.functionName})\n`
     for (let i = 0; i < numLocals; i++) {
       this.output += 'D=0\n'
-      this.output += writePointer('LCL', index)
+      this.output += writePointer('LCL', i)
     }
   }
 }
