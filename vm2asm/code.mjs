@@ -47,7 +47,7 @@ ${pushStack}
 const read = (register, base, index) => `@${base} // read ${register} ${base} ${index}
 D=${register}
 @${index}
-A=A+D
+A=D+A
 D=M // end read
 `
 
@@ -56,9 +56,9 @@ const readPointer = (base, index) => read('M', base, index)
 const readDirect = (base, index) => read('A', base, index)
 
 const popWrite = (register, base, index) => `@${base} // write ${register} ${base} ${index}
-D=${register}${ (parseInt(index) != 0) ? `
+D=${register}${ (parseInt(index) !== 0) ? `
 @${index}
-D=A+D` : ''}
+D=D+A` : ''}
 ${moveToReg('R13')}${popStack}@R13
 A=M
 M=D // end write
@@ -79,6 +79,8 @@ export default class Code {
     this.output += '@256\n'
     this.output += 'D=A\n'
     this.output += '@SP\n'
+    this.output += 'M=D\n'
+    this.output += '@LCL\n'
     this.output += 'M=D\n'
     this.output += '@Sys.init\n'
     this.output += '0;JMP\n\n'
