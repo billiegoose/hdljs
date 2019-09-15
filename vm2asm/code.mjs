@@ -71,7 +71,7 @@ const writeDirect = (base, index) => popWrite('A', base, index)
 export default class Code {
   constructor() {
     this.output = ''
-    // this.writeInit()
+    this.writeInit()
     this.callsites = {}
   }
   writeInit() {
@@ -79,7 +79,9 @@ export default class Code {
     this.output += '@256\n'
     this.output += 'D=A\n'
     this.output += '@SP\n'
-    this.output += 'M=D\n\n'
+    this.output += 'M=D\n'
+    this.output += '@Sys.init\n'
+    this.output += '0;JMP\n\n'
   }
   setFileName(filename) {
     this.filename = path.basename(filename, '.vm')
