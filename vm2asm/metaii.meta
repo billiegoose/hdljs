@@ -1,0 +1,20 @@
+
+.SYNTAX VM
+
+VM = LINE $LINE .,
+LINE = COMMAND2 / COMMAND1 / COMMAND0 .,
+COMMAND2 = 'push' PUSHCONSTANT /
+          'pop' .ID .NUMBER .OUT('pop') .,
+COMMAND1 = 'label' .ID .OUT('(' * ')') .,
+COMMAND0 = 'add' .OUT('// add') POP R13 POP ADD PUSH .,
+
+PUSHCONSTANT = 'constant' .NUMBER .OUT('@' * ' // push constant ' *) .OUT('D=A') PUSH .,
+
+POP = .OUT('@SP // pop') .OUT('AM=M-1') .OUT('D=M') .,
+PUSH = .OUT('@SP // push') .OUT('A=M') .OUT('M=D') .OUT('@SP') .OUT('M=M+1') .,
+R13 = .OUT('@R13') .OUT('M=D') .,
+ADD = .OUT('@R13') .OUT('D=D+M') .,
+
+.END
+
+http://www.bayfronttechnologies.com/mc_workshop.html
