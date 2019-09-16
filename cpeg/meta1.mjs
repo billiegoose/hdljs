@@ -3,7 +3,7 @@ function matchWhitespace (text) {
   let matches = text.match(/^(\s*(--[^\n]*\n)?)*/);
   if (matches !== null) {
     text = text.slice(matches[0].length)
-    return [{type: 'WHITESPACE', value: matches[0]}, text]
+    return [['WHITESPACE',matches[0]], text]
   } else {
     return [null, text]
   }
@@ -24,7 +24,7 @@ function matchString (origtext) {
         return [null, origtext]
       }
     }
-    return [{type: 'STRING', value: text.slice(1, i).replace(/''/g, "'")}, text.slice(i+1)]
+    return [['STRING', text.slice(1, i).replace(/''/g, "'")], text.slice(i+1)]
   }
   return [null, origtext]
 }
@@ -34,7 +34,7 @@ function matchLiteral (origtext, literal) {
   ;[_, text] = matchWhitespace(origtext)
 
   if (text.startsWith(literal)) {
-    return [{type: literal, value: null}, text.slice(literal.length)]
+    return [['LITERAL', literal], text.slice(literal.length)]
   }
   return [null, origtext]
 }
@@ -57,22 +57,45 @@ function matchIdentifier (origtext) {
   let matches = text.match(/^[a-zA-Z_]\w*/)
   if (matches !== null) {
     text = text.slice(matches[0].length)
-    return [{type: 'ID', value: matches[0]}, text]
+    return [['ID', matches[0]], text]
   } else {
     return [null, origtext]
   }
 }
 
 function matchGroup (origtext) {
-  let _, text
+  let _, text, body
   ;[_, text] = matchLiteral(origtext, '(')
   if (_ === null) return [null, origtext]
-  let body
-  ;[body, text] = matchEx2(text)
+  ;[body, text] = matchEx1(text)
   if (body === null) return [null, origtext]
   ;[_, text] = matchLiteral(text, ')')
   if (_ === null) return [null, origtext]
-  return [{type: 'GROUP', value: body}, text]
+  return [['GROUP', body], text]
+}
+
+function matchRepetition (origtext) {
+  let _, text, body
+  ;[_, text] = matchLiteral(origtext, '$')
+  if (_ === null) return [null, origtext]
+  ;[body, text] = matchEx1(text)
+  if (body === null) return [null, origtext]
+  return [['REPEAT', body], text]
+}
+
+function matchType (origtext) {
+  let _, text, id
+  ;[_, text] = matchLiteral(origtext, '{')
+  if (_ === null) return [null, origtext]
+  ;[body, text] = matchEx1(text)
+  if (body === null) return [null, origtext]
+  ;[_, text] = matchLiteral(text, ':')
+  if (_ === null) return [null, origtext]
+  ;[id, text] = matchIdentifier(text)
+  if (id === null) return [null, origtext]
+  ;[_, text] = matchLiteral(text, '}')
+  if (_ === null) return [null, origtext]
+  return [['TYPE', [ id, body ]], text]
 }
 
 function matchEx3 (origtext) {
@@ -89,6 +112,12 @@ function matchEx3 (origtext) {
   if (result[0] !== null) return result
   result = matchGroup(origtext)
   if (result[0] !== null) return result
+  result = matchType(origtext)
+  if (result[0] !== null) return result
+  result = matchLiteral(origtext, '.EMPTY')
+  if (result[0] !== null) return result
+  result = matchRepetition(origtext)
+  if (result[0] !== null) return result
   return [null, origtext]
 }
 
@@ -97,10 +126,8 @@ function matchEx2 (origtext) {
   ;[value, text] = matchEx3(origtext)
   if (value === null) return [null, origtext]
   let list = [value]
-  let lasttext = ''
-  while(text.length > 0 && text !== lasttext) {
+  while(text.length > 0) {
     ;[value, text] = matchEx3(text)
-    lasttext = text
     if (value !== null) {
       list.push(value)
     } else {
@@ -110,7 +137,7 @@ function matchEx2 (origtext) {
   if (list.length === 1) {
     return [list[0], text]
   }
-  return [{type: 'SEQ', value: list}, text]
+  return [['SEQ', list], text]
 }
 
 function matchEx1 (origtext) {
@@ -118,12 +145,10 @@ function matchEx1 (origtext) {
   ;[value, text] = matchEx2(origtext)
   if (value === null) return [null, origtext]
   let list = [value]
-  let lasttext = ''
-  while(text.length > 0 && text !== lasttext) {
+  while(text.length > 0) {
     ;[value, text] = matchLiteral(text, '/')
     if (value === null) break
     ;[value, text] = matchEx2(text)
-    lasttext = text
     if (value !== null) {
       list.push(value)
     } else {
@@ -133,7 +158,7 @@ function matchEx1 (origtext) {
   if (list.length === 1) {
     return [list[0], text]
   }
-  return [{type: 'ALT', value: list}, text]
+  return [['ALT', list], text]
 }
 
 function matchRule (origtext) {
@@ -144,8 +169,10 @@ function matchRule (origtext) {
   if (_ === null) return [null, origtext]
   ;[exp, text] = matchEx1(text)
   if (exp === null) return [null, origtext]
+  ;[_, text] = matchLiteral(text, ';')
+  if (_ === null) return [null, origtext]
 
-  return [{type: 'RULE', value: { id, exp }}, text]
+  return [['RULE', [ id, exp ]], text]
 }
 
 function matchRules (origtext) {
@@ -153,17 +180,15 @@ function matchRules (origtext) {
   ;[rule, text] = matchRule(origtext)
   if (rule === null) return [null, origtext]
   let list = [rule]
-  let lasttext = ''
-  while(text.length > 0 && text !== lasttext) {
+  while(text.length > 0) {
     ;[rule, text] = matchRule(text)
-    lasttext = text
     if (rule !== null) {
       list.push(rule)
     } else {
       break
     }
   }
-  return [{type: 'RULES', value: list}, text]
+  return [['RULES', list], text]
 }
 
 function matchCPEG (origtext) {
@@ -176,7 +201,79 @@ function matchCPEG (origtext) {
   if (rules === null) return [null, origtext]
   ;[_, text] = matchLiteral(text, '.END')
   if (_ === null) return [null, origtext]
-  return [{type: 'CPEG', value: { id, rules }}, text]
+  return [['SYNTAX', [ id, rules ]], text]
 }
 
-console.log(matchCPEG(`.SYNTAX foo bar = goo .END`))
+function smartJoin (strs, joiner, indent) {
+  if (strs.join(joiner).length > 80) {
+    return strs.join('\n' + ' '.repeat(indent) + joiner.trimStart())
+  }
+}
+
+function print(ast, indent = 0) {
+  const [type, value] = ast
+  switch(type) {
+    case 'LITERAL': return value
+    case 'ID': return value
+    case 'NUMBER': return `${value}`
+    case 'STRING': return `'${value}'`
+    case 'GROUP': return `( ${print(value)} )`
+    case 'TYPE': return `{ ${print(value[1])} : ${print(value[0])} }`
+    case 'REPEAT': return `$ ${print(value)}`
+    case 'SEQ': return value.map(print).join(' ')
+    case 'ALT': return smartJoin(value.map(print), ' / ', indent)
+    case 'RULE': return `${print(value[0])} = ${print(value[1], value[0][1].length + 1)} ;`
+    case 'RULES': return value.map(print).join('\n')
+    case 'SYNTAX': return `.SYNTAX ${print(value[0])}\n${print(value[1])}`
+    default: 
+      console.log(ast)
+      throw new Error(`Forgot about '${ast.type}' did ye?`)
+  }
+}
+
+const demo = `
+-- An attempt at a CPEG metacompiler description
+
+.SYNTAX CPEG
+
+CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
+
+RULES = { $ RULE : RULES } ;
+
+RULE = { .ID '=' RULEEX ';' : RULE } ;
+
+RULEEX = { EX1 : EXP } ;
+
+EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
+
+EX2 = { EX3 $ EX3 : SEQ } ;
+
+EX3 = .ID
+    / { .STRING : LITERAL }
+    / { '.ID' : ID }
+    / { '.NUMBER' : NUMBER }
+    / { '.STRING' : STRING }
+    / { '(' EX1 ')' : GROUP }
+    / { '{' EX1 ':' .ID '}' : TYPE }
+    / '.EMPTY'
+    / { '$' EX3 : REPEAT }
+    ;
+
+.END
+
+.COMPILE CPEG
+
+-- provide the .OUT function for each TYPE
+
+Built in types:
+
+.ID -- { [a-zA-Z_][a-zA-Z_0-9]* : ID }
+.STRING -- { '[^']' : STRING }
+.NUMBER -- { [0-9]+ : NUMBER }
+
+`
+
+console.log(require('prettier').format(JSON.stringify(matchCPEG(demo)[0])))
+// console.log(JSON.stringify(matchCPEG(demo)[0], null, 2))
+
+console.log(print(matchCPEG(demo)[0]))
