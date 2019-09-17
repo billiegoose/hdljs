@@ -1,35 +1,85 @@
-
-function matchWhitespace (text) {
-  let matches = text.match(/^(\s*(--[^\n]*\n)?)*/);
-  if (matches !== null) {
-    text = text.slice(matches[0].length)
-    return [['WHITESPACE',matches[0]], text]
-  } else {
-    return [null, text]
-  }
+const discard = (matcher) => (origtext) => {
+  let [match, text] = matcher(origtext)
+  if (match === null) return [null, origtext]
+  return [[false], text]
 }
 
-function matchString (origtext) {
-  let _
-  ;[_, text] = matchWhitespace(origtext)
+const collapse = (matcher) => (origtext) => {
+  let [matches, text] = matcher(origtext)
+  if (matches === null) return [null, origtext]
+  if (matches[1].length === 1) return [matches[1], text]
+  return [matches, text]
+}
 
-  if (text.startsWith("'")) {
-    // search for ending quote
-    let i = 1
-    i = text.indexOf("'", i)
-    while (i + 1 < text.length && text[i+1] === "'") {
-      // keep searching
-      i = text.indexOf("'", i + 2)
-      if  (i === -1) {
-        return [null, origtext]
-      }
-    }
-    return [['STRING', text.slice(1, i).replace(/''/g, "'")], text.slice(i+1)]
+const matchSequence = (matchers) => (origtext) => {
+  let matches = []
+  let text = origtext
+  let currentMatch
+  for (const matcher of matchers) {
+    ;[currentMatch, text] = matcher(text)
+    // todo: remove some of the backtracking
+    if (currentMatch === null) return [null, origtext]
+    matches.push(currentMatch)
+  }
+  matches = matches.filter(m => Boolean(m[0]))
+  if (matches.length === 1) return [matches[0], text]
+  return [matches, text]
+}
+
+const matchAlt = (matchers) => (origtext) => {
+  // return the first match
+  for (const matcher of matchers) {
+    let [currentMatch, text] = matcher(origtext)
+    if (currentMatch !== null) return [currentMatch, text]
   }
   return [null, origtext]
 }
 
-function matchLiteral (origtext, literal) {
+const mMatchRegex = (regex) => (origtext) => {
+  let matches = origtext.match(regex)
+  if (matches !== null) {
+    text = origtext.slice(matches[0].length)
+    return [['WHITESPACE', matches[0]], text]
+  } else {
+    return [null, origtext]
+  }
+}
+
+const matchWhitespace = mMatchRegex(/^(\s*(--[^\n]*\n)?)*/)
+
+const matchJustString = (origtext) => {
+  if (origtext.startsWith("'")) {
+    // search for ending quote
+    let i = 1
+    i = origtext.indexOf("'", i)
+    while (i + 1 < origtext.length && origtext[i+1] === "'") {
+      // keep searching
+      i = origtext.indexOf("'", i + 2)
+      if  (i === -1) {
+        return [null, origtext]
+      }
+    }
+    return [['STRING', origtext.slice(1, i).replace(/''/g, "'")], origtext.slice(i+1)]
+  }
+  return [null, origtext]
+}
+
+function matchJustNumber (origtext) {
+  let matches = origtext.match(/^[0-9]+/)
+  if (matches !== null) {
+    let text = origtext.slice(matches[0].length)
+    return [['NUMBER', matches[0]], text]
+  } else {
+    return [null, origtext]
+  }
+}
+
+const matchString = matchSequence([
+  discard(matchWhitespace),
+  matchJustString
+])
+
+const mMatchLiteral = (literal) => (origtext) => {
   let _
   ;[_, text] = matchWhitespace(origtext)
 
@@ -39,170 +89,120 @@ function matchLiteral (origtext, literal) {
   return [null, origtext]
 }
 
-function matchNumber (origtext) {
-  let _
-  ;[_, text] = matchWhitespace(origtext)
-  let matches = text.match(/^[0-9]+/)
-  if (matches !== null) {
-    text = text.slice(matches[0].length)
-    return [{type: 'NUMBER', value: matches[0]}, text]
-  } else {
-    return [null, origtext]
-  }
-}
+const matchNumber = matchSequence([
+  discard(matchWhitespace),
+  matchJustNumber
+])
 
-function matchIdentifier (origtext) {
-  let _
-  ;[_, text] = matchWhitespace(origtext)
-  let matches = text.match(/^[a-zA-Z_]\w*/)
+const matchJustIdentifier = (origtext) => {
+  let matches = origtext.match(/^[a-zA-Z_]\w*/)
   if (matches !== null) {
-    text = text.slice(matches[0].length)
+    let text = origtext.slice(matches[0].length)
     return [['ID', matches[0]], text]
   } else {
     return [null, origtext]
   }
 }
 
-function matchGroup (origtext) {
-  let _, text, body
-  ;[_, text] = matchLiteral(origtext, '(')
-  if (_ === null) return [null, origtext]
-  ;[body, text] = matchEx1(text)
-  if (body === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, ')')
-  if (_ === null) return [null, origtext]
-  return [['GROUP', body], text]
+const matchIdentifier = matchSequence([
+  discard(matchWhitespace),
+  matchJustIdentifier
+])
+
+const wrap = (type, cond = () => true) => (matcher) => (origtext) => {
+  let [match, text] = matcher(origtext)
+  if (match === null) return [match, origtext]
+  if (!cond(match)) return [match, origtext]
+  return [[type, match], text]
 }
 
-function matchRepetition (origtext) {
-  let _, text, body
-  ;[_, text] = matchLiteral(origtext, '$')
-  if (_ === null) return [null, origtext]
-  ;[body, text] = matchEx1(text)
-  if (body === null) return [null, origtext]
-  return [['REPEAT', body], text]
-}
+const matchGroup = wrap('GROUP')(matchSequence([
+  discard(mMatchLiteral('(')),
+  matchEx1,
+  discard(mMatchLiteral(')'))
+]))
 
-function matchType (origtext) {
-  let _, text, id
-  ;[_, text] = matchLiteral(origtext, '{')
-  if (_ === null) return [null, origtext]
-  ;[body, text] = matchEx1(text)
-  if (body === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, ':')
-  if (_ === null) return [null, origtext]
-  ;[id, text] = matchIdentifier(text)
-  if (id === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, '}')
-  if (_ === null) return [null, origtext]
-  return [['TYPE', [ id, body ]], text]
-}
+const matchRepetition = wrap('REPEAT')(matchSequence([
+  discard(mMatchLiteral('$')),
+  matchEx1
+]))
 
-function matchEx3 (origtext) {
-  let result
-  result = matchIdentifier(origtext)
-  if (result[0] !== null) return result
-  result = matchString(origtext)
-  if (result[0] !== null) return result
-  result = matchLiteral(origtext, '.ID')
-  if (result[0] !== null) return result
-  result = matchLiteral(origtext, '.NUMBER')
-  if (result[0] !== null) return result
-  result = matchLiteral(origtext, '.STRING')
-  if (result[0] !== null) return result
-  result = matchGroup(origtext)
-  if (result[0] !== null) return result
-  result = matchType(origtext)
-  if (result[0] !== null) return result
-  result = matchLiteral(origtext, '.EMPTY')
-  if (result[0] !== null) return result
-  result = matchRepetition(origtext)
-  if (result[0] !== null) return result
-  return [null, origtext]
+const matchType = wrap('TYPE')(matchSequence([
+  discard(mMatchLiteral('{')),
+  matchEx1,
+  discard(mMatchLiteral(':')),
+  matchIdentifier,
+  discard(mMatchLiteral('}'))
+]))
+
+const matchEx3 = matchAlt([
+  matchIdentifier,
+  matchString,
+  mMatchLiteral('.ID'),
+  mMatchLiteral('.NUMBER'),
+  mMatchLiteral('.STRING'),
+  matchGroup,
+  matchType,
+  mMatchLiteral('.EMPTY'),
+  matchRepetition
+])
+
+const matchWhile = (matcher) => (origtext) => {
+  let list = []
+  let text = origtext
+  while(text.length > 0) {
+    ;[value, text] = matcher(text)
+    if (value !== null) {
+      list.push(value)
+    } else {
+      break
+    }
+  }
+  return [list, text]
 }
 
 function matchEx2 (origtext) {
   let value, text
   ;[value, text] = matchEx3(origtext)
   if (value === null) return [null, origtext]
-  let list = [value]
-  while(text.length > 0) {
-    ;[value, text] = matchEx3(text)
-    if (value !== null) {
-      list.push(value)
-    } else {
-      break
-    }
+  let list
+  ;[list, text] = matchWhile(matchEx3)(text)
+  if (list.length === 0) {
+    return [value, text]
   }
-  if (list.length === 1) {
-    return [list[0], text]
-  }
-  return [['SEQ', list], text]
+  return [['SEQ', [value, ...list]], text]
 }
 
 function matchEx1 (origtext) {
   let value, text
   ;[value, text] = matchEx2(origtext)
   if (value === null) return [null, origtext]
-  let list = [value]
-  while(text.length > 0) {
-    ;[value, text] = matchLiteral(text, '/')
-    if (value === null) break
-    ;[value, text] = matchEx2(text)
-    if (value !== null) {
-      list.push(value)
-    } else {
-      break
-    }
+  let list
+  ;[list, text] = matchWhile(matchSequence([
+    discard(mMatchLiteral('/')),
+    matchEx2
+  ]))(text)
+  if (list.length === 0) {
+    return [value, text]
   }
-  if (list.length === 1) {
-    return [list[0], text]
-  }
-  return [['ALT', list], text]
+  return [['ALT', [value, ...list]], text]
 }
 
-function matchRule (origtext) {
-  let id, _, exp, text
-  ;[id, text] = matchIdentifier(origtext)
-  if (id === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, '=')
-  if (_ === null) return [null, origtext]
-  ;[exp, text] = matchEx1(text)
-  if (exp === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, ';')
-  if (_ === null) return [null, origtext]
+const matchRule = wrap('RULE')(matchSequence([
+  matchIdentifier,
+  discard(mMatchLiteral('=')),
+  matchEx1,
+  discard(mMatchLiteral(';'))
+]))
 
-  return [['RULE', [ id, exp ]], text]
-}
+const matchRules = wrap('RULES')(matchWhile(matchRule))
 
-function matchRules (origtext) {
-  let rule, text
-  ;[rule, text] = matchRule(origtext)
-  if (rule === null) return [null, origtext]
-  let list = [rule]
-  while(text.length > 0) {
-    ;[rule, text] = matchRule(text)
-    if (rule !== null) {
-      list.push(rule)
-    } else {
-      break
-    }
-  }
-  return [['RULES', list], text]
-}
-
-function matchCPEG (origtext) {
-  let _, id, rules, text
-  ;[_, text] = matchLiteral(origtext, '.SYNTAX')
-  if (_ === null) return [null, origtext]
-  ;[id, text] = matchIdentifier(text)
-  if (id === null) return [null, origtext]
-  ;[rules, text] = matchRules(text)
-  if (rules === null) return [null, origtext]
-  ;[_, text] = matchLiteral(text, '.END')
-  if (_ === null) return [null, origtext]
-  return [['SYNTAX', [ id, rules ]], text]
-}
+const matchSyntax = wrap('SYNTAX')(matchSequence([
+  discard(mMatchLiteral('.SYNTAX')),
+  matchIdentifier,
+  matchRules,
+  discard(mMatchLiteral('.END'))
+]))
 
 function smartJoin (strs, joiner, indent) {
   if (strs.join(joiner).length > 80) {
@@ -213,6 +213,7 @@ function smartJoin (strs, joiner, indent) {
 function print(ast, indent = 0) {
   const [type, value] = ast
   switch(type) {
+    case 'WHITESPACE': return value
     case 'LITERAL': return value
     case 'ID': return value
     case 'NUMBER': return `${value}`
@@ -227,7 +228,7 @@ function print(ast, indent = 0) {
     case 'SYNTAX': return `.SYNTAX ${print(value[0])}\n${print(value[1])}`
     default: 
       console.log(ast)
-      throw new Error(`Forgot about '${ast.type}' did ye?`)
+      throw new Error(`Forgot about '${type}' did ye?`)
   }
 }
 
@@ -273,7 +274,7 @@ Built in types:
 
 `
 
-console.log(require('prettier').format(JSON.stringify(matchCPEG(demo)[0])))
-// console.log(JSON.stringify(matchCPEG(demo)[0], null, 2))
+console.log(require('prettier').format(JSON.stringify(matchSyntax(demo)[0])))
+// console.log(JSON.stringify(matchSyntax(demo)[0], null, 2))
 
-console.log(print(matchCPEG(demo)[0]))
+console.log(print(matchSyntax(demo)[0]))
