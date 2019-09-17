@@ -204,9 +204,9 @@ const matchSyntax = wrap('SYNTAX')(matchSequence([
   discard(mMatchLiteral('.END'))
 ]))
 
-function smartJoin (strs, joiner, indent) {
+function smartJoin (strs, joiner, indent, postjoiner = '') {
   if (strs.join(joiner).length > 80) {
-    return strs.join('\n' + ' '.repeat(indent) + joiner.trimStart())
+    return strs.join(postjoiner + '\n' + ' '.repeat(indent) + joiner.trimStart())
   }
 }
 
@@ -278,3 +278,36 @@ console.log(require('prettier').format(JSON.stringify(matchSyntax(demo)[0])))
 // console.log(JSON.stringify(matchSyntax(demo)[0], null, 2))
 
 console.log(print(matchSyntax(demo)[0]))
+
+
+
+function compileParser(ast, indent = 0) {
+  const [type, value] = ast
+  switch(type) {
+    case 'WHITESPACE': return ''
+    case 'LITERAL': {
+      switch (value) {
+        case '.ID': return 'matchIdentifier'
+        case '.STRING': return 'matchString'
+        case '.NUMBER': return 'matchNumber'
+        default: return `throw new Error('Invalid ${value}')`
+      }
+    }
+    case 'ID': return `match${value}`
+    case 'NUMBER': return 'matchNumber'
+    case 'STRING': return `mMatchLiteral('${value}')`
+    case 'GROUP': return 'matchGroup'
+    case 'TYPE': return `wrap('${value[1][1]}')(${compileParser(value[0])})`
+    case 'REPEAT': return `matchWhile(${compileParser(value)})`
+    case 'SEQ': return `matchSequence([${smartJoin(value.map(compileParser), ',', 6)}])`
+    case 'ALT': return `matchAlt([${smartJoin(value.map(compileParser), ',', 4)}])`
+    case 'RULE': return `${' '.repeat(indent)}function match${value[0][1]} (text) { return ${compileParser(value[1])}(text) };`
+    case 'RULES': return value.map(v => compileParser(v, indent)).join('\n')
+    case 'SYNTAX': return `function parse${value[0][1]} (text) {\n${compileParser(value[1], 2)}\n  return match${value[0][1]}(text);\n}`
+    default: 
+      console.log(ast)
+      throw new Error(`Forgot about '${type}' did ye?`)
+  }
+}
+
+console.log(compileParser(matchSyntax(demo)[0]))
