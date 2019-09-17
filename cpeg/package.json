@@ -4,12 +4,30 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "William Hilton <wmhilton@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "prettier": "^1.18.2"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0"
+  },
+  "jest": {
+    "testMatch": [
+      "**/?(*.)(spec|test).?(m)js?(x)"
+    ],
+    "transform": {
+      "^.+\\.mjs$": "babel-jest"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "mjs"
+    ]
   }
 }

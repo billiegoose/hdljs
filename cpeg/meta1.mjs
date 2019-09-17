@@ -38,7 +38,7 @@ const matchAlt = (matchers) => (origtext) => {
 const mMatchRegex = (regex) => (origtext) => {
   let matches = origtext.match(regex)
   if (matches !== null) {
-    text = origtext.slice(matches[0].length)
+    let text = origtext.slice(matches[0].length)
     return [['WHITESPACE', matches[0]], text]
   } else {
     return [null, origtext]
@@ -80,8 +80,7 @@ const matchString = matchSequence([
 ])
 
 const mMatchLiteral = (literal) => (origtext) => {
-  let _
-  ;[_, text] = matchWhitespace(origtext)
+  let [_, text] = matchWhitespace(origtext)
 
   if (text.startsWith(literal)) {
     return [['LITERAL', literal], text.slice(literal.length)]
@@ -150,6 +149,7 @@ const matchEx3 = matchAlt([
 const matchWhile = (matcher) => (origtext) => {
   let list = []
   let text = origtext
+  let value
   while(text.length > 0) {
     ;[value, text] = matcher(text)
     if (value !== null) {
@@ -197,7 +197,7 @@ const matchRule = wrap('RULE')(matchSequence([
 
 const matchRules = wrap('RULES')(matchWhile(matchRule))
 
-const matchSyntax = wrap('SYNTAX')(matchSequence([
+export const matchSyntax = wrap('SYNTAX')(matchSequence([
   discard(mMatchLiteral('.SYNTAX')),
   matchIdentifier,
   matchRules,
@@ -210,7 +210,7 @@ function smartJoin (strs, joiner, indent, postjoiner = '') {
   }
 }
 
-function print(ast, indent = 0) {
+export function print(ast, indent = 0) {
   const [type, value] = ast
   switch(type) {
     case 'WHITESPACE': return value
@@ -232,56 +232,7 @@ function print(ast, indent = 0) {
   }
 }
 
-const demo = `
--- An attempt at a CPEG metacompiler description
-
-.SYNTAX CPEG
-
-CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
-
-RULES = { $ RULE : RULES } ;
-
-RULE = { .ID '=' RULEEX ';' : RULE } ;
-
-RULEEX = { EX1 : EXP } ;
-
-EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
-
-EX2 = { EX3 $ EX3 : SEQ } ;
-
-EX3 = .ID
-    / { .STRING : LITERAL }
-    / { '.ID' : ID }
-    / { '.NUMBER' : NUMBER }
-    / { '.STRING' : STRING }
-    / { '(' EX1 ')' : GROUP }
-    / { '{' EX1 ':' .ID '}' : TYPE }
-    / '.EMPTY'
-    / { '$' EX3 : REPEAT }
-    ;
-
-.END
-
-.COMPILE CPEG
-
--- provide the .OUT function for each TYPE
-
-Built in types:
-
-.ID -- { [a-zA-Z_][a-zA-Z_0-9]* : ID }
-.STRING -- { '[^']' : STRING }
-.NUMBER -- { [0-9]+ : NUMBER }
-
-`
-
-console.log(require('prettier').format(JSON.stringify(matchSyntax(demo)[0])))
-// console.log(JSON.stringify(matchSyntax(demo)[0], null, 2))
-
-console.log(print(matchSyntax(demo)[0]))
-
-
-
-function compileParser(ast, indent = 0) {
+export function compileParser(ast, indent = 0) {
   const [type, value] = ast
   switch(type) {
     case 'WHITESPACE': return ''
@@ -309,5 +260,3 @@ function compileParser(ast, indent = 0) {
       throw new Error(`Forgot about '${type}' did ye?`)
   }
 }
-
-console.log(compileParser(matchSyntax(demo)[0]))
