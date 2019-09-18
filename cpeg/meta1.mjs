@@ -1,3 +1,9 @@
+let sourceText
+let cursorStack
+let rootStack // is actually a tree (stack of stacks)
+let stackParents // [root, grandparent, parent]
+let currentStack
+
 const discard = (matcher) => (origtext) => {
   let [match, text] = matcher(origtext)
   if (match === null) return [null, origtext]
@@ -11,6 +17,36 @@ const collapse = (matcher) => (origtext) => {
   return [matches, text]
 }
 
+const _unwrap = (type) => (node) => {
+  if (node[0] === type) return node[1]
+  return node
+}
+
+// const unwrap = (type) => (matcher) => (origtext) => {
+//   let [matches, text] = matcher(origtext)
+//   if (matches === null) return [null, origtext]
+//   if (matches[0] === type) return [matches[1], text]
+//   return [[matches[0], matches[1].map(unwrap(type)], text]
+//   console.log('---')
+//   console.log('matches', matches)
+//   console.log('type', type)
+//   console.log('---')
+//   let newmatches = []
+//   let [_type, ...list] = matches
+//   for (let match of list) {
+//     if (match[0] === _type) {
+//       if (Array.isArray(matches[1])) {
+//         newmatches.push(...match[1])
+//       } else {
+//         newmatches.push(match[1])
+//       }
+//     } else {
+//       newmatches.push(match)
+//     }
+//   }
+//   return [[_type, newmatches], text]
+// }
+
 const matchSequence = (matchers) => (origtext) => {
   let matches = []
   let text = origtext
@@ -19,7 +55,14 @@ const matchSequence = (matchers) => (origtext) => {
     ;[currentMatch, text] = matcher(text)
     // todo: remove some of the backtracking
     if (currentMatch === null) return [null, origtext]
-    matches.push(currentMatch)
+    if (currentMatch[0] === 'WHILE') {
+      console.log('---')
+      console.log(currentMatch[0])
+      console.log(currentMatch[1])
+      matches.push(...currentMatch[1])
+    } else {
+      matches.push(currentMatch)
+    }
   }
   matches = matches.filter(m => Boolean(m[0]))
   if (matches.length === 1) return [matches[0], text]
@@ -158,15 +201,36 @@ const matchWhile = (matcher) => (origtext) => {
       break
     }
   }
+  return [['WHILE', list], text]
+}
+
+const _matchWhile = (matcher) => (origtext) => {
+  let list = []
+  let text = origtext
+  let value
+  while(text.length > 0) {
+    ;[value, text] = matcher(text)
+    if (value !== null) {
+      list.push(value)
+    } else {
+      break
+    }
+  }
   return [list, text]
 }
+
+// const matchEx2 = wrap('SEQ', m => m[1].length > 1)(matchSequence([
+//   matchEx3,
+//   matchWhile(matchEx3)
+// ]))
+
 
 function matchEx2 (origtext) {
   let value, text
   ;[value, text] = matchEx3(origtext)
   if (value === null) return [null, origtext]
   let list
-  ;[list, text] = matchWhile(matchEx3)(text)
+  ;[list, text] = _matchWhile(matchEx3)(text)
   if (list.length === 0) {
     return [value, text]
   }
@@ -178,7 +242,7 @@ function matchEx1 (origtext) {
   ;[value, text] = matchEx2(origtext)
   if (value === null) return [null, origtext]
   let list
-  ;[list, text] = matchWhile(matchSequence([
+  ;[list, text] = _matchWhile(matchSequence([
     discard(mMatchLiteral('/')),
     matchEx2
   ]))(text)
@@ -195,7 +259,7 @@ const matchRule = wrap('RULE')(matchSequence([
   discard(mMatchLiteral(';'))
 ]))
 
-const matchRules = wrap('RULES')(matchWhile(matchRule))
+const matchRules = wrap('RULES')(_matchWhile(matchRule))
 
 export const matchSyntax = wrap('SYNTAX')(matchSequence([
   discard(mMatchLiteral('.SYNTAX')),
@@ -210,6 +274,13 @@ function smartJoin (strs, joiner, indent, postjoiner = '') {
   }
 }
 
+function commaJoin (strs, indent) {
+  let plain = strs.join(',')
+  const I =  ' '.repeat(indent)
+  if (plain.length < 40) return plain
+  return '\n' + I + strs.join(`,\n${I}`) + '\n' + ' '.repeat(indent - 2)
+}
+
 export function print(ast, indent = 0) {
   const [type, value] = ast
   switch(type) {
@@ -220,6 +291,7 @@ export function print(ast, indent = 0) {
     case 'STRING': return `'${value}'`
     case 'GROUP': return `( ${print(value)} )`
     case 'TYPE': return `{ ${print(value[1])} : ${print(value[0])} }`
+    case 'WHILE': return value.map(print).join(' ')
     case 'REPEAT': return `$ ${print(value)}`
     case 'SEQ': return value.map(print).join(' ')
     case 'ALT': return smartJoin(value.map(print), ' / ', indent)
@@ -234,6 +306,7 @@ export function print(ast, indent = 0) {
 
 export function compileParser(ast, indent = 0) {
   const [type, value] = ast
+  const I = ' '.repeat(indent)
   switch(type) {
     case 'WHITESPACE': return ''
     case 'LITERAL': {
@@ -250,11 +323,11 @@ export function compileParser(ast, indent = 0) {
     case 'GROUP': return 'matchGroup'
     case 'TYPE': return `wrap('${value[1][1]}')(${compileParser(value[0])})`
     case 'REPEAT': return `matchWhile(${compileParser(value)})`
-    case 'SEQ': return `matchSequence([${smartJoin(value.map(compileParser), ',', 6)}])`
-    case 'ALT': return `matchAlt([${smartJoin(value.map(compileParser), ',', 4)}])`
-    case 'RULE': return `${' '.repeat(indent)}function match${value[0][1]} (text) { return ${compileParser(value[1])}(text) };`
+    case 'SEQ': return `matchSequence([${commaJoin(value.map(compileParser), 6)}])`
+    case 'ALT': return `matchAlt([${commaJoin(value.map(compileParser), 4)}])`
+    case 'RULE': return `${I}function match${value[0][1]} (text) {\n${I}  return ${compileParser(value[1])}(text)\n${I}};`
     case 'RULES': return value.map(v => compileParser(v, indent)).join('\n')
-    case 'SYNTAX': return `function parse${value[0][1]} (text) {\n${compileParser(value[1], 2)}\n  return match${value[0][1]}(text);\n}`
+    case 'SYNTAX': return `${I}function parse${value[0][1]} (text) {\n${compileParser(value[1], indent + 2)}\n  return match${value[0][1]}(text);\n}`
     default: 
       console.log(ast)
       throw new Error(`Forgot about '${type}' did ye?`)
