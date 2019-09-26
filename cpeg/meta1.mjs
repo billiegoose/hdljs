@@ -4,6 +4,8 @@ let rootStack // is actually a tree (stack of stacks)
 let stackParents // [root, grandparent, parent]
 let currentStack
 
+import * as T from './types.mjs'
+
 const discard = (matcher) => (origtext) => {
   let [match, text] = matcher(origtext)
   if (match === null) return [null, origtext]
@@ -82,7 +84,7 @@ const mMatchRegex = (regex) => (origtext) => {
   let matches = origtext.match(regex)
   if (matches !== null) {
     let text = origtext.slice(matches[0].length)
-    return [['WHITESPACE', matches[0]], text]
+    return [new T.WHITESPACE(matches[0]), text]
   } else {
     return [null, origtext]
   }
@@ -102,7 +104,7 @@ const matchJustString = (origtext) => {
         return [null, origtext]
       }
     }
-    return [['STRING', origtext.slice(1, i).replace(/''/g, "'")], origtext.slice(i+1)]
+    return [new T.STRING(origtext.slice(1, i).replace(/''/g, "'")), origtext.slice(i+1)]
   }
   return [null, origtext]
 }
@@ -126,7 +128,7 @@ const mMatchLiteral = (literal) => (origtext) => {
   let [_, text] = matchWhitespace(origtext)
 
   if (text.startsWith(literal)) {
-    return [['LITERAL', literal], text.slice(literal.length)]
+    return [new T.LITERAL(literal), text.slice(literal.length)]
   }
   return [null, origtext]
 }
@@ -140,7 +142,7 @@ const matchJustIdentifier = (origtext) => {
   let matches = origtext.match(/^[a-zA-Z_]\w*/)
   if (matches !== null) {
     let text = origtext.slice(matches[0].length)
-    return [['ID', matches[0]], text]
+    return [new T.ID(matches[0]), text]
   } else {
     return [null, origtext]
   }
@@ -155,7 +157,11 @@ const wrap = (type, cond = () => true) => (matcher) => (origtext) => {
   let [match, text] = matcher(origtext)
   if (match === null) return [match, origtext]
   if (!cond(match)) return [match, origtext]
-  return [[type, match], text]
+  if (match.constructor.name === 'Array') {
+    return [new T[type](...match), text]
+  } else {
+    return [new T[type](match), text]
+  }
 }
 
 const matchGroup = wrap('GROUP')(matchSequence([
@@ -164,9 +170,10 @@ const matchGroup = wrap('GROUP')(matchSequence([
   discard(mMatchLiteral(')'))
 ]))
 
+
 const matchRepetition = wrap('REPEAT')(matchSequence([
   discard(mMatchLiteral('$')),
-  matchEx1
+  matchEx3
 ]))
 
 const matchType = wrap('TYPE')(matchSequence([
@@ -177,17 +184,19 @@ const matchType = wrap('TYPE')(matchSequence([
   discard(mMatchLiteral('}'))
 ]))
 
-const matchEx3 = matchAlt([
-  matchIdentifier,
-  matchString,
-  mMatchLiteral('.ID'),
-  mMatchLiteral('.NUMBER'),
-  mMatchLiteral('.STRING'),
-  matchGroup,
-  matchType,
-  mMatchLiteral('.EMPTY'),
-  matchRepetition
-])
+function matchEx3 (...args) { 
+  return matchAlt([
+    matchIdentifier,
+    matchString,
+    mMatchLiteral('.ID'),
+    mMatchLiteral('.NUMBER'),
+    mMatchLiteral('.STRING'),
+    matchGroup,
+    matchType,
+    mMatchLiteral('.EMPTY'),
+    matchRepetition
+  ])(...args)
+}
 
 const matchWhile = (matcher) => (origtext) => {
   let list = []
@@ -234,7 +243,7 @@ function matchEx2 (origtext) {
   if (list.length === 0) {
     return [value, text]
   }
-  return [['SEQ', [value, ...list]], text]
+  return [new T.SEQ(value, ...list), text]
 }
 
 function matchEx1 (origtext) {
@@ -249,7 +258,7 @@ function matchEx1 (origtext) {
   if (list.length === 0) {
     return [value, text]
   }
-  return [['ALT', [value, ...list]], text]
+  return [new T.ALT(value, ...list), text]
 }
 
 const matchRule = wrap('RULE')(matchSequence([
@@ -282,54 +291,101 @@ function commaJoin (strs, indent) {
 }
 
 export function print(ast, indent = 0) {
-  const [type, value] = ast
-  switch(type) {
-    case 'WHITESPACE': return value
-    case 'LITERAL': return value
-    case 'ID': return value
-    case 'NUMBER': return `${value}`
-    case 'STRING': return `'${value}'`
-    case 'GROUP': return `( ${print(value)} )`
-    case 'TYPE': return `{ ${print(value[1])} : ${print(value[0])} }`
-    case 'WHILE': return value.map(print).join(' ')
-    case 'REPEAT': return `$ ${print(value)}`
-    case 'SEQ': return value.map(print).join(' ')
-    case 'ALT': return smartJoin(value.map(print), ' / ', indent)
-    case 'RULE': return `${print(value[0])} = ${print(value[1], value[0][1].length + 1)} ;`
-    case 'RULES': return value.map(print).join('\n')
-    case 'SYNTAX': return `.SYNTAX ${print(value[0])}\n${print(value[1])}`
-    default: 
-      console.log(ast)
-      throw new Error(`Forgot about '${type}' did ye?`)
+  if (ast instanceof T.STRING) {
+    return `'${ast[0]}'`
   }
+  if (ast instanceof T.LITERAL) {
+    return ast[0]
+  }
+  if (ast instanceof T.ID) {
+    return ast[0]
+  }
+  if (ast instanceof T.GROUP) {
+    return `( ${print(ast[0])} )`
+  }
+  if (ast instanceof T.TYPE) {
+    return `{ ${print(ast[0])} : ${print(ast[1])} }`
+  }
+  if (ast instanceof T.WHILE) {
+    return ast.map(print).join(' ')
+  }
+  if (ast instanceof T.REPEAT) {
+    return `$ ${print(ast[0])}`
+  }
+  if (ast instanceof T.SEQ) {
+    return ast.map(print).join(' ')
+  }
+  if (ast instanceof T.ALT) {
+    return smartJoin(ast.map(print), ' / ', indent)
+  }
+  if (ast instanceof T.RULE) {
+    return `${print(ast[0])} = ${print(ast[1], ast[0][0].length + 1)} ;`
+  }
+  if (ast instanceof T.RULES) {
+    return ast.map(print).join('\n')
+  }
+  if (ast instanceof T.SYNTAX) {
+    return `.SYNTAX ${print(ast[0])}\n${print(ast[1])}`
+  }
+  console.log(`Forgot about '${ast.constructor}' did ye?`)
 }
 
 export function compileParser(ast, indent = 0) {
-  const [type, value] = ast
   const I = ' '.repeat(indent)
-  switch(type) {
-    case 'WHITESPACE': return ''
-    case 'LITERAL': {
-      switch (value) {
-        case '.ID': return 'matchIdentifier'
-        case '.STRING': return 'matchString'
-        case '.NUMBER': return 'matchNumber'
-        default: return `throw new Error('Invalid ${value}')`
-      }
-    }
-    case 'ID': return `match${value}`
-    case 'NUMBER': return 'matchNumber'
-    case 'STRING': return `mMatchLiteral('${value}')`
-    case 'GROUP': return 'matchGroup'
-    case 'TYPE': return `wrap('${value[1][1]}')(${compileParser(value[0])})`
-    case 'REPEAT': return `matchWhile(${compileParser(value)})`
-    case 'SEQ': return `matchSequence([${commaJoin(value.map(compileParser), 6)}])`
-    case 'ALT': return `matchAlt([${commaJoin(value.map(compileParser), 4)}])`
-    case 'RULE': return `${I}function match${value[0][1]} (text) {\n${I}  return ${compileParser(value[1])}(text)\n${I}};`
-    case 'RULES': return value.map(v => compileParser(v, indent)).join('\n')
-    case 'SYNTAX': return `${I}function parse${value[0][1]} (text) {\n${compileParser(value[1], indent + 2)}\n  return match${value[0][1]}(text);\n}`
-    default: 
-      console.log(ast)
-      throw new Error(`Forgot about '${type}' did ye?`)
+  if (ast instanceof T.STRING) {
+    return `mMatchLiteral('${ast[0]}')`
   }
+  if (ast instanceof T.NUMBER) {
+    return `matchNumber`
+  }
+  if (ast instanceof T.LITERAL) {
+    switch (ast[0]) {
+      case '.ID': return 'matchIdentifier'
+      case '.STRING': return 'matchString'
+      case '.NUMBER': return 'matchNumber'
+      default: return `throw new Error('Invalid ${ast[0]}')`
+    }
+  }
+  if (ast instanceof T.ID) {
+    return `match${ast[0]}`
+  }
+  if (ast instanceof T.GROUP) {
+    return `matchGroup`
+  }
+  if (ast instanceof T.TYPE) {
+    return `wrap('${ast[1][0]}')(${compileParser(ast[0])})`
+  }
+  if (ast instanceof T.REPEAT) {
+    return `matchWhile(${compileParser(ast[0])})`
+  }
+  if (ast instanceof T.SEQ) {
+    return `matchSequence([${commaJoin(ast.map(compileParser), 6)}])`
+  }
+  if (ast instanceof T.ALT) {
+    return `matchAlt([${commaJoin(ast.map(compileParser), 4)}])`
+  }
+  if (ast instanceof T.RULE) {
+    return `${I}function match${ast[0][0]} (text) {\n${I}  return ${compileParser(ast[1])}(text)\n${I}};`
+  }
+  if (ast instanceof T.RULES) {
+    return ast.map(v => compileParser(v, indent)).join('\n')
+  }
+  if (ast instanceof T.SYNTAX) {
+    return `${I}function parse${ast[0][0]} (text) {\n${compileParser(ast[1], indent + 2)}\n  return match${ast[0][0]}(text);\n}`
+  }
+  console.log(`Forgot about '${ast.constructor}' did ye?`)
+  // const [type, value] = ast
+  // const I = ' '.repeat(indent)
+  // switch(type) {
+  //   case 'TYPE': return `wrap('${value[1][1]}')(${compileParser(value[0])})`
+  //   case 'REPEAT': return `matchWhile(${compileParser(value)})`
+  //   case 'SEQ': return `matchSequence([${commaJoin(value.map(compileParser), 6)}])`
+  //   case 'ALT': return `matchAlt([${commaJoin(value.map(compileParser), 4)}])`
+  //   case 'RULE': return `${I}function match${value[0][1]} (text) {\n${I}  return ${compileParser(value[1])}(text)\n${I}};`
+  //   case 'RULES': return value.map(v => compileParser(v, indent)).join('\n')
+  //   case 'SYNTAX': return `${I}function parse${value[0][1]} (text) {\n${compileParser(value[1], indent + 2)}\n  return match${value[0][1]}(text);\n}`
+  //   default: 
+  //     console.log(ast)
+  //     throw new Error(`Forgot about '${type}' did ye?`)
+  // }
 }

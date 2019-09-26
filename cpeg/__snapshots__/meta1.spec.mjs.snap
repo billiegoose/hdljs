@@ -1,400 +1,226 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`test compiler hasn't broken 1`] = `
-"function parseCPEG (text) {
-  function matchCPEG (text) { return wrap('CPEG')(matchSequence([undefined]))(text) };
-  function matchRULES (text) { return wrap('RULES')(matchWhile(matchRULE))(text) };
-  function matchRULE (text) { return wrap('RULE')(matchSequence([undefined]))(text) };
-  function matchRULEEX (text) { return wrap('EXP')(matchEX1)(text) };
-  function matchEX1 (text) { return wrap('ALT')(matchSequence([undefined]))(text) };
-  function matchEX2 (text) { return wrap('SEQ')(matchSequence([undefined]))(text) };
-  function matchEX3 (text) { return matchAlt([matchIdentifier
-    ,wrap('LITERAL')(matchString)
-    ,wrap('ID')(mMatchLiteral('.ID'))
-    ,wrap('NUMBER')(mMatchLiteral('.NUMBER'))
-    ,wrap('STRING')(mMatchLiteral('.STRING'))
-    ,wrap('GROUP')(matchSequence([undefined]))
-    ,wrap('TYPE')(matchSequence([mMatchLiteral('{')
-      ,matchEX1
-      ,mMatchLiteral(':')
-      ,matchIdentifier
-      ,mMatchLiteral('}')]))
-    ,mMatchLiteral('.EMPTY')
-    ,wrap('REPEAT')(matchSequence([undefined]))])(text) };
-  return matchCPEG(text);
-}"
-`;
-
 exports[`test parser hasn't broken 1`] = `
-Array [
-  "SYNTAX",
-  Array [
-    Array [
-      "ID",
-      "CPEG",
+SYNTAX [
+  ID [
+    "CPEG",
+  ],
+  RULES [
+    RULE [
+      ID [
+        "CPEG",
+      ],
+      TYPE [
+        SEQ [
+          STRING [
+            ".SYNTAX",
+          ],
+          LITERAL [
+            ".ID",
+          ],
+          ID [
+            "RULES",
+          ],
+          STRING [
+            ".END",
+          ],
+        ],
+        ID [
+          "CPEG",
+        ],
+      ],
     ],
-    Array [
-      "RULES",
-      Array [
-        Array [
+    RULE [
+      ID [
+        "RULES",
+      ],
+      TYPE [
+        REPEAT [
+          ID [
+            "RULE",
+          ],
+        ],
+        ID [
+          "RULES",
+        ],
+      ],
+    ],
+    RULE [
+      ID [
+        "RULE",
+      ],
+      TYPE [
+        SEQ [
+          LITERAL [
+            ".ID",
+          ],
+          STRING [
+            "=",
+          ],
+          ID [
+            "RULEEX",
+          ],
+          STRING [
+            ";",
+          ],
+        ],
+        ID [
           "RULE",
-          Array [
-            Array [
-              "ID",
-              "CPEG",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "SEQ",
-                  Array [
-                    Array [
-                      "STRING",
-                      ".SYNTAX",
-                    ],
-                    Array [
-                      "LITERAL",
-                      ".ID",
-                    ],
-                    Array [
-                      "ID",
-                      "RULES",
-                    ],
-                    Array [
-                      "STRING",
-                      ".END",
-                    ],
-                  ],
+        ],
+      ],
+    ],
+    RULE [
+      ID [
+        "RULEEX",
+      ],
+      TYPE [
+        ID [
+          "EX1",
+        ],
+        ID [
+          "EXP",
+        ],
+      ],
+    ],
+    RULE [
+      ID [
+        "EX1",
+      ],
+      TYPE [
+        SEQ [
+          ID [
+            "EX2",
+          ],
+          REPEAT [
+            GROUP [
+              SEQ [
+                STRING [
+                  "/",
                 ],
-                Array [
-                  "ID",
-                  "CPEG",
+                ID [
+                  "EX2",
                 ],
               ],
             ],
           ],
         ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
-              "RULES",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "REPEAT",
-                  Array [
-                    "ID",
-                    "RULE",
-                  ],
-                ],
-                Array [
-                  "ID",
-                  "RULES",
-                ],
-              ],
-            ],
-          ],
+        ID [
+          "ALT",
         ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
-              "RULE",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "SEQ",
-                  Array [
-                    Array [
-                      "LITERAL",
-                      ".ID",
-                    ],
-                    Array [
-                      "STRING",
-                      "=",
-                    ],
-                    Array [
-                      "ID",
-                      "RULEEX",
-                    ],
-                    Array [
-                      "STRING",
-                      ";",
-                    ],
-                  ],
-                ],
-                Array [
-                  "ID",
-                  "RULE",
-                ],
-              ],
-            ],
+      ],
+    ],
+    RULE [
+      ID [
+        "EX2",
+      ],
+      TYPE [
+        SEQ [
+          ID [
+            "EX3",
           ],
-        ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
-              "RULEEX",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "ID",
-                  "EX1",
-                ],
-                Array [
-                  "ID",
-                  "EXP",
-                ],
-              ],
-            ],
-          ],
-        ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
-              "EX1",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "SEQ",
-                  Array [
-                    Array [
-                      "ID",
-                      "EX2",
-                    ],
-                    Array [
-                      "REPEAT",
-                      Array [
-                        "GROUP",
-                        Array [
-                          "SEQ",
-                          Array [
-                            Array [
-                              "STRING",
-                              "/",
-                            ],
-                            Array [
-                              "ID",
-                              "EX2",
-                            ],
-                          ],
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                Array [
-                  "ID",
-                  "ALT",
-                ],
-              ],
-            ],
-          ],
-        ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
-              "EX2",
-            ],
-            Array [
-              "TYPE",
-              Array [
-                Array [
-                  "SEQ",
-                  Array [
-                    Array [
-                      "ID",
-                      "EX3",
-                    ],
-                    Array [
-                      "REPEAT",
-                      Array [
-                        "ID",
-                        "EX3",
-                      ],
-                    ],
-                  ],
-                ],
-                Array [
-                  "ID",
-                  "SEQ",
-                ],
-              ],
-            ],
-          ],
-        ],
-        Array [
-          "RULE",
-          Array [
-            Array [
-              "ID",
+          REPEAT [
+            ID [
               "EX3",
             ],
-            Array [
-              "ALT",
-              Array [
-                Array [
-                  "LITERAL",
-                  ".ID",
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "LITERAL",
-                      ".STRING",
-                    ],
-                    Array [
-                      "ID",
-                      "LITERAL",
-                    ],
-                  ],
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "STRING",
-                      ".ID",
-                    ],
-                    Array [
-                      "ID",
-                      "ID",
-                    ],
-                  ],
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "STRING",
-                      ".NUMBER",
-                    ],
-                    Array [
-                      "ID",
-                      "NUMBER",
-                    ],
-                  ],
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "STRING",
-                      ".STRING",
-                    ],
-                    Array [
-                      "ID",
-                      "STRING",
-                    ],
-                  ],
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "SEQ",
-                      Array [
-                        Array [
-                          "STRING",
-                          "(",
-                        ],
-                        Array [
-                          "ID",
-                          "EX1",
-                        ],
-                        Array [
-                          "STRING",
-                          ")",
-                        ],
-                      ],
-                    ],
-                    Array [
-                      "ID",
-                      "GROUP",
-                    ],
-                  ],
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "SEQ",
-                      Array [
-                        Array [
-                          "STRING",
-                          "{",
-                        ],
-                        Array [
-                          "ID",
-                          "EX1",
-                        ],
-                        Array [
-                          "STRING",
-                          ":",
-                        ],
-                        Array [
-                          "LITERAL",
-                          ".ID",
-                        ],
-                        Array [
-                          "STRING",
-                          "}",
-                        ],
-                      ],
-                    ],
-                    Array [
-                      "ID",
-                      "TYPE",
-                    ],
-                  ],
-                ],
-                Array [
-                  "STRING",
-                  ".EMPTY",
-                ],
-                Array [
-                  "TYPE",
-                  Array [
-                    Array [
-                      "SEQ",
-                      Array [
-                        Array [
-                          "STRING",
-                          "$",
-                        ],
-                        Array [
-                          "ID",
-                          "EX3",
-                        ],
-                      ],
-                    ],
-                    Array [
-                      "ID",
-                      "REPEAT",
-                    ],
-                  ],
-                ],
-              ],
+          ],
+        ],
+        ID [
+          "SEQ",
+        ],
+      ],
+    ],
+    RULE [
+      ID [
+        "EX3",
+      ],
+      ALT [
+        LITERAL [
+          ".ID",
+        ],
+        TYPE [
+          LITERAL [
+            ".STRING",
+          ],
+          ID [
+            "LITERAL",
+          ],
+        ],
+        TYPE [
+          STRING [
+            ".ID",
+          ],
+          ID [
+            "ID",
+          ],
+        ],
+        TYPE [
+          STRING [
+            ".NUMBER",
+          ],
+          ID [
+            "NUMBER",
+          ],
+        ],
+        TYPE [
+          STRING [
+            ".STRING",
+          ],
+          ID [
+            "STRING",
+          ],
+        ],
+        TYPE [
+          SEQ [
+            STRING [
+              "(",
             ],
+            ID [
+              "EX1",
+            ],
+            STRING [
+              ")",
+            ],
+          ],
+          ID [
+            "GROUP",
+          ],
+        ],
+        TYPE [
+          SEQ [
+            STRING [
+              "{",
+            ],
+            ID [
+              "EX1",
+            ],
+            STRING [
+              ":",
+            ],
+            LITERAL [
+              ".ID",
+            ],
+            STRING [
+              "}",
+            ],
+          ],
+          ID [
+            "TYPE",
+          ],
+        ],
+        STRING [
+          ".EMPTY",
+        ],
+        TYPE [
+          SEQ [
+            STRING [
+              "$",
+            ],
+            ID [
+              "EX3",
+            ],
+          ],
+          ID [
+            "REPEAT",
           ],
         ],
       ],
@@ -405,19 +231,19 @@ Array [
 
 exports[`test printer hasn't broken 1`] = `
 ".SYNTAX CPEG
-CPEG = { CPEG : '.SYNTAX' .ID RULES '.END' } ;
-RULES = { RULES : $ RULE } ;
-RULE = { RULE : .ID '=' RULEEX ';' } ;
-RULEEX = { EXP : EX1 } ;
-EX1 = { ALT : EX2 $ ( '/' EX2 ) } ;
-EX2 = { SEQ : EX3 $ EX3 } ;
+CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
+RULES = { $ RULE : RULES } ;
+RULE = { .ID '=' RULEEX ';' : RULE } ;
+RULEEX = { EX1 : EXP } ;
+EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
+EX2 = { EX3 $ EX3 : SEQ } ;
 EX3 = .ID
-    / { LITERAL : .STRING }
-    / { ID : '.ID' }
-    / { NUMBER : '.NUMBER' }
-    / { STRING : '.STRING' }
-    / { GROUP : '(' EX1 ')' }
-    / { TYPE : '{' EX1 ':' .ID '}' }
+    / { .STRING : LITERAL }
+    / { '.ID' : ID }
+    / { '.NUMBER' : NUMBER }
+    / { '.STRING' : STRING }
+    / { '(' EX1 ')' : GROUP }
+    / { '{' EX1 ':' .ID '}' : TYPE }
     / '.EMPTY'
-    / { REPEAT : '$' EX3 } ;"
+    / { '$' EX3 : REPEAT } ;"
 `;
