@@ -1,42 +1,5 @@
 import * as T from './types.mjs'
 
-const discard = (matcher) => (origtext) => {
-  let [match, text] = matcher(origtext)
-  if (match === null) return [null, origtext]
-  return [[false], text]
-}
-
-const matchSequence = (matchers) => (origtext) => {
-  let matches = []
-  let text = origtext
-  let currentMatch
-  for (const matcher of matchers) {
-    ;[currentMatch, text] = matcher(text)
-    // todo: remove some of the backtracking
-    if (currentMatch === null) return [null, origtext]
-    if (currentMatch[0] === 'WHILE') {
-      console.log('---')
-      console.log(currentMatch[0])
-      console.log(currentMatch[1])
-      matches.push(...currentMatch[1])
-    } else {
-      matches.push(currentMatch)
-    }
-  }
-  matches = matches.filter(m => Boolean(m[0]))
-  if (matches.length === 1) return [matches[0], text]
-  return [matches, text]
-}
-
-const matchAlt = (matchers) => (origtext) => {
-  // return the first match
-  for (const matcher of matchers) {
-    let [currentMatch, text] = matcher(origtext)
-    if (currentMatch !== null) return [currentMatch, text]
-  }
-  return [null, origtext]
-}
-
 function matchRegex (origtext, regex) {
   let matches = origtext.match(regex)
   if (matches !== null) {
@@ -335,54 +298,139 @@ const _matchWhile = (matcher) => (origtext) => {
   return [list, text]
 }
 
-// const matchEx2 = wrap('SEQ', m => m[1].length > 1)(matchSequence([
-//   matchEx3,
-//   matchWhile(matchEx3)
-// ]))
+function matchEx2 (text) {
+  let token = new T.SEQ()
+  let _token, _text = text
 
+  // Consume (or backtrack)
+  ;[_token, _text] = matchEx3(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
 
-function matchEx2 (origtext) {
-  let value, text
-  ;[value, text] = matchEx3(origtext)
-  if (value === null) return [null, origtext]
-  let list
-  ;[list, text] = _matchWhile(matchEx3)(text)
-  if (list.length === 0) {
-    return [value, text]
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = matchEx3(_text)
+    if (_token === null) { break } else { token.push(_token) }
+
   }
-  return [new T.SEQ(value, ...list), text]
+
+  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  if (token.length === 1) {
+    return [token[0], _text]
+  }
+
+  return [token, _text]
 }
 
-function matchEx1 (origtext) {
-  let value, text
-  ;[value, text] = matchEx2(origtext)
-  if (value === null) return [null, origtext]
-  let list
-  ;[list, text] = _matchWhile(matchSequence([
-    discard(mMatchLiteral('/')),
-    matchEx2
-  ]))(text)
-  if (list.length === 0) {
-    return [value, text]
+function matchEx1 (text) {
+  let token = new T.ALT()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchEx2(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = matchLiteral(_text, '/')
+    if (_token === null) { break } else { token.push(_token) }
+
+    // Discard
+    token.pop()
+
+    // Consume (or error)
+    ;[_token, _text] = matchEx2(_text)
+    if (_token === null) { throw new Error(_text) } else { token.push(_token) }
+
   }
-  return [new T.ALT(value, ...list), text]
+
+  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  if (token.length === 1) {
+    return [token[0], _text]
+  }
+
+  return [token, _text]
 }
 
-const matchRule = wrap('RULE')(matchSequence([
-  matchIdentifier,
-  discard(mMatchLiteral('=')),
-  matchEx1,
-  discard(mMatchLiteral(';'))
-]))
+function matchRule (text) {
+  let token = new T.RULE()
+  let _token, _text = text
 
-const matchRules = wrap('RULES')(_matchWhile(matchRule))
+  // Consume (or backtrack)
+  ;[_token, _text] = matchIdentifier(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
 
-export const matchSyntax = wrap('SYNTAX')(matchSequence([
-  discard(mMatchLiteral('.SYNTAX')),
-  matchIdentifier,
-  matchRules,
-  discard(mMatchLiteral('.END'))
-]))
+  // Consume (or throw)
+  ;[_token, _text] = matchLiteral(_text, '=')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEx1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = matchLiteral(_text, ';')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+function matchRules (text) {
+  let token = new T.RULES()
+  let _token, _text = text
+
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = matchRule(_text)
+    if (_token === null) { break } else { token.push(_token) }
+
+  }
+
+  return [token, _text]
+}
+
+function matchSyntax (text) {
+  let token = new T.SYNTAX()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '.SYNTAX')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchIdentifier(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = matchRules(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '.END')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+export { matchSyntax }
+
 
 function smartJoin (strs, joiner, indent, postjoiner = '') {
   if (strs.join(joiner).length > 80) {
@@ -481,18 +529,4 @@ export function compileParser(ast, indent = 0) {
     return `${I}function parse${ast[0][0]} (text) {\n${compileParser(ast[1], indent + 2)}\n  return match${ast[0][0]}(text);\n}`
   }
   console.log(`Forgot about '${ast.constructor}' did ye?`)
-  // const [type, value] = ast
-  // const I = ' '.repeat(indent)
-  // switch(type) {
-  //   case 'TYPE': return `wrap('${value[1][1]}')(${compileParser(value[0])})`
-  //   case 'REPEAT': return `matchWhile(${compileParser(value)})`
-  //   case 'SEQ': return `matchSequence([${commaJoin(value.map(compileParser), 6)}])`
-  //   case 'ALT': return `matchAlt([${commaJoin(value.map(compileParser), 4)}])`
-  //   case 'RULE': return `${I}function match${value[0][1]} (text) {\n${I}  return ${compileParser(value[1])}(text)\n${I}};`
-  //   case 'RULES': return value.map(v => compileParser(v, indent)).join('\n')
-  //   case 'SYNTAX': return `${I}function parse${value[0][1]} (text) {\n${compileParser(value[1], indent + 2)}\n  return match${value[0][1]}(text);\n}`
-  //   default: 
-  //     console.log(ast)
-  //     throw new Error(`Forgot about '${type}' did ye?`)
-  // }
 }
