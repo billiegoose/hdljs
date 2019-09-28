@@ -1,4 +1,11 @@
-import * as T from './types.mjs'
+// BEGIN PRELUDE
+
+class NODE extends Array {
+  constructor(...args) {
+    super()
+    this.push(...args)
+  }
+}
 
 function matchRegex (origtext, regex) {
   let matches = origtext.match(regex)
@@ -10,8 +17,10 @@ function matchRegex (origtext, regex) {
   }
 }
 
+export class WHITESPACE extends NODE {}
+
 function matchWhitespace (text) {
-  let token = new T.WHITESPACE()
+  let token = new WHITESPACE()
   let _token, _text = text
 
   // Consume (or backtrack)
@@ -27,6 +36,8 @@ const matchJustIdentifier = (text) => {
   ;[_token, _text] = matchRegex(_text, /^[a-zA-Z_]\w*/)
   if (_token === null) { return [null, text] } else { return [_token, _text] }
 }
+
+export class NUMBER extends NODE {}
 
 function matchJustNumber (origtext) {
   let matches = origtext.match(/^[0-9]+/)
@@ -55,8 +66,10 @@ const matchJustString = (origtext) => {
   return [null, origtext]
 }
 
-function matchString (text) {
-  let token = new T.STRING()
+export class STRING extends NODE {}
+
+function _matchSTRING (text) {
+  let token = new STRING()
   let _token, _text = text
 
   // Consume (or backtrack)
@@ -73,8 +86,10 @@ function matchString (text) {
   return [token, _text]
 }
 
-function matchIdentifier (text) {
-  let token = new T.ID()
+export class ID extends NODE {}
+
+function _matchID (text) {
+  let token = new ID()
   let _token, _text = text
 
   // Consume (or backtrack)
@@ -91,345 +106,18 @@ function matchIdentifier (text) {
   return [token, _text]
 }
 
-function matchLiteral (text, literal) {
+export class LITERAL extends NODE {}
+
+function _matchLITERAL (text, literal) {
   let _token, _text = text
   ;[_token, _text] = matchWhitespace(_text)
 
   if (_text.startsWith(literal)) {
-    return [new T.LITERAL(literal), _text.slice(literal.length)]
+    return [new LITERAL(literal), _text.slice(literal.length)]
   } else {
     return [null, text]
   }
 }
-
-const mMatchLiteral = (literal) => (origtext) => {
-  let [_, text] = matchWhitespace(origtext)
-
-  if (text.startsWith(literal)) {
-    return [new T.LITERAL(literal), text.slice(literal.length)]
-  }
-  return [null, origtext]
-}
-
-const wrap = (type, cond = () => true) => (matcher) => (origtext) => {
-  let [match, text] = matcher(origtext)
-  if (match === null) return [match, origtext]
-  if (!cond(match)) return [match, origtext]
-  if (match.constructor.name === 'Array') {
-    return [new T[type](...match), text]
-  } else {
-    return [new T[type](match), text]
-  }
-}
-
-function matchGroup (text) {
-  let token = new T.GROUP()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '(')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchEx1(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or throw)
-  ;[_token, _text] = matchLiteral(_text, ')')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  return [token, _text]
-}
-
-function matchRepetition (text) {
-  let token = new T.REPEAT()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '$')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchEx3(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  return [token, _text]
-}
-
-function matchType (text) {
-  let token = new T.TYPE()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '{')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchEx1(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, ':')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchIdentifier(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '}')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  return [token, _text]
-}
-
-function matchEx3 (text) {
-  let token = new Array()
-  let _token, _text = text
-
-  {
-    let __text = _text
-    for (let i = 0; i <= 9; i++) {
-      let breakFor = false
-      switch (i) {
-        case 0: {
-          // Consume (or try next)
-          ;[_token, __text] = matchIdentifier(_text)
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 1: {
-          // Consume (or try next)
-          ;[_token, __text] = matchString(_text)
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 2: {
-          // Consume (or try next)
-          ;[_token, __text] = matchLiteral(_text, '.ID')
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 3: {
-          // Consume (or try next)
-          ;[_token, __text] = matchLiteral(_text, '.NUMBER')
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 4: {
-          // Consume (or try next)
-          ;[_token, __text] = matchLiteral(_text, '.STRING')
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 5: {
-          // Consume (or try next)
-          ;[_token, __text] = matchGroup(_text)
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 6: {
-          // Consume (or try next)
-          ;[_token, __text] = matchType(_text)
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 7: {
-          // Consume (or try next)
-          ;[_token, __text] = matchLiteral(_text, '.EMPTY')
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 8: {
-          // Consume (or try next)
-          ;[_token, __text] = matchRepetition(_text)
-          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
-        }
-        case 9: {
-          // Backtrack
-          return [null, text]
-        }
-      }
-      if (breakFor) break
-    }
-    _text = __text
-  }
-
-  return [...token, _text]
-}
-
-const matchWhile = (matcher) => (origtext) => {
-  let list = []
-  let text = origtext
-  let value
-  while(text.length > 0) {
-    ;[value, text] = matcher(text)
-    if (value !== null) {
-      list.push(value)
-    } else {
-      break
-    }
-  }
-  return [['WHILE', list], text]
-}
-
-const _matchWhile = (matcher) => (origtext) => {
-  let list = []
-  let text = origtext
-  let value
-  while(text.length > 0) {
-    ;[value, text] = matcher(text)
-    if (value !== null) {
-      list.push(value)
-    } else {
-      break
-    }
-  }
-  return [list, text]
-}
-
-function matchEx2 (text) {
-  let token = new T.SEQ()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchEx3(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Consume 0 or more times
-  while (true) {
-
-    // Consume (or continue)
-    ;[_token, _text] = matchEx3(_text)
-    if (_token === null) { break } else { token.push(_token) }
-
-  }
-
-  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
-  if (token.length === 1) {
-    return [token[0], _text]
-  }
-
-  return [token, _text]
-}
-
-function matchEx1 (text) {
-  let token = new T.ALT()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchEx2(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Consume 0 or more times
-  while (true) {
-
-    // Consume (or continue)
-    ;[_token, _text] = matchLiteral(_text, '/')
-    if (_token === null) { break } else { token.push(_token) }
-
-    // Discard
-    token.pop()
-
-    // Consume (or error)
-    ;[_token, _text] = matchEx2(_text)
-    if (_token === null) { throw new Error(_text) } else { token.push(_token) }
-
-  }
-
-  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
-  if (token.length === 1) {
-    return [token[0], _text]
-  }
-
-  return [token, _text]
-}
-
-function matchRule (text) {
-  let token = new T.RULE()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchIdentifier(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Consume (or throw)
-  ;[_token, _text] = matchLiteral(_text, '=')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchEx1(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or throw)
-  ;[_token, _text] = matchLiteral(_text, ';')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  return [token, _text]
-}
-
-function matchRules (text) {
-  let token = new T.RULES()
-  let _token, _text = text
-
-  // Consume 0 or more times
-  while (true) {
-
-    // Consume (or continue)
-    ;[_token, _text] = matchRule(_text)
-    if (_token === null) { break } else { token.push(_token) }
-
-  }
-
-  return [token, _text]
-}
-
-function matchSyntax (text) {
-  let token = new T.SYNTAX()
-  let _token, _text = text
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '.SYNTAX')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  // Consume (or throw)
-  ;[_token, _text] = matchIdentifier(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or throw)
-  ;[_token, _text] = matchRules(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Consume (or backtrack)
-  ;[_token, _text] = matchLiteral(_text, '.END')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
-
-  return [token, _text]
-}
-
-export { matchSyntax }
 
 
 function smartJoin (strs, joiner, indent, postjoiner = '') {
@@ -446,40 +134,37 @@ function commaJoin (strs, indent) {
 }
 
 export function print(ast, indent = 0) {
-  if (ast instanceof T.STRING) {
+  if (ast instanceof STRING) {
     return `'${ast[0]}'`
   }
-  if (ast instanceof T.LITERAL) {
+  if (ast instanceof LITERAL) {
     return ast[0]
   }
-  if (ast instanceof T.ID) {
+  if (ast instanceof ID) {
     return ast[0]
   }
-  if (ast instanceof T.GROUP) {
+  if (ast instanceof GROUP) {
     return `( ${print(ast[0])} )`
   }
-  if (ast instanceof T.TYPE) {
+  if (ast instanceof TYPE) {
     return `{ ${print(ast[0])} : ${print(ast[1])} }`
   }
-  if (ast instanceof T.WHILE) {
-    return ast.map(print).join(' ')
-  }
-  if (ast instanceof T.REPEAT) {
+  if (ast instanceof REPEAT) {
     return `$ ${print(ast[0])}`
   }
-  if (ast instanceof T.SEQ) {
+  if (ast instanceof SEQ) {
     return ast.map(print).join(' ')
   }
-  if (ast instanceof T.ALT) {
+  if (ast instanceof ALT) {
     return smartJoin(ast.map(print), ' / ', indent)
   }
-  if (ast instanceof T.RULE) {
+  if (ast instanceof RULE) {
     return `${print(ast[0])} = ${print(ast[1], ast[0][0].length + 1)} ;`
   }
-  if (ast instanceof T.RULES) {
+  if (ast instanceof RULES) {
     return ast.map(print).join('\n')
   }
-  if (ast instanceof T.SYNTAX) {
+  if (ast instanceof SYNTAX) {
     return `.SYNTAX ${print(ast[0])}\n${print(ast[1])}`
   }
   console.log(`Forgot about '${ast.constructor}' did ye?`)
@@ -487,13 +172,13 @@ export function print(ast, indent = 0) {
 
 export function compileParser(ast, indent = 0) {
   const I = ' '.repeat(indent)
-  if (ast instanceof T.STRING) {
+  if (ast instanceof STRING) {
     return `mMatchLiteral('${ast[0]}')`
   }
-  if (ast instanceof T.NUMBER) {
+  if (ast instanceof NUMBER) {
     return `matchNumber`
   }
-  if (ast instanceof T.LITERAL) {
+  if (ast instanceof LITERAL) {
     switch (ast[0]) {
       case '.ID': return 'matchIdentifier'
       case '.STRING': return 'matchString'
@@ -501,32 +186,330 @@ export function compileParser(ast, indent = 0) {
       default: return `throw new Error('Invalid ${ast[0]}')`
     }
   }
-  if (ast instanceof T.ID) {
+  if (ast instanceof ID) {
     return `match${ast[0]}`
   }
-  if (ast instanceof T.GROUP) {
+  if (ast instanceof GROUP) {
     return `matchGroup`
   }
-  if (ast instanceof T.TYPE) {
+  if (ast instanceof TYPE) {
     return `wrap('${ast[1][0]}')(${compileParser(ast[0])})`
   }
-  if (ast instanceof T.REPEAT) {
+  if (ast instanceof REPEAT) {
     return `matchWhile(${compileParser(ast[0])})`
   }
-  if (ast instanceof T.SEQ) {
+  if (ast instanceof SEQ) {
     return `matchSequence([${commaJoin(ast.map(compileParser), 6)}])`
   }
-  if (ast instanceof T.ALT) {
+  if (ast instanceof ALT) {
     return `matchAlt([${commaJoin(ast.map(compileParser), 4)}])`
   }
-  if (ast instanceof T.RULE) {
+  if (ast instanceof RULE) {
     return `${I}function match${ast[0][0]} (text) {\n${I}  return ${compileParser(ast[1])}(text)\n${I}};`
   }
-  if (ast instanceof T.RULES) {
+  if (ast instanceof RULES) {
     return ast.map(v => compileParser(v, indent)).join('\n')
   }
-  if (ast instanceof T.SYNTAX) {
+  if (ast instanceof SYNTAX) {
     return `${I}function parse${ast[0][0]} (text) {\n${compileParser(ast[1], indent + 2)}\n  return match${ast[0][0]}(text);\n}`
   }
   console.log(`Forgot about '${ast.constructor}' did ye?`)
 }
+
+// END PRELUDE
+
+export class GROUP extends NODE {}
+
+function matchGROUP (text) {
+  let token = new GROUP()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '(')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEX1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = _matchLITERAL(_text, ')')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+export class REPEAT extends NODE {}
+
+function matchREPEAT (text) {
+  let token = new REPEAT()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '$')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEX3(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  return [token, _text]
+}
+
+export class TYPE extends NODE {}
+
+function matchTYPE (text) {
+  let token = new TYPE()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '{')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEX1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, ':')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = _matchID(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '}')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+function matchEX3 (text) {
+  let token = new Array()
+  let _token, _text = text
+
+  {
+    let __text = _text
+    for (let i = 0; i <= 9; i++) {
+      let breakFor = false
+      switch (i) {
+        case 0: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchID(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 1: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchSTRING(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 2: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchLITERAL(_text, '.ID')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 3: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchLITERAL(_text, '.NUMBER')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 4: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchLITERAL(_text, '.STRING')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 5: {
+          // Consume (or try next)
+          ;[_token, __text] = matchGROUP(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 6: {
+          // Consume (or try next)
+          ;[_token, __text] = matchTYPE(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 7: {
+          // Consume (or try next)
+          ;[_token, __text] = _matchLITERAL(_text, '.EMPTY')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 8: {
+          // Consume (or try next)
+          ;[_token, __text] = matchREPEAT(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 9: {
+          // Backtrack
+          return [null, text]
+        }
+      }
+      if (breakFor) break
+    }
+    _text = __text
+  }
+
+  return [...token, _text]
+}
+
+export class SEQ extends NODE {}
+
+function matchEX2 (text) {
+  let token = new SEQ()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchEX3(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = matchEX3(_text)
+    if (_token === null) { break } else { token.push(_token) }
+
+  }
+
+  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  if (token.length === 1) {
+    return [token[0], _text]
+  }
+
+  return [token, _text]
+}
+
+export class ALT extends NODE {}
+
+function matchEX1 (text) {
+  let token = new ALT()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchEX2(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = _matchLITERAL(_text, '/')
+    if (_token === null) { break } else { token.push(_token) }
+
+    // Discard
+    token.pop()
+
+    // Consume (or error)
+    ;[_token, _text] = matchEX2(_text)
+    if (_token === null) { throw new Error(_text) } else { token.push(_token) }
+
+  }
+
+  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  if (token.length === 1) {
+    return [token[0], _text]
+  }
+
+  return [token, _text]
+}
+
+export class RULE extends NODE {}
+
+function matchRULE (text) {
+  let token = new RULE()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchID(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = _matchLITERAL(_text, '=')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEX1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = _matchLITERAL(_text, ';')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+export class RULES extends NODE {}
+
+function matchRULES (text) {
+  let token = new RULES()
+  let _token, _text = text
+
+  // Consume 0 or more times
+  while (true) {
+
+    // Consume (or continue)
+    ;[_token, _text] = matchRULE(_text)
+    if (_token === null) { break } else { token.push(_token) }
+
+  }
+
+  return [token, _text]
+}
+
+export class SYNTAX extends NODE {}
+
+function matchSYNTAX (text) {
+  let token = new SYNTAX()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '.SYNTAX')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = _matchID(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or throw)
+  ;[_token, _text] = matchRULES(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = _matchLITERAL(_text, '.END')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+export { matchSYNTAX }
+

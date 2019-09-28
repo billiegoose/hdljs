@@ -3,12 +3,12 @@
 exports[`test parser hasn't broken 1`] = `
 SYNTAX [
   ID [
-    "CPEG",
+    "SYNTAX",
   ],
   RULES [
     RULE [
       ID [
-        "CPEG",
+        "SYNTAX",
       ],
       TYPE [
         SEQ [
@@ -26,7 +26,7 @@ SYNTAX [
           ],
         ],
         ID [
-          "CPEG",
+          "SYNTAX",
         ],
       ],
     ],

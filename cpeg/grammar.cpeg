@@ -1,8 +1,8 @@
 -- An attempt at a CPEG metacompiler description
 
-.SYNTAX CPEG
+.SYNTAX SYNTAX
 
-CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
+SYNTAX = { '.SYNTAX' .ID RULES '.END' : SYNTAX } ;
 
 RULES = { $ RULE : RULES } ;
 
