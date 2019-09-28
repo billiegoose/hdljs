@@ -228,22 +228,3 @@ SYNTAX [
   ],
 ]
 `;
-
-exports[`test printer hasn't broken 1`] = `
-".SYNTAX CPEG
-CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
-RULES = { $ RULE : RULES } ;
-RULE = { .ID '=' RULEEX ';' : RULE } ;
-RULEEX = { EX1 : EXP } ;
-EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
-EX2 = { EX3 $ EX3 : SEQ } ;
-EX3 = .ID
-    / { .STRING : LITERAL }
-    / { '.ID' : ID }
-    / { '.NUMBER' : NUMBER }
-    / { '.STRING' : STRING }
-    / { '(' EX1 ')' : GROUP }
-    / { '{' EX1 ':' .ID '}' : TYPE }
-    / '.EMPTY'
-    / { '$' EX3 : REPEAT } ;"
-`;

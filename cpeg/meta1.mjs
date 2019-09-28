@@ -1,9 +1,3 @@
-let sourceText
-let cursorStack
-let rootStack // is actually a tree (stack of stacks)
-let stackParents // [root, grandparent, parent]
-let currentStack
-
 import * as T from './types.mjs'
 
 const discard = (matcher) => (origtext) => {
@@ -11,43 +5,6 @@ const discard = (matcher) => (origtext) => {
   if (match === null) return [null, origtext]
   return [[false], text]
 }
-
-const collapse = (matcher) => (origtext) => {
-  let [matches, text] = matcher(origtext)
-  if (matches === null) return [null, origtext]
-  if (matches[1].length === 1) return [matches[1], text]
-  return [matches, text]
-}
-
-const _unwrap = (type) => (node) => {
-  if (node[0] === type) return node[1]
-  return node
-}
-
-// const unwrap = (type) => (matcher) => (origtext) => {
-//   let [matches, text] = matcher(origtext)
-//   if (matches === null) return [null, origtext]
-//   if (matches[0] === type) return [matches[1], text]
-//   return [[matches[0], matches[1].map(unwrap(type)], text]
-//   console.log('---')
-//   console.log('matches', matches)
-//   console.log('type', type)
-//   console.log('---')
-//   let newmatches = []
-//   let [_type, ...list] = matches
-//   for (let match of list) {
-//     if (match[0] === _type) {
-//       if (Array.isArray(matches[1])) {
-//         newmatches.push(...match[1])
-//       } else {
-//         newmatches.push(match[1])
-//       }
-//     } else {
-//       newmatches.push(match)
-//     }
-//   }
-//   return [[_type, newmatches], text]
-// }
 
 const matchSequence = (matchers) => (origtext) => {
   let matches = []
@@ -80,17 +37,43 @@ const matchAlt = (matchers) => (origtext) => {
   return [null, origtext]
 }
 
-const mMatchRegex = (regex) => (origtext) => {
+function matchRegex (origtext, regex) {
   let matches = origtext.match(regex)
   if (matches !== null) {
     let text = origtext.slice(matches[0].length)
-    return [new T.WHITESPACE(matches[0]), text]
+    return [matches[0], text]
   } else {
     return [null, origtext]
   }
 }
 
-const matchWhitespace = mMatchRegex(/^(\s*(--[^\n]*\n)?)*/)
+function matchWhitespace (text) {
+  let token = new T.WHITESPACE()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchRegex(_text, /^(\s*(--[^\n]*\n)?)*/)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  return [token, _text]
+}
+
+const matchJustIdentifier = (text) => {
+  let _token, _text = text
+
+  ;[_token, _text] = matchRegex(_text, /^[a-zA-Z_]\w*/)
+  if (_token === null) { return [null, text] } else { return [_token, _text] }
+}
+
+function matchJustNumber (origtext) {
+  let matches = origtext.match(/^[0-9]+/)
+  if (matches !== null) {
+    let text = origtext.slice(matches[0].length)
+    return [['NUMBER', matches[0]], text]
+  } else {
+    return [null, origtext]
+  }
+}
 
 const matchJustString = (origtext) => {
   if (origtext.startsWith("'")) {
@@ -104,25 +87,57 @@ const matchJustString = (origtext) => {
         return [null, origtext]
       }
     }
-    return [new T.STRING(origtext.slice(1, i).replace(/''/g, "'")), origtext.slice(i+1)]
+    return [origtext.slice(1, i).replace(/''/g, "'"), origtext.slice(i+1)]
   }
   return [null, origtext]
 }
 
-function matchJustNumber (origtext) {
-  let matches = origtext.match(/^[0-9]+/)
-  if (matches !== null) {
-    let text = origtext.slice(matches[0].length)
-    return [['NUMBER', matches[0]], text]
-  } else {
-    return [null, origtext]
-  }
+function matchString (text) {
+  let token = new T.STRING()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchWhitespace(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchJustString(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  return [token, _text]
 }
 
-const matchString = matchSequence([
-  discard(matchWhitespace),
-  matchJustString
-])
+function matchIdentifier (text) {
+  let token = new T.ID()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchWhitespace(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchJustIdentifier(_text)
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  return [token, _text]
+}
+
+function matchLiteral (text, literal) {
+  let _token, _text = text
+  ;[_token, _text] = matchWhitespace(_text)
+
+  if (_text.startsWith(literal)) {
+    return [new T.LITERAL(literal), _text.slice(literal.length)]
+  } else {
+    return [null, text]
+  }
+}
 
 const mMatchLiteral = (literal) => (origtext) => {
   let [_, text] = matchWhitespace(origtext)
@@ -132,26 +147,6 @@ const mMatchLiteral = (literal) => (origtext) => {
   }
   return [null, origtext]
 }
-
-const matchNumber = matchSequence([
-  discard(matchWhitespace),
-  matchJustNumber
-])
-
-const matchJustIdentifier = (origtext) => {
-  let matches = origtext.match(/^[a-zA-Z_]\w*/)
-  if (matches !== null) {
-    let text = origtext.slice(matches[0].length)
-    return [new T.ID(matches[0]), text]
-  } else {
-    return [null, origtext]
-  }
-}
-
-const matchIdentifier = matchSequence([
-  discard(matchWhitespace),
-  matchJustIdentifier
-])
 
 const wrap = (type, cond = () => true) => (matcher) => (origtext) => {
   let [match, text] = matcher(origtext)
@@ -164,38 +159,150 @@ const wrap = (type, cond = () => true) => (matcher) => (origtext) => {
   }
 }
 
-const matchGroup = wrap('GROUP')(matchSequence([
-  discard(mMatchLiteral('(')),
-  matchEx1,
-  discard(mMatchLiteral(')'))
-]))
+function matchGroup (text) {
+  let token = new T.GROUP()
+  let _token, _text = text
 
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '(')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
 
-const matchRepetition = wrap('REPEAT')(matchSequence([
-  discard(mMatchLiteral('$')),
-  matchEx3
-]))
+  // Discard
+  token.pop()
 
-const matchType = wrap('TYPE')(matchSequence([
-  discard(mMatchLiteral('{')),
-  matchEx1,
-  discard(mMatchLiteral(':')),
-  matchIdentifier,
-  discard(mMatchLiteral('}'))
-]))
+  // Consume (or throw)
+  ;[_token, _text] = matchEx1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
 
-function matchEx3 (...args) { 
-  return matchAlt([
-    matchIdentifier,
-    matchString,
-    mMatchLiteral('.ID'),
-    mMatchLiteral('.NUMBER'),
-    mMatchLiteral('.STRING'),
-    matchGroup,
-    matchType,
-    mMatchLiteral('.EMPTY'),
-    matchRepetition
-  ])(...args)
+  // Consume (or throw)
+  ;[_token, _text] = matchLiteral(_text, ')')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+function matchRepetition (text) {
+  let token = new T.REPEAT()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '$')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEx3(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  return [token, _text]
+}
+
+function matchType (text) {
+  let token = new T.TYPE()
+  let _token, _text = text
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '{')
+  if (_token === null) { return [null, text] } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchEx1(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, ':')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  // Consume (or throw)
+  ;[_token, _text] = matchIdentifier(_text)
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Consume (or backtrack)
+  ;[_token, _text] = matchLiteral(_text, '}')
+  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+
+  // Discard
+  token.pop()
+
+  return [token, _text]
+}
+
+function matchEx3 (text) {
+  let token = new Array()
+  let _token, _text = text
+
+  {
+    let __text = _text
+    for (let i = 0; i <= 9; i++) {
+      let breakFor = false
+      switch (i) {
+        case 0: {
+          // Consume (or try next)
+          ;[_token, __text] = matchIdentifier(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 1: {
+          // Consume (or try next)
+          ;[_token, __text] = matchString(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 2: {
+          // Consume (or try next)
+          ;[_token, __text] = matchLiteral(_text, '.ID')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 3: {
+          // Consume (or try next)
+          ;[_token, __text] = matchLiteral(_text, '.NUMBER')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 4: {
+          // Consume (or try next)
+          ;[_token, __text] = matchLiteral(_text, '.STRING')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 5: {
+          // Consume (or try next)
+          ;[_token, __text] = matchGroup(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 6: {
+          // Consume (or try next)
+          ;[_token, __text] = matchType(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 7: {
+          // Consume (or try next)
+          ;[_token, __text] = matchLiteral(_text, '.EMPTY')
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 8: {
+          // Consume (or try next)
+          ;[_token, __text] = matchRepetition(_text)
+          if (_token === null) { continue } else { token.push(_token); breakFor = true; break }
+        }
+        case 9: {
+          // Backtrack
+          return [null, text]
+        }
+      }
+      if (breakFor) break
+    }
+    _text = __text
+  }
+
+  return [...token, _text]
 }
 
 const matchWhile = (matcher) => (origtext) => {

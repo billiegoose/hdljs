@@ -11,7 +11,22 @@ describe('test', () => {
     expect(ast).toMatchSnapshot()
   })
   it("printer hasn't broken", () => {
-    expect(print(ast)).toMatchSnapshot()
+    expect(print(ast)).toBe(`.SYNTAX CPEG
+CPEG = { '.SYNTAX' .ID RULES '.END' : CPEG } ;
+RULES = { $ RULE : RULES } ;
+RULE = { .ID '=' RULEEX ';' : RULE } ;
+RULEEX = { EX1 : EXP } ;
+EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
+EX2 = { EX3 $ EX3 : SEQ } ;
+EX3 = .ID
+    / { .STRING : LITERAL }
+    / { '.ID' : ID }
+    / { '.NUMBER' : NUMBER }
+    / { '.STRING' : STRING }
+    / { '(' EX1 ')' : GROUP }
+    / { '{' EX1 ':' .ID '}' : TYPE }
+    / '.EMPTY'
+    / { '$' EX3 : REPEAT } ;`)
   })
   it("compiler hasn't broken", () => {
     expect(true).toBe(true)
