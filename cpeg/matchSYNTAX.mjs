@@ -269,10 +269,10 @@ function matchEX1 (text) {
 
   }
 
-  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
-  if (token.length === 1) {
-    return [token[0], _text]
-  }
+  // // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  // if (token.length === 1) {
+  //   return [token[0], _text]
+  // }
 
   return [token, _text]
 }
@@ -294,10 +294,10 @@ function matchEX2 (text) {
 
   }
 
-  // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
-  if (token.length === 1) {
-    return [token[0], _text]
-  }
+  // // Collapse single-length sequences. TODO: IS THIS A BAD IDEA?
+  // if (token.length === 1) {
+  //   return [token[0], _text]
+  // }
 
   return [token, _text]
 }

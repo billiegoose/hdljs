@@ -11,23 +11,29 @@ SYNTAX [
         "SYNTAX",
       ],
       EXP [
-        TYPE [
+        ALT [
           SEQ [
-            STRING [
-              ".SYNTAX",
+            TYPE [
+              ALT [
+                SEQ [
+                  STRING [
+                    ".SYNTAX",
+                  ],
+                  LITERAL [
+                    ".ID",
+                  ],
+                  ID [
+                    "RULES",
+                  ],
+                  STRING [
+                    ".END",
+                  ],
+                ],
+              ],
+              ID [
+                "SYNTAX",
+              ],
             ],
-            LITERAL [
-              ".ID",
-            ],
-            ID [
-              "RULES",
-            ],
-            STRING [
-              ".END",
-            ],
-          ],
-          ID [
-            "SYNTAX",
           ],
         ],
       ],
@@ -37,14 +43,22 @@ SYNTAX [
         "RULES",
       ],
       EXP [
-        TYPE [
-          REPEAT [
-            ID [
-              "RULE",
+        ALT [
+          SEQ [
+            TYPE [
+              ALT [
+                SEQ [
+                  REPEAT [
+                    ID [
+                      "RULE",
+                    ],
+                  ],
+                ],
+              ],
+              ID [
+                "RULES",
+              ],
             ],
-          ],
-          ID [
-            "RULES",
           ],
         ],
       ],
@@ -54,23 +68,29 @@ SYNTAX [
         "RULE",
       ],
       EXP [
-        TYPE [
+        ALT [
           SEQ [
-            LITERAL [
-              ".ID",
+            TYPE [
+              ALT [
+                SEQ [
+                  LITERAL [
+                    ".ID",
+                  ],
+                  STRING [
+                    "=",
+                  ],
+                  ID [
+                    "RULEEX",
+                  ],
+                  STRING [
+                    ";",
+                  ],
+                ],
+              ],
+              ID [
+                "RULE",
+              ],
             ],
-            STRING [
-              "=",
-            ],
-            ID [
-              "RULEEX",
-            ],
-            STRING [
-              ";",
-            ],
-          ],
-          ID [
-            "RULE",
           ],
         ],
       ],
@@ -80,12 +100,20 @@ SYNTAX [
         "RULEEX",
       ],
       EXP [
-        TYPE [
-          ID [
-            "EX1",
-          ],
-          ID [
-            "EXP",
+        ALT [
+          SEQ [
+            TYPE [
+              ALT [
+                SEQ [
+                  ID [
+                    "EX1",
+                  ],
+                ],
+              ],
+              ID [
+                "EXP",
+              ],
+            ],
           ],
         ],
       ],
@@ -95,26 +123,34 @@ SYNTAX [
         "EX1",
       ],
       EXP [
-        TYPE [
+        ALT [
           SEQ [
-            ID [
-              "EX2",
-            ],
-            REPEAT [
-              GROUP [
+            TYPE [
+              ALT [
                 SEQ [
-                  STRING [
-                    "/",
-                  ],
                   ID [
                     "EX2",
                   ],
+                  REPEAT [
+                    GROUP [
+                      ALT [
+                        SEQ [
+                          STRING [
+                            "/",
+                          ],
+                          ID [
+                            "EX2",
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
               ],
+              ID [
+                "ALT",
+              ],
             ],
-          ],
-          ID [
-            "ALT",
           ],
         ],
       ],
@@ -124,19 +160,25 @@ SYNTAX [
         "EX2",
       ],
       EXP [
-        TYPE [
+        ALT [
           SEQ [
-            ID [
-              "EX3",
-            ],
-            REPEAT [
+            TYPE [
+              ALT [
+                SEQ [
+                  ID [
+                    "EX3",
+                  ],
+                  REPEAT [
+                    ID [
+                      "EX3",
+                    ],
+                  ],
+                ],
+              ],
               ID [
-                "EX3",
+                "SEQ",
               ],
             ],
-          ],
-          ID [
-            "SEQ",
           ],
         ],
       ],
@@ -146,110 +188,162 @@ SYNTAX [
         "EX3",
       ],
       EXP [
-        TYPE [
-          ALT [
+        ALT [
+          SEQ [
             TYPE [
-              LITERAL [
-                ".ID",
+              ALT [
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        LITERAL [
+                          ".ID",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "ID",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        LITERAL [
+                          ".STRING",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "STRING",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          ".ID",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "LITERAL",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          ".NUMBER",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "LITERAL",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          ".STRING",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "LITERAL",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          "(",
+                        ],
+                        ID [
+                          "EX1",
+                        ],
+                        STRING [
+                          ")",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "GROUP",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          "{",
+                        ],
+                        ID [
+                          "EX1",
+                        ],
+                        STRING [
+                          ":",
+                        ],
+                        LITERAL [
+                          ".ID",
+                        ],
+                        STRING [
+                          "}",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "TYPE",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          ".EMPTY",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "LITERAL",
+                    ],
+                  ],
+                ],
+                SEQ [
+                  TYPE [
+                    ALT [
+                      SEQ [
+                        STRING [
+                          "$",
+                        ],
+                        ID [
+                          "EX3",
+                        ],
+                      ],
+                    ],
+                    ID [
+                      "REPEAT",
+                    ],
+                  ],
+                ],
               ],
               ID [
-                "ID",
+                "TERM",
               ],
             ],
-            TYPE [
-              LITERAL [
-                ".STRING",
-              ],
-              ID [
-                "STRING",
-              ],
-            ],
-            TYPE [
-              STRING [
-                ".ID",
-              ],
-              ID [
-                "LITERAL",
-              ],
-            ],
-            TYPE [
-              STRING [
-                ".NUMBER",
-              ],
-              ID [
-                "LITERAL",
-              ],
-            ],
-            TYPE [
-              STRING [
-                ".STRING",
-              ],
-              ID [
-                "LITERAL",
-              ],
-            ],
-            TYPE [
-              SEQ [
-                STRING [
-                  "(",
-                ],
-                ID [
-                  "EX1",
-                ],
-                STRING [
-                  ")",
-                ],
-              ],
-              ID [
-                "GROUP",
-              ],
-            ],
-            TYPE [
-              SEQ [
-                STRING [
-                  "{",
-                ],
-                ID [
-                  "EX1",
-                ],
-                STRING [
-                  ":",
-                ],
-                LITERAL [
-                  ".ID",
-                ],
-                STRING [
-                  "}",
-                ],
-              ],
-              ID [
-                "TYPE",
-              ],
-            ],
-            TYPE [
-              STRING [
-                ".EMPTY",
-              ],
-              ID [
-                "LITERAL",
-              ],
-            ],
-            TYPE [
-              SEQ [
-                STRING [
-                  "$",
-                ],
-                ID [
-                  "EX3",
-                ],
-              ],
-              ID [
-                "REPEAT",
-              ],
-            ],
-          ],
-          ID [
-            "TERM",
           ],
         ],
       ],

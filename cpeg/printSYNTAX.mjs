@@ -10,7 +10,7 @@ function normalizeMultiline (chunks) {
 }
 
 function space (text) {
-  return (text.includes('\n') ? '\n' + text.replace(/\n */, '') : ' ' + text)
+  return (text.includes('\n') ? '\n' + text.replace(/\n  /, '') : ' ' + text)
 }
 
 function smartJoin (strs, joiner) {
@@ -19,7 +19,9 @@ function smartJoin (strs, joiner) {
       (str.includes('\n') ? str : '\n' + str )
        + (i === a.length - 1 ? '' : joiner.trimEnd())
     )
-    return indentText(strs.join(''))
+    let text = strs.join('')
+    if (strs.length > 1) text = indentText(text)
+    return text
   } else {
     return strs.join(joiner)
   }
@@ -58,31 +60,30 @@ function printRULE (ast) {
 }
 
 function printEXP (ast) {
-  return printBLAW(ast[0])
+  return printALT(ast[0])
 }
 
 function printALT (ast) {
-  return smartJoin(ast.map(printBLAW), ' / ', )
+  return smartJoin(ast.map(printSEQ), ' / ')
 }
 
 function printSEQ (ast) {
-  return ast.map(printBLAW).join(' ')
+  return smartJoin(ast.map(printTERM), ' ')
 }
 
 function printGROUP (ast) {
-  return `( ${printBLAW(ast[0])} )`
-}
-
-function printREPEAT (ast) {
-  return `$ ${printBLAW(ast[0])}`
+  return `( ${printALT(ast[0])} )`
 }
 
 function printTYPE (ast) {
-  return smartJoin(['{', printBLAW(ast[0], 2), ':', _printID(ast[1]), '}'], ' ')
+  return smartJoin(['{', printALT(ast[0], 2), ':', _printID(ast[1]), '}'], ' ')
 }
 
+function printREPEAT (ast) {
+  return `$ ${printTERM(ast[0])}`
+}
 
-function printBLAW (ast) {
+function printTERM (ast) {
   switch (ast.constructor.name) {
     case 'STRING': 
       return _printSTRING(ast)
