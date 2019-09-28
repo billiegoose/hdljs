@@ -16,14 +16,19 @@ RULE = { .ID '=' RULEEX ';' : RULE } ;
 RULEEX = { EX1 : EXP } ;
 EX1 = { EX2 $ ( '/' EX2 ) : ALT } ;
 EX2 = { EX3 $ EX3 : SEQ } ;
-EX3 = .ID
-    / { .STRING : LITERAL }
-    / { '.ID' : ID }
-    / { '.NUMBER' : NUMBER }
-    / { '.STRING' : STRING }
-    / { '(' EX1 ')' : GROUP }
-    / { '{' EX1 ':' .ID '}' : TYPE }
-    / '.EMPTY'
-    / { '$' EX3 : REPEAT } ;`)
+EX3 =
+  {
+    { .ID : ID } /
+    { .STRING : STRING } /
+    { '.ID' : LITERAL } /
+    { '.NUMBER' : LITERAL } /
+    { '.STRING' : LITERAL } /
+    { '(' EX1 ')' : GROUP } /
+    { '{' EX1 ':' .ID '}' : TYPE } /
+    { '.EMPTY' : LITERAL } /
+    { '$' EX3 : REPEAT }
+  :
+  TERM
+  } ;`)
   })
 })
