@@ -4,16 +4,11 @@ function indentText (text) {
   return text.split('\n').map(line => '  ' + line.trimEnd()).join('\n')
 }
 
-function normalizeMultiline (chunks) {
-  return chunks.map(chunk => chunk.includes('\n') ? chunk : '\n' + chunk + '\n')
-    .map(chunk => chunk.replace(/\n\n/g, '\n'))
+function dedentText (text) {
+  return text.split('\n').map(line => line.trimEnd().replace(/^  /, '')).join('\n')
 }
 
-function space (text) {
-  return (text.includes('\n') ? '\n' + text.replace(/\n  /, '') : ' ' + text)
-}
-
-function smartJoin (strs, joiner) {
+function smartJoin (strs, joiner = ' ') {
   if (strs.join(joiner).length > 80 || strs.some(str => str.includes('\n'))) {
     strs = strs.map((str, i, a) => 
       (str.includes('\n') ? str : '\n' + str )
@@ -25,6 +20,22 @@ function smartJoin (strs, joiner) {
   } else {
     return strs.join(joiner)
   }
+}
+
+function hangingJoin (strs, joiner) {
+  if (strs.join(joiner).length > 80 || strs.some(str => str.includes('\n'))) {
+    return dedentText(smartJoin(strs, joiner)).trimLeft()
+  } else {
+    return strs.join(joiner)
+  }
+}
+
+function newlineJoin (strs) {
+  return strs.join('\n')
+}
+
+function nonbreakingJoin (strs) {
+  return strs.join(' ')
 }
 
 function _printSTRING(ast) {
@@ -43,65 +54,143 @@ function _printID(ast) {
   return String(ast[0])
 }
 
+function _printLiteral(literal) {
+  return literal
+}
+
 // * * * * * * * * * * * * * * * * END PRELUDE * * * * * * * * * * * * * * * * //
 
 export { printSYNTAX }
 
 function printSYNTAX (ast) {
-  return `.SYNTAX ${_printID(ast[0])}\n${printRULES(ast[1])}`
+  switch (ast.constructor.name) {
+    case 'SYNTAX': {
+      let $0 = _printID(ast[0])
+      let $1 = printRULES(ast[1])
+      return newlineJoin([['.SYNTAX', $0].join(' '), $1, '.END'])
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printRULES (ast) {
-  return ast.map(printRULE).join('\n')
+  switch (ast.constructor.name) {
+    case 'RULES': {
+      let $0 = ast.map(printRULE)
+      return newlineJoin([...$0])
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printRULE (ast) {
-  return `${_printID(ast[0])} =${space(printEXP(ast[1], ast[0][0].length + 1))} ;`
+  switch (ast.constructor.name) {
+    case 'RULE': {
+      let $0 = _printID(ast[0])
+      let $1 = printEXP(ast[1])
+      return hangingJoin([nonbreakingJoin([$0, '=']), $1, ';'], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printEXP (ast) {
-  return printALT(ast[0])
+  switch (ast.constructor.name) {
+    case 'EXP': {
+      let $0 = printALT(ast[0])
+      return smartJoin([$0], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printALT (ast) {
-  return smartJoin(ast.map(printSEQ), ' / ')
+  switch (ast.constructor.name) {
+    case 'ALT': {
+      let $0 = ast.map(printSEQ)
+      return smartJoin([...$0], ' / ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printSEQ (ast) {
-  return smartJoin(ast.map(printTERM), ' ')
+  switch (ast.constructor.name) {
+    case 'SEQ': {
+      let $0 = ast.map(printTERM)
+      return smartJoin([...$0], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printGROUP (ast) {
-  return `( ${printALT(ast[0])} )`
+  switch (ast.constructor.name) {
+    case 'GROUP': {
+      let $0 = printALT(ast[0])
+      return smartJoin(['(', $0, ')'], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printTYPE (ast) {
-  return smartJoin(['{', printALT(ast[0], 2), ':', _printID(ast[1]), '}'], ' ')
+  switch (ast.constructor.name) {
+    case 'TYPE': {
+      let $0 = printALT(ast[0])
+      let $1 = _printID(ast[1])
+      return smartJoin(['{', $0, ':', $1, '}'], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printREPEAT (ast) {
-  return `$ ${printTERM(ast[0])}`
+  switch (ast.constructor.name) {
+    case 'REPEAT': {
+      let $0 = printTERM(ast[0])
+      return smartJoin(['$', $0], ' ')
+    }
+    default:
+      throw new TypeError(ast)
+  }
 }
 
 function printTERM (ast) {
   switch (ast.constructor.name) {
-    case 'STRING': 
-      return _printSTRING(ast)
-    case 'LITERAL':
-      return _printLITERAL(ast)
-    case 'ID':
-      return _printID(ast)
-    case 'GROUP':
-      return printGROUP(ast)
-    case 'TYPE':
-      return printTYPE(ast)
-    case 'REPEAT':
-      return printREPEAT(ast)
-    case 'SEQ':
-      return printSEQ(ast)
-    case 'ALT':
-      return printALT(ast)      
+    case 'ID': {
+      let $0 = _printID(ast)
+      return smartJoin([$0], ' ')
+    }
+    case 'STRING':  {
+      let $0 = _printSTRING(ast)
+      return smartJoin([$0], ' ')
+    }
+    case 'LITERAL': {
+      let $0 = _printLITERAL(ast)
+      return smartJoin([$0], ' ')
+    }
+    case 'GROUP': {
+      let $0 = printGROUP(ast)
+      return smartJoin([$0], ' ')
+    }
+    case 'TYPE': {
+      let $0 = printTYPE(ast)
+      return smartJoin([$0], ' ')
+    }
+    case 'REPEAT': {
+      let $0 = printREPEAT(ast)
+      return smartJoin([$0], ' ')
+    }
     default:
-      return console.log(`Forgot about '${ast.constructor}' did ye?`)
+      throw new TypeError(ast)
   }
 }
