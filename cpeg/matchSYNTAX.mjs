@@ -1,12 +1,5 @@
 // * * * * * * * * * * * * * * * * BEGIN PRELUDE * * * * * * * * * * * * * * * * //
 
-class NODE extends Array {
-  constructor(...args) {
-    super()
-    this.push(...args)
-  }
-}
-
 function node (name) {
   let c = (class extends Array {})
   Object.defineProperty(c, 'name', { value: name })
@@ -117,49 +110,11 @@ function _matchLITERAL (text, literal) {
   }
 }
 
-
-function smartJoin (strs, joiner, indent, postjoiner = '') {
-  if (strs.join(joiner).length > 80) {
-    return strs.join(postjoiner + '\n' + ' '.repeat(indent) + joiner.trimStart())
-  }
-}
-
 function commaJoin (strs, indent) {
   let plain = strs.join(',')
   const I =  ' '.repeat(indent)
   if (plain.length < 40) return plain
   return '\n' + I + strs.join(`,\n${I}`) + '\n' + ' '.repeat(indent - 2)
-}
-
-export function print(ast, indent = 0) {
-  switch (ast.constructor.name) {
-    case 'STRING': 
-      return `'${ast[0]}'`
-    case 'LITERAL':
-      return ast[0]
-    case 'ID':
-      return ast[0]
-    case 'GROUP':
-      return `( ${print(ast[0])} )`
-    case 'TYPE':
-      return `{ ${print(ast[0])} : ${print(ast[1])} }`
-    case 'REPEAT':
-      return `$ ${print(ast[0])}`
-    case 'SEQ':
-      return ast.map(print).join(' ')
-    case 'ALT':
-      return smartJoin(ast.map(print), ' / ', indent)
-    case 'EXP':
-      return print(ast[0], indent)
-    case 'RULE':
-      return `${print(ast[0])} = ${print(ast[1], ast[0][0].length + 1)} ;`
-    case 'RULES':
-      return ast.map(print).join('\n')
-    case 'SYNTAX':
-      return `.SYNTAX ${print(ast[0])}\n${print(ast[1])}`
-    default:
-      return console.log(`Forgot about '${ast.constructor}' did ye?`)
-  }
 }
 
 export function compileParser(ast, indent = 0) {

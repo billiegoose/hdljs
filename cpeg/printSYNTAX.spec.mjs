@@ -1,17 +1,15 @@
 /* eslint-env jest */
 import fs from 'fs'
-import { matchSYNTAX, print, compileParser } from './meta1.mjs'
+import { matchSYNTAX } from './matchSYNTAX.mjs'
+import { printSYNTAX } from './printSYNTAX.mjs'
 
 const demo = fs.readFileSync('grammar.cpeg', 'utf8')
 
 describe('test', () => {
   const ast = matchSYNTAX(demo)[0]
 
-  it("parser hasn't broken", () => {
-    expect(ast).toMatchSnapshot()
-  })
   it("printer hasn't broken", () => {
-    expect(print(ast)).toBe(`.SYNTAX SYNTAX
+    expect(printSYNTAX(ast)).toBe(`.SYNTAX SYNTAX
 SYNTAX = { '.SYNTAX' .ID RULES '.END' : SYNTAX } ;
 RULES = { $ RULE : RULES } ;
 RULE = { .ID '=' RULEEX ';' : RULE } ;
@@ -28,9 +26,4 @@ EX3 = .ID
     / '.EMPTY'
     / { '$' EX3 : REPEAT } ;`)
   })
-  it("compiler hasn't broken", () => {
-    expect(true).toBe(true)
-    console.log(compileParser(ast))
-  })
 })
-
