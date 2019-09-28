@@ -6,34 +6,84 @@ function smartJoin (strs, joiner, indent, postjoiner = '') {
   }
 }
 
+function _printSTRING(ast, indent = 0) {
+  return `'${ast[0]}'`
+}
+
+function _printLITERAL(ast, indent = 0) {
+  return String(ast[0])
+}
+
+function _printNUMBER(ast, indent = 0) {
+  return Number(ast[0]).toFixed(0)
+}
+
+function _printID(ast, indent = 0) {
+  return String(ast[0])
+}
+
 // * * * * * * * * * * * * * * * * END PRELUDE * * * * * * * * * * * * * * * * //
 
-export function printSYNTAX(ast, indent = 0) {
+export { printSYNTAX }
+
+function printSYNTAX (ast, indent = 0) {
+  return `.SYNTAX ${_printID(ast[0])}\n${printRULES(ast[1], indent)}`
+}
+
+function printGROUP (ast, indent = 0) {
+  return `( ${printEXP(ast[0])} )`
+}
+
+function printALT (ast, indent = 0) {
+  return smartJoin(ast.map(printEXP), ' / ', indent)
+}
+
+function printSEQ (ast, indent = 0) {
+  return ast.map(printEXP).join(' ')
+}
+
+function printRULES (ast, indent = 0) {
+  return ast.map(printRULE).join('\n')
+}
+
+function printRULE (ast, indent = 0) {
+  return `${printEXP(ast[0])} = ${printEXP(ast[1], ast[0][0].length + 1)} ;`
+}
+
+function printREPEAT (ast, indent = 0) {
+  return `$ ${printEXP(ast[0])}`
+}
+
+function printTYPE (ast, indent = 0) {
+  return `{ ${printEXP(ast[0])} : ${printEXP(ast[1])} }`
+}
+
+function printEXP (ast, indent = 0) {
   switch (ast.constructor.name) {
     case 'STRING': 
-      return `'${ast[0]}'`
+      return _printSTRING(ast, indent)
     case 'LITERAL':
-      return ast[0]
+      return _printLITERAL(ast, indent)
     case 'ID':
-      return ast[0]
+      return _printID(ast, indent)
     case 'GROUP':
-      return `( ${printSYNTAX(ast[0])} )`
+      return printGROUP(ast, indent)
     case 'TYPE':
-      return `{ ${printSYNTAX(ast[0])} : ${printSYNTAX(ast[1])} }`
+      return printTYPE(ast, indent)
     case 'REPEAT':
-      return `$ ${printSYNTAX(ast[0])}`
+      return printREPEAT(ast, indent)
     case 'SEQ':
-      return ast.map(printSYNTAX).join(' ')
+      return printSEQ(ast, indent)
     case 'ALT':
-      return smartJoin(ast.map(printSYNTAX), ' / ', indent)
+      return printALT(ast, indent)
     case 'EXP':
-      return printSYNTAX(ast[0], indent)
+      return printEXP(ast[0], indent)
     case 'RULE':
-      return `${printSYNTAX(ast[0])} = ${printSYNTAX(ast[1], ast[0][0].length + 1)} ;`
+      return printRULE(ast, indent)
     case 'RULES':
-      return ast.map(printSYNTAX).join('\n')
+      return printRULES(ast, indent)
     case 'SYNTAX':
-      return `.SYNTAX ${printSYNTAX(ast[0])}\n${printSYNTAX(ast[1])}`
+      return `.SYNTAX ${_printID(ast[0])}\n${printRULES(ast[1])}`
     default:
       return console.log(`Forgot about '${ast.constructor}' did ye?`)
   }
