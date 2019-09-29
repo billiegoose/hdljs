@@ -10,9 +10,6 @@ describe('test', () => {
   it("parser hasn't broken", () => {
     expect(ast).toMatchSnapshot()
   })
-  it("compiler hasn't broken", () => {
-    expect(true).toBe(true)
-    console.log(compileParser(ast))
-  })
+
 })
 

@@ -1,5 +1,4 @@
-const PRELUDE = `
-// * * * * * * * * * * * * * * * * BEGIN PRELUDE * * * * * * * * * * * * * * * * //
+const PRELUDE = `// * * * * * * * * * * * * * * * * BEGIN PRELUDE * * * * * * * * * * * * * * * * //
 
 function node (name) {
   let c = (class extends Array {})
@@ -22,7 +21,7 @@ function matchWhitespace (text) {
   let _token, _text = text
 
   // Consume (or backtrack)
-  ;[_token, _text] = matchRegex(_text, /^(\s*(--[^\n]*\n)?)*/)
+  ;[_token, _text] = matchRegex(_text, /^(\\s*(--[^\\n]*\\n)?)*/)
   if (_token === null) { return [null, text] } else { token.push(_token) }
 
   return [token, _text]
@@ -31,7 +30,7 @@ function matchWhitespace (text) {
 const matchJustIdentifier = (text) => {
   let _token, _text = text
 
-  ;[_token, _text] = matchRegex(_text, /^[a-zA-Z_]\w*/)
+  ;[_token, _text] = matchRegex(_text, /^[a-zA-Z_]\\w*/)
   if (_token === null) { return [null, text] } else { return [_token, _text] }
 }
 
@@ -112,19 +111,18 @@ function _matchLITERAL (text, literal) {
 }
 
 // * * * * * * * * * * * * * * * * END PRELUDE * * * * * * * * * * * * * * * * //
+
 `
 
 export { compileMatch }
 
 function compileMatch (ast) {
-  let text = ''
+  let text = PRELUDE
   let indent = 0
 
   function out (line) {
     text += ' '.repeat(indent * 2) + line + '\n'
   }
-
-  // text += PRELUDE
 
   const fns = {
     SYNTAX: {
@@ -198,8 +196,7 @@ function compileMatch (ast) {
       enter (node, stack) {
         let parent = stack && stack[stack.length - 1]
         if (parent) {
-          if (parent.constructor.name === 'SEQ'
-          || parent.constructor.name === 'REPEAT') {
+          if (parent.constructor.name === 'TERM') {
             out(`;[_token, _text] = match${node[0]}(_text)`)
           }
         }
@@ -220,21 +217,18 @@ function compileMatch (ast) {
         let type = child.constructor.name
         if (type !== 'TYPE' && type !== 'REPEAT') {
           if (i === 0) {
-            out(`if (_token === null) { return [null, text] } else { token.push(_token) }\n`)
+            out(`if (_token === null) { return [null, text] } else { token && token.push(_token) }\n`)
           } else {
-            out(`if (_token === null) { throw new Error(text) } else { token.push(_token) }\n`)
+            out(`if (_token === null) { throw new Error(text) } else { token && token.push(_token) }\n`)
           }
-        }
-        // discard literals for now
-        if (type === 'STRING') {
-          out(`// Discard`)
-          out(`token.pop()\n`)
         }
       }
     },
     STRING: {
       enter (node) {
         out(`;[_token, _text] = _matchLITERAL(_text, '${node[0]}')`)
+        out(`// Discard`)
+        out(`_token = false`)
       }
     },
     LITERAL: {

@@ -101,7 +101,7 @@ function printEXP (ast) {
   switch (ast.constructor.name) {
     case 'EXP': {
       let $0 = printALT(ast[0])
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     default:
       throw new TypeError(ast)
@@ -123,7 +123,7 @@ function printSEQ (ast) {
   switch (ast.constructor.name) {
     case 'SEQ': {
       let $0 = ast.map(printTERM)
-      return smartJoin([...$0], ' ')
+      return smartJoin([...$0])
     }
     default:
       throw new TypeError(ast)
@@ -134,7 +134,7 @@ function printGROUP (ast) {
   switch (ast.constructor.name) {
     case 'GROUP': {
       let $0 = printALT(ast[0])
-      return smartJoin(['(', $0, ')'], ' ')
+      return smartJoin(['(', $0, ')'])
     }
     default:
       throw new TypeError(ast)
@@ -146,7 +146,7 @@ function printTYPE (ast) {
     case 'TYPE': {
       let $0 = printALT(ast[0])
       let $1 = _printID(ast[1])
-      return smartJoin(['{', $0, ':', $1, '}'], ' ')
+      return smartJoin(['{', $0, ':', $1, '}'])
     }
     default:
       throw new TypeError(ast)
@@ -157,7 +157,7 @@ function printREPEAT (ast) {
   switch (ast.constructor.name) {
     case 'REPEAT': {
       let $0 = printTERM(ast[0])
-      return smartJoin(['$', $0], ' ')
+      return smartJoin(['$', $0])
     }
     default:
       throw new TypeError(ast)
@@ -165,30 +165,31 @@ function printREPEAT (ast) {
 }
 
 function printTERM (ast) {
+  ast = ast[0]
   switch (ast.constructor.name) {
     case 'ID': {
       let $0 = _printID(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     case 'STRING':  {
       let $0 = _printSTRING(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     case 'LITERAL': {
       let $0 = _printLITERAL(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     case 'GROUP': {
       let $0 = printGROUP(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     case 'TYPE': {
       let $0 = printTYPE(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     case 'REPEAT': {
       let $0 = printREPEAT(ast)
-      return smartJoin([$0], ' ')
+      return smartJoin([$0])
     }
     default:
       throw new TypeError(ast)
