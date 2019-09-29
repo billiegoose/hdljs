@@ -22,7 +22,7 @@ function matchWhitespace (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchRegex(_text, /^(\\s*(--[^\\n]*\\n)?)*/)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -67,14 +67,12 @@ function _matchSTRING (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchWhitespace(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or backtrack)
   ;[_token, _text] = matchJustString(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -85,14 +83,12 @@ function _matchID (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchWhitespace(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or backtrack)
   ;[_token, _text] = matchJustIdentifier(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -217,9 +213,9 @@ function compileMatch (ast) {
         let type = child.constructor.name
         if (type !== 'TYPE' && type !== 'REPEAT') {
           if (i === 0) {
-            out(`if (_token === null) { return [null, text] } else { token && token.push(_token) }\n`)
+            out(`if (_token === null) { return [null, text] } else { _token && token.push(_token) }\n`)
           } else {
-            out(`if (_token === null) { throw new Error(text) } else { token && token.push(_token) }\n`)
+            out(`if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }\n`)
           }
         }
       }
@@ -227,8 +223,7 @@ function compileMatch (ast) {
     STRING: {
       enter (node) {
         out(`;[_token, _text] = _matchLITERAL(_text, '${node[0]}')`)
-        out(`// Discard`)
-        out(`_token = false`)
+        out(`if (_token !== null) _token = false // Discard literal`)
       }
     },
     LITERAL: {
@@ -248,7 +243,7 @@ function compileMatch (ast) {
         out(`// Consume (or continue)`)
       },
       childExit (i, child, node) {
-        out(`if (_token === null) { break } else { token.push(_token) }\n`)
+        out(`if (_token === null) { break } else { _token && token.push(_token) }\n`)
       },
       exit (node) {
         indent--

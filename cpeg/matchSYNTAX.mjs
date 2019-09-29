@@ -22,7 +22,7 @@ function matchWhitespace (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchRegex(_text, /^(\s*(--[^\n]*\n)?)*/)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -67,14 +67,12 @@ function _matchSTRING (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchWhitespace(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or backtrack)
   ;[_token, _text] = matchJustString(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -85,14 +83,12 @@ function _matchID (text) {
 
   // Consume (or backtrack)
   ;[_token, _text] = matchWhitespace(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or backtrack)
   ;[_token, _text] = matchJustIdentifier(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -120,25 +116,21 @@ function matchSYNTAX (text) {
   let token = node('SYNTAX')
   // Consume (or backtrack)
   ;[_token, _text] = _matchLITERAL(_text, '.SYNTAX')
-  if (_token === null) { return [null, text] } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = _matchID(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = matchRULES(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = _matchLITERAL(_text, '.END')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -152,7 +144,7 @@ function matchRULES (text) {
 
     // Consume (or continue)
     ;[_token, _text] = matchRULE(_text)
-    if (_token === null) { break } else { token.push(_token) }
+    if (_token === null) { break } else { _token && token.push(_token) }
 
   }
 
@@ -165,25 +157,21 @@ function matchRULE (text) {
   let token = node('RULE')
   // Consume (or backtrack)
   ;[_token, _text] = _matchID(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = _matchLITERAL(_text, '=')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = matchRULEEX(_text)
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   // Consume (or throw)
   ;[_token, _text] = _matchLITERAL(_text, ';')
-  if (_token === null) { throw new Error(text) } else { token.push(_token) }
-
-  // Discard
-  token.pop()
+  if (_token !== null) _token = false // Discard literal
+  if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -194,7 +182,7 @@ function matchRULEEX (text) {
   let token = node('EXP')
   // Consume (or backtrack)
   ;[_token, _text] = matchEX1(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   return [token, _text]
 }
@@ -205,21 +193,19 @@ function matchEX1 (text) {
   let token = node('ALT')
   // Consume (or backtrack)
   ;[_token, _text] = matchEX2(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume 0 or more times
   while (true) {
 
     // Consume (or continue)
     ;[_token, _text] = _matchLITERAL(_text, '/')
-    if (_token === null) { break } else { token.push(_token) }
-
-    // Discard
-    token.pop()
+    if (_token !== null) _token = false // Discard literal
+    if (_token === null) { break } else { _token && token.push(_token) }
 
     // Consume (or error)
     ;[_token, _text] = matchEX2(_text)
-    if (_token === null) { throw new Error(_text) } else { token.push(_token) }
+    if (_token === null) { throw new Error(_text) } else { _token && token.push(_token) }
 
   }
 
@@ -232,14 +218,14 @@ function matchEX2 (text) {
   let token = node('SEQ')
   // Consume (or backtrack)
   ;[_token, _text] = matchEX3(_text)
-  if (_token === null) { return [null, text] } else { token.push(_token) }
+  if (_token === null) { return [null, text] } else { _token && token.push(_token) }
 
   // Consume 0 or more times
   while (true) {
 
     // Consume (or continue)
     ;[_token, _text] = matchEX3(_text)
-    if (_token === null) { break } else { token.push(_token) }
+    if (_token === null) { break } else { _token && token.push(_token) }
 
   }
 
@@ -258,35 +244,35 @@ function matchEX3 (text) {
         case 0: {
           // Consume (or try next)
           ;[_token, __text] = _matchID(_text)
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
         case 1: {
           // Consume (or try next)
           ;[_token, __text] = _matchSTRING(_text)
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
         case 2: {
           // Consume (or try next)
           ;[_token, __text] = _matchLITERAL(_text, '.ID')
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
         case 3: {
           // Consume (or try next)
           ;[_token, __text] = _matchLITERAL(_text, '.NUMBER')
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
         case 4: {
           // Consume (or try next)
           ;[_token, __text] = _matchLITERAL(_text, '.STRING')
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
@@ -296,21 +282,17 @@ function matchEX3 (text) {
 
           // Consume (or backtrack)
           ;[_token, __text] = _matchLITERAL(_text, '(')
-          if (_token === null) { continue } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { continue } else { _token && subtoken.push(_token) }
 
           // Consume (or throw)
           ;[_token, __text] = matchEX1(__text)
-          if (_token === null) { throw new Error(_text) } else { subtoken.push(_token) }
+          if (_token === null) { throw new Error(_text) } else { _token && subtoken.push(_token) }
 
           // Consume (or throw)
           ;[_token, __text] = _matchLITERAL(__text, ')')
-          if (_token === null) { throw new Error(_text) } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { throw new Error(_text) } else { _token && subtoken.push(_token) }
 
           token.push(subtoken)
           breakFor = true
@@ -322,32 +304,26 @@ function matchEX3 (text) {
 
           // Consume (or backtrack)
           ;[_token, __text] = _matchLITERAL(_text, '{')
-          if (_token === null) { continue } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { continue } else { _token && subtoken.push(_token) }
 
           // Consume (or throw)
           ;[_token, __text] = matchEX1(__text)
-          if (_token === null) { throw new Error(text) } else { subtoken.push(_token) }
+          if (_token === null) { throw new Error(text) } else { _token && subtoken.push(_token) }
 
           // Consume (or backtrack)
           ;[_token, __text] = _matchLITERAL(__text, ':')
-          if (_token === null) { throw new Error(text) } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { throw new Error(text) } else { _token && subtoken.push(_token) }
 
           // Consume (or throw)
           ;[_token, __text] = _matchID(__text)
-          if (_token === null) { throw new Error(text) } else { subtoken.push(_token) }
+          if (_token === null) { throw new Error(text) } else { _token && subtoken.push(_token) }
 
           // Consume (or backtrack)
           ;[_token, __text] = _matchLITERAL(__text, '}')
-          if (_token === null) { throw new Error(text) } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { throw new Error(text) } else { _token && subtoken.push(_token) }
 
           token.push(subtoken)
           breakFor = true
@@ -356,7 +332,7 @@ function matchEX3 (text) {
         case 7: {
           // Consume (or try next)
           ;[_token, __text] = _matchLITERAL(_text, '.EMPTY')
-          if (_token === null) { continue } else { token.push(_token) }
+          if (_token === null) { continue } else { _token && token.push(_token) }
           breakFor = true
           break
         }
@@ -366,14 +342,12 @@ function matchEX3 (text) {
 
           // Consume (or backtrack)
           ;[_token, __text] = _matchLITERAL(_text, '$')
-          if (_token === null) { continue } else { subtoken.push(_token) }
-
-          // Discard
-          subtoken.pop()
+          if (_token !== null) _token = false // Discard literal
+          if (_token === null) { continue } else { _token && subtoken.push(_token) }
 
           // Consume (or throw)
           ;[_token, __text] = matchEX3(__text)
-          if (_token === null) { throw new Error(text) } else { subtoken.push(_token) }
+          if (_token === null) { throw new Error(text) } else { _token && subtoken.push(_token) }
 
           token.push(subtoken)
           breakFor = true
