@@ -120,161 +120,141 @@ function compileMatch (ast) {
     text += ' '.repeat(indent * 2) + line + '\n'
   }
 
+  function start (line = '') {
+    text += ' '.repeat(indent * 2) + line
+  }
+  function mid (line = '') {
+    text += line
+  }
+  function end (line = '') {
+    text += line + '\n'
+  }
+
+  function call (ast) {
+    fns(ast.constructor.name)(...ast)
+  }
+
   const fns = {
-    SYNTAX: {
-      enter (node) {
-        out(`export { match${node[0][0]} }\n`)
-      },
+    SYNTAX (id, rules) {
+      start(`export { match`)
+      call(id)
+      end(` }`)
+      end()
+      call(rules)
     },
-    RULE: {
-      enter (node) {
-        let id = node[0][0]
-        out(`function match${id} (text) {`)
-        indent++
-        out(`let _token, _text = text\n`)
-      },
-      exit (node) {
-        out(`return [token, _text]`)
-        indent--
-        out(`}\n`)
-      },
+    ID (value) {
+      mid(value)
     },
-    TYPE: {
-      enter (node) {
-        let id = node[1][0]
-        out(`let token = node('${id}')`)
+    RULES (...rules) {
+      for (let rule of rules) {
+        call(rule)
       }
     },
-    ALT: {
-      enter (node) {
-        if (node.length > 1) {
-          out(`{`)
-          indent++
-          out(`let __text = _text`)
-          out(`for (let i = 0; i <= ${node.length}; i++) {`)
-          indent++
-          out(`let breakFor = false`)
-          out(`switch (i) {`)
-          indent++
-        }
-      },
-      childEnter (i, child, node) {
-        if (node.length > 1) {
+    RULE (id, exp) {
+      start(`function match`)
+      call(id)
+      end(`} (text) {`)
+      indent++
+      out(`let _token, _text = text`)
+      end()
+      call(exp)
+      out(`return [token, _text]`)
+      indent--
+      out(`}`)
+      end()
+    },
+    EXP (alt) {
+      call(alt)
+    },
+    ALT (...seqs) {
+      if (seqs.length === 1) {
+        call(seqs[0])
+      } else {
+        out(`{`)
+        indent++
+        out(`let __text = _text`)
+        out(`for (let i = 0; i <= ${seqs.length}; i++) {`)
+        indent++
+        out(`let breakFor = false`)
+        out(`switch (i) {`)
+        indent++
+        for (let seq of seqs) {
           out(`case ${i}: {`)
           indent++
-        }
-      },
-      childExit (i, child, node) {
-        if (node.length > 1) {
+          call(seq)
           out(`breakFor = true`)
           indent--
           out(`}`)
         }
-      },
-      exit (node) {
-        if (node.length > 1) {
-          out(`case 9: {`)
-          indent++
-          out(`// Backtrack`)
-          out(`return [null, text]`)
-          indent--
-          out(`}`)
-          indent--
-          out(`}`)
-          indent--
-          out(`_text = __text`)
-          indent--
-          out(`}`)
-        }
-      },
-    },
-    ID: {
-      enter (node, stack) {
-        let parent = stack && stack[stack.length - 1]
-        if (parent) {
-          if (parent.constructor.name === 'TERM') {
-            out(`;[_token, _text] = match${node[0]}(_text)`)
-          }
-        }
-      }
-    },
-    SEQ: {
-      childEnter (i, child, node) {
-        let type = child.constructor.name
-        if (type !== 'TYPE' && type !== 'REPEAT') {
-          if (i === 0) {
-            out(`// Consume (or backtrack)`)
-          } else {
-            out(`// Consume (or throw)`)
-          }
-        }
-      },
-      childExit (i, child, node) {
-        let type = child.constructor.name
-        if (type !== 'TYPE' && type !== 'REPEAT') {
-          if (i === 0) {
-            out(`if (_token === null) { return [null, text] } else { _token && token.push(_token) }\n`)
-          } else {
-            out(`if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }\n`)
-          }
-        }
-      }
-    },
-    STRING: {
-      enter (node) {
-        out(`;[_token, _text] = _matchLITERAL(_text, '${node[0]}')`)
-        out(`if (_token !== null) _token = false // Discard literal`)
-      }
-    },
-    LITERAL: {
-      enter (node) {
-        if (node[0] === '.ID') {
-          out(`;[_token, _text] = _matchID(_text)`)
-        }
-      }
-    },
-    REPEAT: {
-      enter (node) {
-        out(`// Consume 0 or more times`)
-        out(`while (true) {\n`)
+        out(`case ${seqs.length}: {`)
         indent++
-      },
-      childEnter (i, child, node) {
-        out(`// Consume (or continue)`)
-      },
-      childExit (i, child, node) {
-        out(`if (_token === null) { break } else { _token && token.push(_token) }\n`)
-      },
-      exit (node) {
+        out(`// Backtrack`)
+        out(`return [null, text]`)
         indent--
-        out(`}\n`)
-      },
-    }
-  }
-
-  function walk (node, stack) {
-    const type = node.constructor.name
-    // TODO: Narrow enter & exit by matching against stack
-    let fn = fns[type]
-    let enter = fn && fn.enter
-    let exit = fn && fn.exit
-    let childEnter = fn && fn.childEnter
-    let childExit = fn && fn.childExit
-    if (enter) enter(node, stack)
-    if (Array.isArray(node)) {
-      stack.push(node)
-      for (let n = 0; n < node.length; n++) {
-        let child = node[n]
-        if (childEnter) childEnter(n, child, node)
-        walk(child, stack)
-        if (childExit) childExit(n, child, node)
+        out(`}`)
+        indent--
+        out(`}`)
+        indent--
+        out(`_text = __text`)
+        indent--
+        out(`}`)
       }
-      stack.pop()
+    },
+    TYPE (alt, id) {
+      start(`let token = node('`)
+      call(id)
+      end(`}')`)
+      call(alt)
+    },
+    SEQ (...terms) {
+      if (terms.length === 1) {
+        call(terms[0])
+      } else {
+        let first = terms.shift()
+        out(`// Consume (or backtrack)`)
+        call(first)
+        out(`if (_token === null) { return [null, text] } else { _token && token.push(_token) }`)
+        end()
+
+        for (let term of terms) {
+          out(`// Consume (or throw)`)
+          call(term)
+          out(`if (_token === null) { throw new Error(text) } else { _token && token.push(_token) }`)
+          end()
+        }
+      }
+    },
+    ID2 (value) {
+      start(`;[_token, _text] = match`)
+      mid(value)
+      end(`(_text)`)
+    },
+    STRING (value) {
+      start(`;[_token, _text] = _matchLITERAL(_text, '`)
+      mid(value)
+      end(`')`)
+      out(`if (_token !== null) _token = false // Discard literal`)
+    },
+    LITERAL (value) {
+      if (value === '.ID') {
+        out(`;[_token, _text] = _matchID(_text)`)
+      }
+    },
+    REPEAT (term) {
+      out(`// Consume 0 or more times`)
+      out(`while (true) {`)
+      end()
+      indent++
+      call(term)
+      out(`if (_token === null) { break } else { _token && token.push(_token) }`)
+      end()
+      indent--
+      out(`}`)
+      end()
     }
-    if (exit) exit(node, stack)
   }
 
-  walk(ast, [])
+  call(ast)
 
   return text
 }
